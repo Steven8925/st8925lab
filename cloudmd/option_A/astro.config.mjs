@@ -2,13 +2,13 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  site: 'https://st8925lab.com',
+  site: 'https://lab.st8925lab.com',
   output: 'static',
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'zh'],
     routing: {
-      prefixDefaultLocale: true,
+      prefixDefaultLocale: false,
       redirectToDefaultLocale: false,
     },
   },
