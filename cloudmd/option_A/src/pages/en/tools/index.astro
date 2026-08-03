@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { useTranslations } from '../../../i18n/index';
+
+const lang = 'en';
+const title = 'Industrial Tools';
+const description = 'Free open-source tools for protocol debugging and system integration';
+
+const toolsJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Modbus Address Converter",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "description": "Convert between Modbus table addresses (40001), PDU wire addresses (0x0000), and vendor conventions. Instantly identify the correct function code.",
+    "url": "https://example.com/en/tools/modbus-address-converter"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Modbus Float/Int32 Decoder",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "description": "Decode 32-bit float and integer values from Modbus register pairs. Test all 4 byte/word order combinations simultaneously.",
+    "url": "https://example.com/en/tools/modbus-float-decoder"
+  }
+];
+---
+
+<BaseLayout title={title} description={description} lang={lang} jsonLd={toolsJsonLd}>
+  <section class="section-container py-16">
+    <h1 class="section-title text-3xl font-bold mb-2">{title}</h1>
+    <p class="text-text-dim text-lg mb-12">{description}</p>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <a href="/en/tools/modbus-address-converter" class="group block bg-surface rounded-xl border border-blue/10 p-8 hover:border-blue/50 transition-colors">
+        <div class="text-4xl mb-4">🔧</div>
+        <h2 class="text-2xl font-bold mb-3 group-hover:text-blue-light transition-colors">Modbus Address Converter</h2>
+        <p class="text-text-dim">Convert between Modbus table addresses (40001), PDU wire addresses (0x0000), and vendor conventions. Instantly identify the correct function code.</p>
+      </a>
+
+      <a href="/en/tools/modbus-float-decoder" class="group block bg-surface rounded-xl border border-blue/10 p-8 hover:border-blue/50 transition-colors">
+        <div class="text-4xl mb-4">🔢</div>
+        <h2 class="text-2xl font-bold mb-3 group-hover:text-blue-light transition-colors">Modbus Float/Int32 Decoder</h2>
+        <p class="text-text-dim">Decode 32-bit float and integer values from Modbus register pairs. Test all 4 byte/word order combinations simultaneously.</p>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

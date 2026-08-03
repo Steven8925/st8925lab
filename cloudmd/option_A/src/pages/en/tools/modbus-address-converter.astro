@@ -1,0 +1,196 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+const lang = 'en';
+const title = 'Modbus Address Converter';
+const description = 'Convert Modbus table addresses to PDU wire addresses. Identify function codes and fix off-by-one errors instantly.';
+
+const pageJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": title,
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "description": description
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why does 40001 become PDU address 0x0000?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Modbus table addresses use a 1-based numbering scheme with a prefix digit indicating the register type. The '4' prefix identifies Holding Registers, and the numbering starts at 1. On the wire (PDU), addresses are 0-based with no prefix. So 40001 minus the base 40001 equals 0, which is 0x0000 in hex."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between FC03 and FC04?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "FC03 (Read Holding Registers) reads from the 4xxxx address space — registers that are typically read/write. FC04 (Read Input Registers) reads from the 3xxxx space — registers that are read-only, often used for measured values like temperatures and pressures."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "My Modbus read returns all zeros. What should I check?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Common causes: (1) Wrong baud rate or parity settings, (2) Wrong function code (FC03 vs FC04), (3) Table address sent directly instead of converting to PDU offset, (4) Wrong slave ID. Use a protocol analyzer to verify raw bytes on the wire."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do all vendors use the same addressing convention?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Some vendors use 0-based addressing (40000 = first register), others use 1-based (40001 = first register). Some omit the prefix entirely. Always verify against the device's register map documentation and test with a Modbus scanner."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I convert a register address like 400123?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For extended 6-digit addresses: subtract the base (400001) to get the PDU offset. 400123 - 400001 = 122 = 0x007A. The function code is FC03 (Holding Register). Some PLCs support up to 65536 registers per type."
+          }
+        }
+      ]
+    }
+  ]
+};
+---
+<BaseLayout title={title} description={description} lang={lang} jsonLd={pageJsonLd}>
+  <!-- STATIC SEO CONTENT -->
+  <section class="section-container py-16">
+    <h1 class="section-title text-3xl font-bold mb-2">Modbus Address Converter</h1>
+    <p class="text-text-dim text-lg mb-8 max-w-3xl">Convert between Modbus table addresses (like 40001), PDU wire addresses (0x0000), and identify the correct function code. This tool helps you avoid the off-by-one addressing trap that causes days of debugging.</p>
+
+    <!-- INTERACTIVE CALCULATOR -->
+    <div class="card bg-surface rounded-xl border border-blue/10 p-8 mb-12" id="calculator">
+      <h2 class="text-xl font-bold mb-4">Address Calculator</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm text-text-dim mb-2" for="addr-input">Table Address (e.g., 40001)</label>
+          <input type="text" id="addr-input" maxlength="10" placeholder="40001" autocomplete="off"
+            class="w-full px-4 py-3 bg-bg border border-blue/20 rounded-lg text-text font-mono focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue/50" />
+        </div>
+        <div id="result-panel" class="space-y-3 p-4 bg-bg rounded-lg border border-blue/5">
+          <div class="flex justify-between"><span class="text-text-dim">Register Type:</span><span id="r-type" class="font-mono text-text">—</span></div>
+          <div class="flex justify-between"><span class="text-text-dim">Function Code:</span><span id="r-fc" class="font-mono text-text">—</span></div>
+          <div class="flex justify-between"><span class="text-text-dim">PDU Address (hex):</span><span id="r-pdu" class="font-mono text-blue-light">—</span></div>
+          <div class="flex justify-between"><span class="text-text-dim">PDU Address (dec):</span><span id="r-dec" class="font-mono text-text">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 STATIC PRE-RENDERED EXAMPLES -->
+    <h2 class="text-2xl font-bold mb-6">Examples</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <caption class="text-left text-text-dim mb-3">Common Modbus address conversions</caption>
+        <thead>
+          <tr class="border-b border-blue/15">
+            <th scope="col" class="text-left p-3 font-semibold">Table Address</th>
+            <th scope="col" class="text-left p-3 font-semibold">Register Type</th>
+            <th scope="col" class="text-left p-3 font-semibold">Function Code</th>
+            <th scope="col" class="text-left p-3 font-semibold">PDU Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">00001</td><td class="p-3">Coil</td><td class="p-3 font-mono">FC01</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover bg-surface/50"><td class="p-3 font-mono">10001</td><td class="p-3">Discrete Input</td><td class="p-3 font-mono">FC02</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">30001</td><td class="p-3">Input Register</td><td class="p-3 font-mono">FC04</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover bg-surface/50"><td class="p-3 font-mono">40001</td><td class="p-3">Holding Register</td><td class="p-3 font-mono">FC03</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">40100</td><td class="p-3">Holding Register</td><td class="p-3 font-mono">FC03</td><td class="p-3 font-mono">0x0063</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ADDRESS RANGE REFERENCE -->
+    <h2 class="text-2xl font-bold mb-6">Modbus Address Ranges</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <thead><tr class="border-b border-blue/15">
+          <th scope="col" class="text-left p-3 font-semibold">Range</th>
+          <th scope="col" class="text-left p-3 font-semibold">Type</th>
+          <th scope="col" class="text-left p-3 font-semibold">Access</th>
+          <th scope="col" class="text-left p-3 font-semibold">Function Code</th>
+          <th scope="col" class="text-left p-3 font-semibold">PDU Base</th>
+        </tr></thead>
+        <tbody>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">00001–09999</td><td class="p-3">Coils</td><td class="p-3">Read/Write</td><td class="p-3 font-mono">FC01/FC05/FC15</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">10001–19999</td><td class="p-3">Discrete Inputs</td><td class="p-3">Read Only</td><td class="p-3 font-mono">FC02</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">30001–39999</td><td class="p-3">Input Registers</td><td class="p-3">Read Only</td><td class="p-3 font-mono">FC04</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">40001–49999</td><td class="p-3">Holding Registers</td><td class="p-3">Read/Write</td><td class="p-3 font-mono">FC03/FC06/FC16</td><td class="p-3 font-mono">0x0000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <h2 class="text-2xl font-bold mb-6">FAQ</h2>
+    <div class="space-y-4 mb-12">
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">Why does 40001 become PDU address 0x0000?</summary><p class="mt-3 text-text-dim">Modbus table addresses use a 1-based numbering scheme with a prefix digit indicating the register type. The '4' prefix identifies Holding Registers, and the numbering starts at 1. On the wire (PDU), addresses are 0-based with no prefix. So 40001 minus the base 40001 equals 0, which is 0x0000 in hex.</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">What is the difference between FC03 and FC04?</summary><p class="mt-3 text-text-dim">FC03 (Read Holding Registers) reads from the 4xxxx address space — registers that are typically read/write. FC04 (Read Input Registers) reads from the 3xxxx space — registers that are read-only, often used for measured values like temperatures and pressures.</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">My Modbus read returns all zeros. What should I check?</summary><p class="mt-3 text-text-dim">Common causes: (1) Wrong baud rate or parity settings, (2) Wrong function code (FC03 vs FC04), (3) Table address sent directly instead of converting to PDU offset, (4) Wrong slave ID. Use a protocol analyzer to verify raw bytes on the wire.</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">Do all vendors use the same addressing convention?</summary><p class="mt-3 text-text-dim">No. Some vendors use 0-based addressing (40000 = first register), others use 1-based (40001 = first register). Some omit the prefix entirely. Always verify against the device's register map documentation and test with a Modbus scanner.</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">How do I convert a register address like 400123?</summary><p class="mt-3 text-text-dim">For extended 6-digit addresses: subtract the base (400001) to get the PDU offset. 400123 - 400001 = 122 = 0x007A. The function code is FC03 (Holding Register). Some PLCs support up to 65536 registers per type.</p></details>
+    </div>
+
+    <!-- RELATED CASE STUDY LINK -->
+    <div class="card border border-blue/20 bg-blue/5 rounded-xl p-6">
+      <p class="text-text-dim mb-4">This exact addressing error caused 3 days of debugging in a real chiller monitoring project. The firmware sent raw table addresses on the wire instead of subtracting the base offset.</p>
+      <a href="/en/work/chiller-ot-monitoring" class="text-blue-light font-semibold hover:underline inline-block">Read the full case study →</a>
+    </div>
+  </section>
+
+  <!-- CALCULATOR SCRIPT -->
+  <script is:inline>
+    (function() {
+      const input = document.getElementById('addr-input');
+      const rType = document.getElementById('r-type');
+      const rFc = document.getElementById('r-fc');
+      const rPdu = document.getElementById('r-pdu');
+      const rDec = document.getElementById('r-dec');
+      if (!input || !rType || !rFc || !rPdu || !rDec) return;
+
+      function convert(raw) {
+        // Security: strict numeric validation
+        const cleaned = raw.replace(/[^0-9]/g, '');
+        if (!cleaned || cleaned.length > 10) return null;
+        const addr = parseInt(cleaned, 10);
+        if (isNaN(addr) || addr < 0) return null;
+
+        let type, fc, base;
+        if (addr >= 400001) { type = 'Holding Register'; fc = 'FC03 (Read Holding)'; base = 400001; }
+        else if (addr >= 300001) { type = 'Input Register'; fc = 'FC04 (Read Input)'; base = 300001; }
+        else if (addr >= 100001) { type = 'Discrete Input'; fc = 'FC02 (Read Discrete)'; base = 100001; }
+        else if (addr >= 40001 && addr <= 49999) { type = 'Holding Register'; fc = 'FC03 (Read Holding)'; base = 40001; }
+        else if (addr >= 30001 && addr <= 39999) { type = 'Input Register'; fc = 'FC04 (Read Input)'; base = 30001; }
+        else if (addr >= 10001 && addr <= 19999) { type = 'Discrete Input'; fc = 'FC02 (Read Discrete)'; base = 10001; }
+        else if (addr >= 1 && addr <= 9999) { type = 'Coil'; fc = 'FC01 (Read Coil)'; base = 1; }
+        else { return null; }
+
+        const pdu = addr - base;
+        return { type, fc, pduHex: '0x' + pdu.toString(16).toUpperCase().padStart(4, '0'), pduDec: pdu.toString() };
+      }
+
+      input.addEventListener('input', function() {
+        const result = convert(this.value);
+        if (result) {
+          rType.textContent = result.type;
+          rFc.textContent = result.fc;
+          rPdu.textContent = result.pduHex;
+          rDec.textContent = result.pduDec;
+        } else {
+          rType.textContent = '—';
+          rFc.textContent = '—';
+          rPdu.textContent = '—';
+          rDec.textContent = '—';
+        }
+      });
+    })();
+  </script>
+</BaseLayout>

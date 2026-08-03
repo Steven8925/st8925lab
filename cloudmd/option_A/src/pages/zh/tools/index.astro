@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { useTranslations } from '../../../i18n/index';
+
+const lang = 'zh';
+const title = '工業工具';
+const description = '用於協定除錯和系統整合的免費開源工具';
+
+const toolsJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Modbus 位址轉換器",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "description": "在 Modbus 表格位址（40001）、PDU 線路位址（0x0000）和供應商慣例之間進行轉換。立即識別正確的功能碼。",
+    "url": "https://example.com/zh/tools/modbus-address-converter"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Modbus 32 位元浮點數 / 整數解碼器",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "description": "從 Modbus 暫存器對解碼 32 位元浮點數和整數值。同時測試所有 4 種位元組/字組順序組合。",
+    "url": "https://example.com/zh/tools/modbus-float-decoder"
+  }
+];
+---
+
+<BaseLayout title={title} description={description} lang={lang} jsonLd={toolsJsonLd}>
+  <section class="section-container py-16">
+    <h1 class="section-title text-3xl font-bold mb-2">{title}</h1>
+    <p class="text-text-dim text-lg mb-12">{description}</p>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <a href="/zh/tools/modbus-address-converter" class="group block bg-surface rounded-xl border border-blue/10 p-8 hover:border-blue/50 transition-colors">
+        <div class="text-4xl mb-4">🔧</div>
+        <h2 class="text-2xl font-bold mb-3 group-hover:text-blue-light transition-colors">Modbus 位址轉換器</h2>
+        <p class="text-text-dim">在 Modbus 表格位址（40001）、PDU 線路位址（0x0000）和供應商慣例之間進行轉換。立即識別正確的功能碼。</p>
+      </a>
+
+      <a href="/zh/tools/modbus-float-decoder" class="group block bg-surface rounded-xl border border-blue/10 p-8 hover:border-blue/50 transition-colors">
+        <div class="text-4xl mb-4">🔢</div>
+        <h2 class="text-2xl font-bold mb-3 group-hover:text-blue-light transition-colors">Modbus 32 位元浮點數 / 整數解碼器</h2>
+        <p class="text-text-dim">從 Modbus 暫存器對解碼 32 位元浮點數和整數值。同時測試所有 4 種位元組/字組順序組合。</p>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

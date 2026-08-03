@@ -1,0 +1,20 @@
+# st8925lab.com - Robots Policy
+# Allow AI agents for public content discovery
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: *
+Allow: /
+Disallow: /_astro/
+Disallow: /api/
+
+Sitemap: https://st8925lab.com/sitemap-index.xml

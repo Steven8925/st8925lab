@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+const allReferences = await getCollection('reference', ({ data }) => data.lang === 'en' && !data.draft);
+allReferences.sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="Reference | ST8925 LAB" description="Technical references and guides" lang="en">
+  <div class="max-w-4xl mx-auto py-12 px-4">
+    <h1 class="text-4xl font-bold mb-8">Technical Reference</h1>
+    <div class="grid gap-6">
+      {allReferences.map(ref => (
+        <a href={`/en/reference/${ref.slug.replace('en/', '')}`} class="block bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition border border-gray-100">
+          <h2 class="text-2xl font-bold mb-2 text-blue-900">{ref.data.title}</h2>
+          <p class="text-gray-600 mb-4">{ref.data.description}</p>
+          <div class="text-sm text-gray-400">Last Reviewed: {ref.data.lastReviewed}</div>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

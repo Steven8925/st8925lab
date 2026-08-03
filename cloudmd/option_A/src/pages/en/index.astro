@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CaseStudyCard from '../../components/CaseStudyCard.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/index';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout 
+  title="Home | ST8925 LAB" 
+  description="Bridging Legacy Equipment to Modern Monitoring" 
+  lang={lang}
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "ST8925 LAB",
+    "url": "https://st8925lab.com",
+    "sameAs": ["https://github.com/st8925lab"]
+  }}
+>
+  <section class="hero bg-gradient-to-b from-blue-900 to-gray-900 text-white py-20 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-5xl font-bold mb-6">Bridging Legacy Equipment to Modern Monitoring</h1>
+      <p class="text-xl mb-10 text-gray-300">Modernizing industrial assets with robust, custom OT/IT integrations.</p>
+      <div class="flex justify-center gap-4">
+        <a href="/en/work" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition">View Work</a>
+        <a href="/en/capabilities" class="px-6 py-3 border border-white hover:bg-white hover:text-gray-900 rounded-lg font-medium transition">Explore Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured-work py-20 px-4 max-w-6xl mx-auto">
+    <h2 class="text-3xl font-bold mb-10">Featured Work</h2>
+    <CaseStudyCard 
+      title="Retrofitting Real-Time Monitoring onto a Legacy Chiller"
+      summary="Built a custom ESP32 Modbus RTU monitoring system for a five-star hotel chiller, achieving ~80% faster fault detection without touching the existing BMS."
+      sector="Hospitality" 
+      role="End-to-end Delivery" 
+      duration="14+ months operation"
+      stack={['ESP32','RS-485','Modbus RTU','Siemens Climatix','Arduino','OTA']}
+      results={[{metric:'Fault Detection',value:'~80% faster'},{metric:'Inspection Hours',value:'~50% reduced'},{metric:'Uptime',value:'14+ months'}]}
+      slug="chiller-ot-monitoring" 
+      lang="en"
+    />
+  </section>
+
+  <section class="capabilities py-20 px-4 bg-gray-50">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl font-bold mb-10 text-gray-900">Capabilities</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">🔌</div>
+          <h3 class="text-xl font-bold mb-2">OT/IT Network Integration</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">📡</div>
+          <h3 class="text-xl font-bold mb-2">Legacy Protocol Integration</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">📊</div>
+          <h3 class="text-xl font-bold mb-2">Monitoring Platform Deployment</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">🔍</div>
+          <h3 class="text-xl font-bold mb-2">Device Selection & Compliance</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">📋</div>
+          <h3 class="text-xl font-bold mb-2">Delivery Documentation (FAT/SAT/UAT)</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

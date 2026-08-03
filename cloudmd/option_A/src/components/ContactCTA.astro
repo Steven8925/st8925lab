@@ -1,0 +1,15 @@
+---
+import { getLangFromUrl, useTranslations } from '../i18n/index';
+
+export interface Props {
+  lang?: string;
+}
+
+const { lang } = Astro.props;
+const currentLang = lang || getLangFromUrl(Astro.url);
+const t = useTranslations(currentLang as any);
+---
+
+<a href="mailto:contact@st8925lab.com" class="btn-primary text-sm px-4 py-2 rounded bg-blue hover:bg-blue/90 text-white font-medium inline-block">
+  {t('nav.contact') || 'Get in touch →'}
+</a>
