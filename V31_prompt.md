@@ -104,7 +104,7 @@ const MARKER_SITES = [
 
 // --- 部署地 IP 定位 / Deploy-site geolocation ------------------
 const ENABLE_GEO_LOOKUP  = false;   // 預設關閉 / OFF by default
-const GEO_LOOKUP_URL     = 'https://ipapi.co/json/';
+const GEO_LOOKUP_URL     = 'https://get.geojs.io/v1/ip/geo.json';
 const GEO_LOOKUP_TIMEOUT = 3000;    // ms
 
 // --- 時間列 / Clock row ----------------------------------------
@@ -520,19 +520,19 @@ halo.addColorStop(1,   'rgba(60,120,210,0)');
 ```css
 #clock {
     position: fixed; left: 50%;
-    top: calc(50% + var(--bar-h) / 2 + 250px);
+    top: calc(50% + var(--bar-h) / 2 + 350px);
     transform: translateX(-50%);
     display: flex; gap: .8rem; white-space: nowrap;
     z-index: 15; pointer-events: none;
 }
 ```
 
-**250px 的依據**：必須避開呼吸**最小時**的軌道（211px），而非只避開地球（130px）。
+**350px 的依據**：必須避開呼吸**最小時**的軌道（211px）以及動態城市下拉選單高度，而非只避開地球（130px）。
 
 ### 5.5 響應式 / Responsive
 
 ```css
-@media (max-height: 760px) { #clock { top: auto; bottom: 40px; } }
+@media (max-height: 880px) { #clock { top: auto; bottom: 45px; } }
 @media (max-width: 560px)  { #clock { flex-direction: column; gap: .2rem; }
                              #clock .sep { display: none; } }
 @media (max-width: 720px)  { :root { --bar-h: 56px; } #cta { display: none; } }

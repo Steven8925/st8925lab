@@ -745,19 +745,139 @@ function localZoneLabel(now) {
     return `GMT${sign}${Math.floor(a / 60)}${a % 60 ? ':' + pad(a % 60) : ''}`;
 }
 
+// --- 62 世界城市清單 (依國家英文名稱 A-Z 排序) / 62 World Cities sorted A-Z ---
+const WORLD_CITIES = [
+    { label: 'Argentina_Buenos Aires', tz: 'America/Argentina/Buenos_Aires' },
+    { label: 'Australia_Sydney', tz: 'Australia/Sydney' },
+    { label: 'Austria_Vienna', tz: 'Europe/Vienna' },
+    { label: 'Bangladesh_Dhaka', tz: 'Asia/Dhaka' },
+    { label: 'Belgium_Brussels', tz: 'Europe/Brussels' },
+    { label: 'Brazil_Sao Paulo', tz: 'America/Sao_Paulo' },
+    { label: 'Bulgaria_Sofia', tz: 'Europe/Sofia' },
+    { label: 'Canada_Toronto', tz: 'America/Toronto' },
+    { label: 'Canada_Vancouver', tz: 'America/Vancouver' },
+    { label: 'Chile_Santiago', tz: 'America/Santiago' },
+    { label: 'China_Shanghai', tz: 'Asia/Shanghai' },
+    { label: 'Colombia_Bogota', tz: 'America/Bogota' },
+    { label: 'Croatia_Zagreb', tz: 'Europe/Zagreb' },
+    { label: 'Czech Republic_Prague', tz: 'Europe/Prague' },
+    { label: 'Denmark_Copenhagen', tz: 'Europe/Copenhagen' },
+    { label: 'Egypt_Cairo', tz: 'Africa/Cairo' },
+    { label: 'Finland_Helsinki', tz: 'Europe/Helsinki' },
+    { label: 'France_Paris', tz: 'Europe/Paris' },
+    { label: 'Germany_Berlin', tz: 'Europe/Berlin' },
+    { label: 'Greece_Athens', tz: 'Europe/Athens' },
+    { label: 'Hong Kong_Hong Kong', tz: 'Asia/Hong_Kong' },
+    { label: 'Hungary_Budapest', tz: 'Europe/Budapest' },
+    { label: 'India_Kolkata', tz: 'Asia/Kolkata' },
+    { label: 'Indonesia_Jakarta', tz: 'Asia/Jakarta' },
+    { label: 'Iran_Tehran', tz: 'Asia/Tehran' },
+    { label: 'Ireland_Dublin', tz: 'Europe/Dublin' },
+    { label: 'Israel_Jerusalem', tz: 'Asia/Jerusalem' },
+    { label: 'Italy_Rome', tz: 'Europe/Rome' },
+    { label: 'Japan_Tokyo', tz: 'Asia/Tokyo' },
+    { label: 'Malaysia_Kuala Lumpur', tz: 'Asia/Kuala_Lumpur' },
+    { label: 'Mexico_Mexico City', tz: 'America/Mexico_City' },
+    { label: 'Morocco_Casablanca', tz: 'Africa/Casablanca' },
+    { label: 'Netherlands_Amsterdam', tz: 'Europe/Amsterdam' },
+    { label: 'New Zealand_Auckland', tz: 'Pacific/Auckland' },
+    { label: 'Nigeria_Lagos', tz: 'Africa/Lagos' },
+    { label: 'Norway_Oslo', tz: 'Europe/Oslo' },
+    { label: 'Pakistan_Karachi', tz: 'Asia/Karachi' },
+    { label: 'Peru_Lima', tz: 'America/Lima' },
+    { label: 'Philippines_Manila', tz: 'Asia/Manila' },
+    { label: 'Poland_Warsaw', tz: 'Europe/Warsaw' },
+    { label: 'Portugal_Lisbon', tz: 'Europe/Lisbon' },
+    { label: 'Russia_Moscow', tz: 'Europe/Moscow' },
+    { label: 'Saudi Arabia_Riyadh', tz: 'Asia/Riyadh' },
+    { label: 'Singapore_Singapore', tz: 'Asia/Singapore' },
+    { label: 'South Africa_Johannesburg', tz: 'Africa/Johannesburg' },
+    { label: 'South Korea_Seoul', tz: 'Asia/Seoul' },
+    { label: 'Spain_Madrid', tz: 'Europe/Madrid' },
+    { label: 'Sweden_Stockholm', tz: 'Europe/Stockholm' },
+    { label: 'Switzerland_Zurich', tz: 'Europe/Zurich' },
+    { label: 'Taiwan_Taipei', tz: 'Asia/Taipei' },
+    { label: 'Thailand_Bangkok', tz: 'Asia/Bangkok' },
+    { label: 'Turkey_Istanbul', tz: 'Europe/Istanbul' },
+    { label: 'UAE_Dubai', tz: 'Asia/Dubai' },
+    { label: 'UK_London', tz: 'Europe/London' },
+    { label: 'Ukraine_Kyiv', tz: 'Europe/Kyiv' },
+    { label: 'USA_Chicago', tz: 'America/Chicago' },
+    { label: 'USA_Denver', tz: 'America/Denver' },
+    { label: 'USA_Honolulu', tz: 'Pacific/Honolulu' },
+    { label: 'USA_Los Angeles', tz: 'America/Los_Angeles' },
+    { label: 'USA_New York', tz: 'America/New_York' },
+    { label: 'USA_Phoenix', tz: 'America/Phoenix' },
+    { label: 'Vietnam_Ho Chi Minh', tz: 'Asia/Ho_Chi_Minh' }
+].sort((a, b) => a.label.localeCompare(b.label));
+
 const clockLocal = document.getElementById('clock-local');
 const clockGmt8 = document.getElementById('clock-gmt8');
+const worldSelect = document.getElementById('world-clock-select');
+
+function buildWorldClock() {
+    if (!worldSelect) return;
+    worldSelect.innerHTML = '';
+    WORLD_CITIES.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.tz;
+        opt.textContent = c.label;
+        worldSelect.appendChild(opt);
+    });
+
+    const defaultOpt = WORLD_CITIES.find(c => c.label === 'Taiwan_Taipei');
+    if (defaultOpt) worldSelect.value = defaultOpt.tz;
+
+    let searchBuffer = '';
+    let searchTimer = null;
+    worldSelect.addEventListener('keydown', e => {
+        if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            clearTimeout(searchTimer);
+            searchBuffer += e.key.toLowerCase();
+            const options = Array.from(worldSelect.options);
+            const match = options.find(opt => opt.textContent.toLowerCase().startsWith(searchBuffer));
+            if (match) {
+                worldSelect.value = match.value;
+                tickClock();
+            }
+            searchTimer = setTimeout(() => { searchBuffer = ''; }, 800);
+        }
+    });
+
+    worldSelect.addEventListener('change', tickClock);
+}
+
+function tzStamp(now, timeZone) {
+    try {
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+            timeZoneName: 'short',
+        });
+        const parts = {};
+        formatter.formatToParts(now).forEach(p => { parts[p.type] = p.value; });
+        const hour = parts.hour === '24' ? '00' : parts.hour;
+        const dateStr = `${parts.year}${parts.month}${parts.day}-${hour}${parts.minute}${parts.second}`;
+        const tzName = parts.timeZoneName || 'UTC';
+        return `${dateStr} (${tzName})`;
+    } catch (e) {
+        return localStamp(now);
+    }
+}
 
 function tickClock() {
     const now = new Date();
-    clockLocal.textContent = `${localStamp(now)} (${localZoneLabel(now)})`;
+    const selectedTz = worldSelect ? worldSelect.value : null;
+    clockLocal.textContent = selectedTz ? tzStamp(now, selectedTz) : `${localStamp(now)} (${localZoneLabel(now)})`;
     clockGmt8.textContent = `${offsetStamp(now, CLOCK_TZ_OFFSET)} (GMT+${CLOCK_TZ_OFFSET})`;
 }
 
-// Two distinct rainbow hues, drawn once per load. Reuses the shuffled
-// ringColours so the clock can never clash with a ring's lead point.
-// 每次載入抽兩個互異的彩虹色。沿用已洗牌的 ringColours，
-// 因此時間顏色不會與任一環的主光點撞色。
 function paintClock() {
     const pool = RAINBOW.slice();
     for (let i = pool.length - 1; i > 0; i--) {
@@ -796,6 +916,7 @@ function lookupDeploySite() {
 
 buildProjects();
 buildWordmark(SITE_NAME);
+buildWorldClock();
 paintClock();
 tickClock();
 setInterval(tickClock, 1000);
