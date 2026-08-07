@@ -11,6 +11,7 @@ const ORBIT_RINGS = 6;     // 軌道環數 / orbit planes
 const POINTS_PER_RING = 4;     // 每環光點 / light points per ring -> 24 total
 const ORBIT_RADIUS = 240;   // 軌道半徑 px / orbit radius
 const EARTH_RADIUS = 130;   // 地球半徑 px / earth radius
+const EARTH_TILT_DEG = 23.44; // 地球自轉軸傾角 (黃赤交角) / Earth axial tilt (23.44 deg)
 const TILT_DEG = 65;    // 軌道傾角 / orbit tilt
 const RING_ALPHA = 0.4;   // 軌道線透明度 / orbit ring alpha
 const RING_SEGMENTS = 120;   // 軌道線段數 / ring polyline segments
@@ -94,8 +95,8 @@ const MARKER_SITES = [
 // Disabled by default. Enabling it sends a request to a third-party API on
 // every page load, exposing the visitor's IP, and the page stops being
 // offline-capable. Set to true to enable the third marker.
-const ENABLE_GEO_LOOKUP = false;
-const GEO_LOOKUP_URL = 'https://ipapi.co/json/';
+const ENABLE_GEO_LOOKUP = true;
+const GEO_LOOKUP_URL = 'https://get.geojs.io/v1/ip/geo.json';
 const GEO_LOOKUP_TIMEOUT = 3000;  // ms
 
 // --- 時間列 / Clock row ----------------------------------------
@@ -124,6 +125,8 @@ const PROJECT_LABELS = [
 
 const TILT = TILT_DEG * Math.PI / 180;
 const COS_TILT = Math.cos(TILT), SIN_TILT = Math.sin(TILT);
+const EARTH_TILT = EARTH_TILT_DEG * Math.PI / 180;
+const COS_EARTH_TILT = Math.cos(EARTH_TILT), SIN_EARTH_TILT = Math.sin(EARTH_TILT);
 
 // --- Fisher-Yates: pick ORBIT_RINGS distinct colours from RAINBOW ---
 // 每次載入重新洗牌，7 色取 6，必有 1 色未使用（規格已知）。
@@ -268,12 +271,19 @@ function occluded(p, cx, cy, earthPx) {
 const COAST = unpackGeo(COAST_PACKED);
 const LAND = unpackGeo(LAND_PACKED);
 
-// Rotate lon/lat to a 3D point on the globe, applying the current spin.
-// 經緯度轉球面 3D 座標，套用當前自轉角。
+// Rotate lon/lat to a 3D point on the globe, applying spin and 23.44 deg axial tilt.
+// 經緯度轉球面 3D 座標，套用自轉角與 23.44° 地軸傾角 (黃赤交角)。
 function geoToXYZ(lon, lat, R) {
     const l = lon + spinAngle;
     const cl = Math.cos(lat);
-    return [R * cl * Math.cos(l), -R * Math.sin(lat), R * cl * Math.sin(l)];
+    const x0 = R * cl * Math.cos(l);
+    const y0 = -R * Math.sin(lat);
+    const z0 = R * cl * Math.sin(l);
+    return [
+        x0 * COS_EARTH_TILT - y0 * SIN_EARTH_TILT,
+        x0 * SIN_EARTH_TILT + y0 * COS_EARTH_TILT,
+        z0,
+    ];
 }
 
 // Backface cull must use CAMERA z, not world z — dragging the camera changes
@@ -789,13 +799,40 @@ function lookupDeploySite() {
             markerSites = markerSites.concat([{
                 name: (d.city || 'DEPLOY').toUpperCase(), lat, lon,
             }]);
+            buildLocationPanel();
         })
         .catch(() => { /* 靜默略過 / silently skip, by design */ })
         .finally(() => clearTimeout(timer));
 }
 
+// ---------------------------------------------------------------
+//  LOCATION PANEL / 地理位置標籤列
+// ---------------------------------------------------------------
+function buildLocationPanel() {
+    const list = document.getElementById('loc-list');
+    if (!list) return;
+    list.innerHTML = '';
+    markerSites.forEach(site => {
+        const item = document.createElement('div');
+        item.className = 'loc-item';
+        
+        const latStr = `${Math.abs(site.lat).toFixed(2)}° ${site.lat >= 0 ? 'N' : 'S'}`;
+        const lonStr = `${Math.abs(site.lon).toFixed(2)}° ${site.lon >= 0 ? 'E' : 'W'}`;
+        
+        item.innerHTML = `
+            <div class="loc-item-header">
+                <span class="loc-item-dot"></span>
+                <span class="loc-name">${site.name}</span>
+            </div>
+            <div class="loc-coords">${latStr}, ${lonStr}</div>
+        `;
+        list.appendChild(item);
+    });
+}
+
 buildProjects();
 buildWordmark(SITE_NAME);
+buildLocationPanel();
 paintClock();
 tickClock();
 setInterval(tickClock, 1000);
