@@ -95,7 +95,7 @@ const MARKER_SITES = [
 // Disabled by default. Enabling it sends a request to a third-party API on
 // every page load, exposing the visitor's IP, and the page stops being
 // offline-capable. Set to true to enable the third marker.
-const ENABLE_GEO_LOOKUP = true;
+const ENABLE_GEO_LOOKUP = false;
 const GEO_LOOKUP_URL = 'https://get.geojs.io/v1/ip/geo.json';
 const GEO_LOOKUP_TIMEOUT = 3000;  // ms
 
@@ -443,16 +443,6 @@ function drawMarkers(cx, cy, R) {
         ctx.beginPath();
         ctx.arc(p.px, p.py, dotR, 0, Math.PI * 2);
         ctx.fill();
-
-        // 地標名稱文字標籤 / Location name label
-        if (site.name) {
-            const fontPx = Math.max(8, 10 * sceneScale);
-            ctx.font = `600 ${fontPx}px ui-monospace, "SF Mono", Menlo, monospace`;
-            ctx.fillStyle = `rgba(${mr},${mg},${mb},${facing * 0.95})`;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(site.name, p.px + dotR * 2 + 3 * sceneScale, p.py);
-        }
     }
 }
 
@@ -799,40 +789,13 @@ function lookupDeploySite() {
             markerSites = markerSites.concat([{
                 name: (d.city || 'DEPLOY').toUpperCase(), lat, lon,
             }]);
-            buildLocationPanel();
         })
         .catch(() => { /* 靜默略過 / silently skip, by design */ })
         .finally(() => clearTimeout(timer));
 }
 
-// ---------------------------------------------------------------
-//  LOCATION PANEL / 地理位置標籤列
-// ---------------------------------------------------------------
-function buildLocationPanel() {
-    const list = document.getElementById('loc-list');
-    if (!list) return;
-    list.innerHTML = '';
-    markerSites.forEach(site => {
-        const item = document.createElement('div');
-        item.className = 'loc-item';
-        
-        const latStr = `${Math.abs(site.lat).toFixed(2)}° ${site.lat >= 0 ? 'N' : 'S'}`;
-        const lonStr = `${Math.abs(site.lon).toFixed(2)}° ${site.lon >= 0 ? 'E' : 'W'}`;
-        
-        item.innerHTML = `
-            <div class="loc-item-header">
-                <span class="loc-item-dot"></span>
-                <span class="loc-name">${site.name}</span>
-            </div>
-            <div class="loc-coords">${latStr}, ${lonStr}</div>
-        `;
-        list.appendChild(item);
-    });
-}
-
 buildProjects();
 buildWordmark(SITE_NAME);
-buildLocationPanel();
 paintClock();
 tickClock();
 setInterval(tickClock, 1000);

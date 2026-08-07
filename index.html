@@ -186,118 +186,6 @@
         z-index: 15;
     }
 
-    /* ===========================================================
-       地球旁地理位置標籤列 / Location panel beside Earth
-       =========================================================== */
-    #location-panel {
-        position: fixed;
-        left: clamp(1.2rem, 3.5vw, 3rem);
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 15;
-        display: flex;
-        flex-direction: column;
-        gap: .6rem;
-        padding: .85rem 1.1rem;
-        background: rgba(4, 7, 14, 0.6);
-        backdrop-filter: blur(14px) saturate(120%);
-        -webkit-backdrop-filter: blur(14px) saturate(120%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-        user-select: none;
-        pointer-events: auto;
-        min-width: 170px;
-        transition: opacity .3s ease, transform .3s ease;
-    }
-    #location-panel .loc-header {
-        display: flex;
-        align-items: center;
-        gap: .45rem;
-        font-size: .62rem;
-        font-weight: 700;
-        letter-spacing: .12em;
-        color: var(--muted);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        padding-bottom: .45rem;
-    }
-    #location-panel .loc-dot {
-        width: 6px; height: 6px; border-radius: 50%;
-        background: #ff4040;
-        box-shadow: 0 0 8px #ff4040;
-        flex: none;
-    }
-    #location-panel #loc-list {
-        display: flex;
-        flex-direction: column;
-        gap: .55rem;
-    }
-    .loc-item {
-        display: flex;
-        flex-direction: column;
-        gap: .15rem;
-    }
-    .loc-item-header {
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-    }
-    .loc-item-dot {
-        width: 4px; height: 4px; border-radius: 50%;
-        background: #ff6b6b;
-        flex: none;
-    }
-    .loc-name {
-        font-size: .75rem;
-        font-weight: 700;
-        color: #e8eef7;
-        letter-spacing: .08em;
-    }
-    .loc-coords {
-        font-size: .65rem;
-        color: #94a3b8;
-        letter-spacing: .04em;
-        padding-left: .8rem;
-    }
-
-    @media (max-width: 900px) {
-        #location-panel {
-            left: 1rem;
-            padding: .65rem .85rem;
-            min-width: 140px;
-        }
-    }
-    @media (max-width: 720px) {
-        #location-panel {
-            top: calc(var(--bar-h) + 12px);
-            left: 50%;
-            transform: translateX(-50%);
-            flex-direction: row;
-            align-items: center;
-            min-width: 0;
-            padding: .45rem .8rem;
-            gap: .8rem;
-        }
-        #location-panel .loc-header {
-            border-bottom: none;
-            padding-bottom: 0;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            padding-right: .6rem;
-        }
-        #location-panel #loc-list {
-            flex-direction: row;
-            gap: .8rem;
-        }
-        .loc-item {
-            flex-direction: row;
-            align-items: center;
-            gap: .4rem;
-        }
-        .loc-coords {
-            padding-left: 0;
-        }
-    }
-
     /* 矮螢幕：時間列改貼底部，避免與軌道重疊 */
     /* Short viewports: pin the clock to the bottom instead of overlapping */
     @media (max-height: 760px) {
@@ -324,14 +212,6 @@
     <nav id="projects" aria-label="Projects"></nav>
     <a id="cta" href="#contact">CONTACT</a>
 </header>
-
-<aside id="location-panel" aria-label="Geographical Locations">
-    <div class="loc-header">
-        <span class="loc-dot"></span>
-        <span class="loc-title">LOCATIONS / 地標位置</span>
-    </div>
-    <div id="loc-list"></div>
-</aside>
 
 <div id="stage">
     <canvas id="scene"></canvas>

@@ -43,6 +43,7 @@ const ORBIT_RINGS        = 6;     // 軌道環數 / orbit planes
 const POINTS_PER_RING    = 4;     // 每環光點 / points per ring -> 24 total
 const ORBIT_RADIUS       = 240;   // 軌道靜止半徑 px / resting orbit radius
 const EARTH_RADIUS       = 130;   // 地球半徑 px / earth radius
+const EARTH_TILT_DEG     = 23.44; // 地球自轉軸傾角 (黃赤交角) / Earth axial tilt
 const TILT_DEG           = 65;    // 軌道傾角 / orbit tilt
 const RING_ALPHA         = 0.4;   // 軌道線透明度 / ring alpha
 const RING_SEGMENTS      = 120;   // 軌道線段數 / ring polyline segments
@@ -132,6 +133,8 @@ const PROJECT_LABELS = [
 
 const TILT = TILT_DEG * Math.PI / 180;
 const COS_TILT = Math.cos(TILT), SIN_TILT = Math.sin(TILT);
+const EARTH_TILT = EARTH_TILT_DEG * Math.PI / 180;
+const COS_EARTH_TILT = Math.cos(EARTH_TILT), SIN_EARTH_TILT = Math.sin(EARTH_TILT);
 ```
 
 ---
@@ -210,7 +213,14 @@ function occluded(p, cx, cy, earthPx) {
 function geoToXYZ(lon, lat, R) {
     const l = lon + spinAngle;
     const cl = Math.cos(lat);
-    return [R * cl * Math.cos(l), -R * Math.sin(lat), R * cl * Math.sin(l)];
+    const x0 = R * cl * Math.cos(l);
+    const y0 = -R * Math.sin(lat);
+    const z0 = R * cl * Math.sin(l);
+    return [
+        x0 * COS_EARTH_TILT - y0 * SIN_EARTH_TILT,
+        x0 * SIN_EARTH_TILT + y0 * COS_EARTH_TILT,
+        z0,
+    ];
 }
 
 function surfacePoint(lon, lat, R, cx, cy) {
