@@ -7,46 +7,46 @@
 // ---------------------------------------------------------------
 // FIXED PARAMETERS / 固定參數
 // ---------------------------------------------------------------
-const ORBIT_RINGS        = 6;     // 軌道環數 / orbit planes
-const POINTS_PER_RING    = 4;     // 每環光點 / light points per ring -> 24 total
-const ORBIT_RADIUS       = 240;   // 軌道半徑 px / orbit radius
-const EARTH_RADIUS       = 130;   // 地球半徑 px / earth radius
-const TILT_DEG           = 65;    // 軌道傾角 / orbit tilt
-const RING_ALPHA         = 0.4;   // 軌道線透明度 / orbit ring alpha
-const RING_SEGMENTS      = 120;   // 軌道線段數 / ring polyline segments
-const ORBIT_SPEED        = 1.5;   // 光點角速度 rad/s / point angular speed
-const EARTH_SPIN         = 0.18;  // 地球自轉 rad/s / earth spin
-const TRAIL_POINTS       = 15;    // 拖尾點數 / trail samples
-const TRAIL_DTHETA       = 0.04;  // 拖尾間距 rad / trail spacing
-const LEAD_SCALE         = 1.5;   // 主光點放大倍率 / lead point size multiplier
-const POINT_SIZE         = 6;     // 一般光點半徑 px / normal point radius
-const DIM_ALPHA          = 0.45;  // 非主光點亮度 / non-lead point alpha
-const CAM_DISTANCE       = 900;   // 透視距離 / perspective divide distance
-const CAM_RX0            = 0.35;  // 相機初始俯仰 / initial camera pitch
-const CAM_RY0            = 0.0;   // 相機初始偏航 / initial camera yaw
-const DRAG_SENS          = 0.006; // 拖曳靈敏度 rad/px / drag sensitivity
-const OCCLUSION_MARGIN   = 0.985; // 遮擋判定邊界 / occlusion test margin
-const BACKFACE_ALPHA     = 0.0;   // 被遮擋光點透明度 / occluded point alpha
+const ORBIT_RINGS = 6;     // 軌道環數 / orbit planes
+const POINTS_PER_RING = 4;     // 每環光點 / light points per ring -> 24 total
+const ORBIT_RADIUS = 240;   // 軌道半徑 px / orbit radius
+const EARTH_RADIUS = 130;   // 地球半徑 px / earth radius
+const TILT_DEG = 65;    // 軌道傾角 / orbit tilt
+const RING_ALPHA = 0.4;   // 軌道線透明度 / orbit ring alpha
+const RING_SEGMENTS = 120;   // 軌道線段數 / ring polyline segments
+const ORBIT_SPEED = 1.5;   // 光點角速度 rad/s / point angular speed
+const EARTH_SPIN = 0.18;  // 地球自轉 rad/s / earth spin
+const TRAIL_POINTS = 15;    // 拖尾點數 / trail samples
+const TRAIL_DTHETA = 0.04;  // 拖尾間距 rad / trail spacing
+const LEAD_SCALE = 1.5;   // 主光點放大倍率 / lead point size multiplier
+const POINT_SIZE = 6;     // 一般光點半徑 px / normal point radius
+const DIM_ALPHA = 0.45;  // 非主光點亮度 / non-lead point alpha
+const CAM_DISTANCE = 900;   // 透視距離 / perspective divide distance
+const CAM_RX0 = 0.35;  // 相機初始俯仰 / initial camera pitch
+const CAM_RY0 = 0.0;   // 相機初始偏航 / initial camera yaw
+const DRAG_SENS = 0.006; // 拖曳靈敏度 rad/px / drag sensitivity
+const OCCLUSION_MARGIN = 0.985; // 遮擋判定邊界 / occlusion test margin
+const BACKFACE_ALPHA = 0.0;   // 被遮擋光點透明度 / occluded point alpha
 
 // --- 呼吸 / Breathing ------------------------------------------
 // 只作用於軌道與光點，地球半徑恆為 EARTH_RADIUS。
 // Applies to the orbits and light points only; the Earth never scales.
-const BREATH_AMPLITUDE   = 0.12;  // 自主呼吸幅度 +/-12% / autonomous amplitude
-const BREATH_PERIOD      = 8.0;   // 呼吸週期 秒 / period in seconds
-const MOUSE_BREATH_MAX   = 0.08;  // 滑鼠最大疊加 +8% / max mouse contribution
+const BREATH_AMPLITUDE = 0.12;  // 自主呼吸幅度 +/-12% / autonomous amplitude
+const BREATH_PERIOD = 8.0;   // 呼吸週期 秒 / period in seconds
+const MOUSE_BREATH_MAX = 0.08;  // 滑鼠最大疊加 +8% / max mouse contribution
 const MOUSE_BREATH_RANGE = 420;   // 達到最大疊加的距離 px / distance for max
-const MOUSE_DAMPING      = 0.06;  // 滑鼠追隨阻尼 / follow damping, 0..1
+const MOUSE_DAMPING = 0.06;  // 滑鼠追隨阻尼 / follow damping, 0..1
 
 // --- 站名亦滅 / Wordmark pulse ---------------------------------
-const PULSE_PERIOD       = 5.0;   // 亦滅週期 秒 / pulse period in seconds
-const PULSE_DARK         = 0x55;  // 暗相灰階 #555555，對比 2.70 / dark phase
-const PULSE_BRIGHT       = 0x99;  // 亮相灰階 #999999，對比 7.07 / bright phase
+const PULSE_PERIOD = 5.0;   // 亦滅週期 秒 / pulse period in seconds
+const PULSE_DARK = 0x55;  // 暗相灰階 #555555，對比 2.70 / dark phase
+const PULSE_BRIGHT = 0x99;  // 亮相灰階 #999999，對比 7.07 / bright phase
 
 // --- 逐字透鏡 / Per-glyph lens ---------------------------------
-const LENS_MAX_SCALE     = 1.55;  // 鏡心最大放大 / peak magnification
-const LENS_RADIUS        = 110;   // 透鏡影響半徑 px / lens influence radius
-const LENS_LIFT          = 9;     // 鏡心最大上移 px / peak vertical lift
-const LENS_DAMPING       = 0.18;  // 透鏡追隨阻尼 / lens follow damping
+const LENS_MAX_SCALE = 1.55;  // 鏡心最大放大 / peak magnification
+const LENS_RADIUS = 110;   // 透鏡影響半徑 px / lens influence radius
+const LENS_LIFT = 9;     // 鏡心最大上移 px / peak vertical lift
+const LENS_DAMPING = 0.18;  // 透鏡追隨阻尼 / lens follow damping
 
 // --- 地球貼地浮雕文字 / Embossed surface text ------------------
 // 文字貼在球面上隨自轉進出視野。顏色以海洋底色為基準做倍率調變：
@@ -65,27 +65,27 @@ const LENS_DAMPING       = 0.18;  // 透鏡追隨阻尼 / lens follow damping
 // the land-free gaps in the equatorial band (lat +/-4): Atlantic -38..+9
 // (47 deg wide, centre -14) and Pacific +153..+279 (126 deg wide, centre -144,
 // crossing the date line). The text spans ~29.5 deg and clears both coasts.
-const SURFACE_TEXT       = 'st8925lab';
+const SURFACE_TEXT = 'st8925lab';
 const SURFACE_TEXT_SITES = [
-    { name: 'pacific',  lon: -144, lat: 0 },   // 太平洋正中 / mid-Pacific
-    { name: 'atlantic', lon:  -14, lat: 0 },   // 大西洋正中 / mid-Atlantic
+    { name: 'pacific', lon: -144, lat: 0 },   // 太平洋正中 / mid-Pacific
+    { name: 'atlantic', lon: -14, lat: 0 },   // 大西洋正中 / mid-Atlantic
 ];
-const OCEAN_BASE         = [0x0b, 0x1a, 0x2e];  // 海洋底色 / ocean base colour
-const EMBOSS_PERIOD      = 5.0;   // 亦滅週期 秒 / pulse period
-const EMBOSS_MIN_MULT    = 1.0;   // 最暗倍率（等於底色）/ trough multiplier
-const EMBOSS_MAX_MULT    = 2.5;   // 最亮倍率 +150% / peak multiplier
-const EMBOSS_FONT_PX     = 12;    // 字級 px / font size
-const EMBOSS_FADE_COS    = 0.35;  // 淡出門檻 cos(theta) / limb fade threshold
+const OCEAN_BASE = [0x0b, 0x1a, 0x2e];  // 海洋底色 / ocean base colour
+const EMBOSS_PERIOD = 5.0;   // 亦滅週期 秒 / pulse period
+const EMBOSS_MIN_MULT = 1.0;   // 最暗倍率（等於底色）/ trough multiplier
+const EMBOSS_MAX_MULT = 2.5;   // 最亮倍率 +150% / peak multiplier
+const EMBOSS_FONT_PX = 12;    // 字級 px / font size
+const EMBOSS_FADE_COS = 0.35;  // 淡出門檻 cos(theta) / limb fade threshold
 
 // --- 地標紅點 / Location markers -------------------------------
-const MARKER_PERIOD      = 2.0;   // 雷達環週期 秒 / radar ring period
-const MARKER_DOT_R       = 3.0;   // 紅點半徑 px / dot radius
-const MARKER_RING_MAX    = 16;    // 雷達環最大半徑 px / max ring radius
-const MARKER_COLOUR      = [255, 64, 64];   // 紅 / red
+const MARKER_PERIOD = 2.0;   // 雷達環週期 秒 / radar ring period
+const MARKER_DOT_R = 3.0;   // 紅點半徑 px / dot radius
+const MARKER_RING_MAX = 16;    // 雷達環最大半徑 px / max ring radius
+const MARKER_COLOUR = [255, 64, 64];   // 紅 / red
 
 const MARKER_SITES = [
-    { name: 'TAIWAN',    lat:  25.03, lon: 121.57 },
-    { name: 'SINGAPORE', lat:   1.35, lon: 103.82 },
+    { name: 'TAIWAN', lat: 25.03, lon: 121.57 },
+    { name: 'SINGAPORE', lat: 1.35, lon: 103.82 },
 ];
 
 // --- 部署地 IP 定位 / Deploy-site geolocation ------------------
@@ -94,22 +94,22 @@ const MARKER_SITES = [
 // Disabled by default. Enabling it sends a request to a third-party API on
 // every page load, exposing the visitor's IP, and the page stops being
 // offline-capable. Set to true to enable the third marker.
-const ENABLE_GEO_LOOKUP  = false;
-const GEO_LOOKUP_URL     = 'https://ipapi.co/json/';
+const ENABLE_GEO_LOOKUP = true;
+const GEO_LOOKUP_URL = 'https://ipapi.co/json/';
 const GEO_LOOKUP_TIMEOUT = 3000;  // ms
 
 // --- 時間列 / Clock row ----------------------------------------
-const CLOCK_TZ_OFFSET    = 8;     // 第二個時區 GMT+8 / second timezone
+const CLOCK_TZ_OFFSET = 8;     // 第二個時區 GMT+8 / second timezone
 
 // 提亮版彩虹 — 每色對 #04070e 背景的對比 >= 7.26，已達 WCAG AAA (7.0)
 // Brightened rainbow — every hue scores >= 7.26 against the #04070e backdrop,
 // clearing WCAG AAA (7.0). Run verify.py for the full contrast table.
 const RAINBOW = [
-    { name: 'red',    hex: '#ff6b6b', rgb: [255, 107, 107] },
-    { name: 'orange', hex: '#ffa94d', rgb: [255, 169,  77] },
+    { name: 'red', hex: '#ff6b6b', rgb: [255, 107, 107] },
+    { name: 'orange', hex: '#ffa94d', rgb: [255, 169, 77] },
     { name: 'yellow', hex: '#ffe066', rgb: [255, 224, 102] },
-    { name: 'green',  hex: '#69db7c', rgb: [105, 219, 124] },
-    { name: 'blue',   hex: '#4dabf7', rgb: [ 77, 171, 247] },
+    { name: 'green', hex: '#69db7c', rgb: [105, 219, 124] },
+    { name: 'blue', hex: '#4dabf7', rgb: [77, 171, 247] },
     { name: 'indigo', hex: '#a78bfa', rgb: [167, 139, 250] },
     { name: 'violet', hex: '#f783ac', rgb: [247, 131, 172] },
 ];
@@ -139,8 +139,8 @@ const ringColours = pickRingColours();
 
 // --- canvas setup ---
 const canvas = document.getElementById('scene');
-const ctx    = canvas.getContext('2d');
-const stage  = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const stage = document.getElementById('stage');
 
 let rotX = CAM_RX0, rotY = CAM_RY0;
 let orbitAngle = 0, spinAngle = 0;
@@ -168,7 +168,7 @@ let sceneScale = 1;
 function resize() {
     const dpr = window.devicePixelRatio || 1;
     const r = stage.getBoundingClientRect();
-    canvas.width  = Math.round(r.width  * dpr);
+    canvas.width = Math.round(r.width * dpr);
     canvas.height = Math.round(r.height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // Reserve room for the fully inflated orbit, not the resting radius,
@@ -238,10 +238,10 @@ function ringPoint(theta, cosP, sinP, R) {
 function project(x, y, z, cx, cy) {
     const cy_ = Math.cos(rotY), sy = Math.sin(rotY);
     const cx_ = Math.cos(rotX), sx = Math.sin(rotX);
-    const x1 =  x * cy_ + z * sy;
-    const z1 = -x * sy  + z * cy_;
+    const x1 = x * cy_ + z * sy;
+    const z1 = -x * sy + z * cy_;
     const y2 = y * cx_ - z1 * sx;
-    const z2 = y * sx  + z1 * cx_;
+    const z2 = y * sx + z1 * cx_;
     const fov = CAM_DISTANCE / (CAM_DISTANCE + z2 * sceneScale);
     return {
         px: cx + x1 * sceneScale * fov,
@@ -266,7 +266,7 @@ function occluded(p, cx, cy, earthPx) {
 
 // --- geo point data (unpacked once) ---
 const COAST = unpackGeo(COAST_PACKED);
-const LAND  = unpackGeo(LAND_PACKED);
+const LAND = unpackGeo(LAND_PACKED);
 
 // Rotate lon/lat to a 3D point on the globe, applying the current spin.
 // 經緯度轉球面 3D 座標，套用當前自轉角。
@@ -292,17 +292,17 @@ function surfacePoint(lon, lat, R, cx, cy) {
 function drawEarth(cx, cy, R) {
     // ocean disc + limb glow / 海洋圓盤與邊緣輝光
     const g = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R);
-    g.addColorStop(0,    '#0b1a2e');
+    g.addColorStop(0, '#0b1a2e');
     g.addColorStop(0.75, '#0a1526');
-    g.addColorStop(1,    '#12233d');
+    g.addColorStop(1, '#12233d');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
 
     // atmosphere halo / 大氣層光暈
     const halo = ctx.createRadialGradient(cx, cy, R, cx, cy, R * 1.35);
-    halo.addColorStop(0,   'rgba(90,170,255,0.22)');
+    halo.addColorStop(0, 'rgba(90,170,255,0.22)');
     halo.addColorStop(0.4, 'rgba(70,140,230,0.09)');
-    halo.addColorStop(1,   'rgba(60,120,210,0)');
+    halo.addColorStop(1, 'rgba(60,120,210,0)');
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, Math.PI * 2); ctx.fill();
 
@@ -400,7 +400,7 @@ function drawMarkers(cx, cy, R) {
 
     for (const site of markerSites) {
         const p = surfacePoint(site.lon * Math.PI / 180,
-                               site.lat * Math.PI / 180, R, cx, cy);
+            site.lat * Math.PI / 180, R, cx, cy);
         if (!p) continue;                          // 背面完全隱藏 / hidden
 
         const facing = Math.min(1, -p.z / R);
@@ -420,10 +420,10 @@ function drawMarkers(cx, cy, R) {
 
         const dotR = MARKER_DOT_R * sceneScale;
         const glow = ctx.createRadialGradient(p.px, p.py, 0.4,
-                                              p.px, p.py, dotR * 3.2);
-        glow.addColorStop(0,   `rgba(${mr},${mg},${mb},${0.9 * facing})`);
+            p.px, p.py, dotR * 3.2);
+        glow.addColorStop(0, `rgba(${mr},${mg},${mb},${0.9 * facing})`);
         glow.addColorStop(0.4, `rgba(${mr},${mg},${mb},${0.3 * facing})`);
-        glow.addColorStop(1,   `rgba(${mr},${mg},${mb},0)`);
+        glow.addColorStop(1, `rgba(${mr},${mg},${mb},0)`);
         ctx.fillStyle = glow;
         ctx.beginPath();
         ctx.arc(p.px, p.py, dotR * 3.2, 0, Math.PI * 2);
@@ -440,7 +440,7 @@ function render(now) {
     const delta = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
     orbitAngle += ORBIT_SPEED * delta;
-    spinAngle  += EARTH_SPIN  * delta;
+    spinAngle += EARTH_SPIN * delta;
     breathClock += delta;
     embossClock += delta;
     markerClock += delta;
@@ -449,7 +449,7 @@ function render(now) {
     // independent so the feel is identical at 60 Hz and 144 Hz.
     // 指數平滑追隨滑鼠目標，並做幀率無關化，60Hz 與 144Hz 手感一致。
     mouseBreath += (mouseBreathTarget - mouseBreath) *
-                   (1 - Math.pow(1 - MOUSE_DAMPING, delta * 60));
+        (1 - Math.pow(1 - MOUSE_DAMPING, delta * 60));
 
     // Breathing scales the ORBITS ONLY. earthPx deliberately does not use it,
     // so the globe stays pinned at the centre exactly as specified.
@@ -490,7 +490,7 @@ function render(now) {
         let cur = null, avgZ = 0;
         for (let i = 0; i <= RING_SEGMENTS; i++) {
             const [x, y, z] = ringPoint((i * 2 * Math.PI) / RING_SEGMENTS,
-                                        cosP, sinP, orbitR);
+                cosP, sinP, orbitR);
             const p = project(x, y, z, cx, cy);
             avgZ += p.z;
             if (occluded(p, cx, cy, earthPx)) { cur = null; continue; }
@@ -499,24 +499,26 @@ function render(now) {
         }
         avgZ /= (RING_SEGMENTS + 1);
 
-        drawList.push({ z: avgZ - 5, render: () => {
-            ctx.strokeStyle = `rgba(${cr},${cg},${cb},${RING_ALPHA})`;
-            ctx.lineWidth = 1.4;
-            for (const seg of segs) {
-                if (seg.length < 2) continue;
-                ctx.beginPath();
-                seg.forEach((p, i) => i ? ctx.lineTo(p.px, p.py)
-                                        : ctx.moveTo(p.px, p.py));
-                ctx.stroke();
+        drawList.push({
+            z: avgZ - 5, render: () => {
+                ctx.strokeStyle = `rgba(${cr},${cg},${cb},${RING_ALPHA})`;
+                ctx.lineWidth = 1.4;
+                for (const seg of segs) {
+                    if (seg.length < 2) continue;
+                    ctx.beginPath();
+                    seg.forEach((p, i) => i ? ctx.lineTo(p.px, p.py)
+                        : ctx.moveTo(p.px, p.py));
+                    ctx.stroke();
+                }
             }
-        }});
+        });
 
         // light points: index 0 is the lead (bright, rainbow, +50% size)
         // 光點：索引 0 為主光點（最亮、彩虹色、放大 50%）
         for (let e = 0; e < POINTS_PER_RING; e++) {
             const isLead = (e === 0);
             const a = orbitAngle + planeAngle
-                    + e * (2 * Math.PI / POINTS_PER_RING);   // even π/2 spacing
+                + e * (2 * Math.PI / POINTS_PER_RING);   // even π/2 spacing
 
             const [x, y, z] = ringPoint(a, cosP, sinP, orbitR);
             const p = project(x, y, z, cx, cy);
@@ -525,46 +527,48 @@ function render(now) {
             const tail = [];
             for (let t = 1; t <= TRAIL_POINTS; t++) {
                 const [tx, ty, tz] = ringPoint(a - t * TRAIL_DTHETA,
-                                               cosP, sinP, orbitR);
+                    cosP, sinP, orbitR);
                 const tp = project(tx, ty, tz, cx, cy);
                 if (occluded(tp, cx, cy, earthPx)) continue;
                 tail.push({ p: tp, t });
             }
 
             const baseA = isLead ? 1 : DIM_ALPHA;
-            const size  = POINT_SIZE * (isLead ? LEAD_SCALE : 1);
+            const size = POINT_SIZE * (isLead ? LEAD_SCALE : 1);
 
-            drawList.push({ z: p.z, render: () => {
-                for (const { p: tp, t } of tail) {
-                    const al = (1 - t / TRAIL_POINTS) * 0.7 * baseA;
-                    ctx.fillStyle = `rgba(${cr},${cg},${cb},${al})`;
-                    ctx.beginPath();
-                    ctx.arc(tp.px, tp.py,
+            drawList.push({
+                z: p.z, render: () => {
+                    for (const { p: tp, t } of tail) {
+                        const al = (1 - t / TRAIL_POINTS) * 0.7 * baseA;
+                        ctx.fillStyle = `rgba(${cr},${cg},${cb},${al})`;
+                        ctx.beginPath();
+                        ctx.arc(tp.px, tp.py,
                             Math.max(0.2, (size * 0.42 - t * 0.14) * tp.scale),
                             0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    const s = size * p.scale;
+                    const gl = ctx.createRadialGradient(p.px, p.py, 0.5,
+                        p.px, p.py, s * 3);
+                    gl.addColorStop(0, `rgba(${cr},${cg},${cb},${baseA})`);
+                    gl.addColorStop(0.4, `rgba(${cr},${cg},${cb},${baseA * 0.35})`);
+                    gl.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+                    ctx.fillStyle = gl;
+                    ctx.beginPath(); ctx.arc(p.px, p.py, s * 3, 0, Math.PI * 2);
                     ctx.fill();
-                }
-                const s = size * p.scale;
-                const gl = ctx.createRadialGradient(p.px, p.py, 0.5,
-                                                    p.px, p.py, s * 3);
-                gl.addColorStop(0,   `rgba(${cr},${cg},${cb},${baseA})`);
-                gl.addColorStop(0.4, `rgba(${cr},${cg},${cb},${baseA * 0.35})`);
-                gl.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
-                ctx.fillStyle = gl;
-                ctx.beginPath(); ctx.arc(p.px, p.py, s * 3, 0, Math.PI * 2);
-                ctx.fill();
 
-                ctx.fillStyle = `rgba(${cr},${cg},${cb},${baseA})`;
-                ctx.beginPath(); ctx.arc(p.px, p.py, s, 0, Math.PI * 2);
-                ctx.fill();
-
-                if (isLead) {                       // white core / 白色核心
-                    ctx.fillStyle = 'rgba(255,255,255,0.92)';
-                    ctx.beginPath();
-                    ctx.arc(p.px, p.py, s * 0.42, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${cr},${cg},${cb},${baseA})`;
+                    ctx.beginPath(); ctx.arc(p.px, p.py, s, 0, Math.PI * 2);
                     ctx.fill();
+
+                    if (isLead) {                       // white core / 白色核心
+                        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+                        ctx.beginPath();
+                        ctx.arc(p.px, p.py, s * 0.42, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
-            }});
+            });
         }
     }
 
@@ -662,7 +666,7 @@ function updateTopBar(now) {
     // --- per-glyph lens / 逐字透鏡 ---
     if (lensActive && lensTargetX !== null) {
         lensX += (lensTargetX - lensX) *
-                 (1 - Math.pow(1 - LENS_DAMPING, dt * 60));
+            (1 - Math.pow(1 - LENS_DAMPING, dt * 60));
     }
 
     for (const g of glyphs) {
@@ -677,11 +681,11 @@ function updateTopBar(now) {
                 // 因此透鏡邊界沒有折痕。線性衰減會出現摺角。
                 const f = 0.5 + 0.5 * Math.cos((d / LENS_RADIUS) * Math.PI);
                 scale = 1 + (LENS_MAX_SCALE - 1) * f;
-                lift  = -LENS_LIFT * f;
+                lift = -LENS_LIFT * f;
             }
         }
         g.el.style.transform = `translateY(${lift.toFixed(2)}px) ` +
-                               `scale(${scale.toFixed(3)})`;
+            `scale(${scale.toFixed(3)})`;
     }
 
     requestAnimationFrame(updateTopBar);
@@ -696,7 +700,7 @@ const pad = (n, w = 2) => String(n).padStart(w, '0');
 
 function stamp(d) {
     return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`
-         + `-${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
+        + `-${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
 }
 
 // Local time is formatted by shifting a UTC clone by the local offset, so both
@@ -732,12 +736,12 @@ function localZoneLabel(now) {
 }
 
 const clockLocal = document.getElementById('clock-local');
-const clockGmt8  = document.getElementById('clock-gmt8');
+const clockGmt8 = document.getElementById('clock-gmt8');
 
 function tickClock() {
     const now = new Date();
     clockLocal.textContent = `${localStamp(now)} (${localZoneLabel(now)})`;
-    clockGmt8.textContent  = `${offsetStamp(now, CLOCK_TZ_OFFSET)} (GMT+${CLOCK_TZ_OFFSET})`;
+    clockGmt8.textContent = `${offsetStamp(now, CLOCK_TZ_OFFSET)} (GMT+${CLOCK_TZ_OFFSET})`;
 }
 
 // Two distinct rainbow hues, drawn once per load. Reuses the shuffled
@@ -751,7 +755,7 @@ function paintClock() {
         [pool[i], pool[j]] = [pool[j], pool[i]];
     }
     clockLocal.style.color = pool[0].hex;
-    clockGmt8.style.color  = pool[1].hex;
+    clockGmt8.style.color = pool[1].hex;
 }
 
 // ===============================================================
