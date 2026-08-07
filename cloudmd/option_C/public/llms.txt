@@ -1,0 +1,26 @@
+# st8925lab.com — LLMs.txt
+# For AI agents and LLM crawlers
+
+> st8925lab.com is the professional portfolio of an OT/IT integration specialist.
+> The site showcases real-world case studies in industrial monitoring, protocol integration, and facility management systems.
+
+## Site Sections
+
+- /en/work/ — Case studies of completed OT/IT integration projects
+- /en/reference/ — Technical reference articles on Modbus, BACnet, industrial networking
+- /en/tools/ — Free industrial tools: Modbus Address Converter, Float Decoder
+- /en/capabilities/ — Professional services and capabilities
+- /en/about/ — Background, credentials, and contact information
+
+## Key Topics
+
+- Modbus RTU/TCP protocol integration
+- Legacy equipment monitoring retrofits (ESP32 + RS-485)
+- Industrial network specifications (EN50155, IEC 61850-3)
+- OT/IT convergence and IEC 62443 security zones
+- Time-series data collection from PLCs and controllers
+
+## Languages
+
+- English: /en/
+- Traditional Chinese: /zh/

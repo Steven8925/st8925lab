@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ContactCTA from '../../components/ContactCTA.astro';
+---
+
+<BaseLayout title="關於我們 | ST8925 LAB" description="關於 ST8925 LAB" lang="zh">
+  <div class="max-w-4xl mx-auto py-12 px-4">
+    <h1 class="text-4xl font-bold mb-8">關於我們</h1>
+    <div class="prose prose-lg text-gray-700 mb-12">
+      <p>ST8925 LAB 是一家獨立工程顧問公司，專注於工業連線、OT/IT 融合以及廠務現代化。</p>
+      <p>我們相信實用且穩健的解決方案，致力於在不引入不必要複雜性與風險的情況下，釋放傳統設備的數據價值。</p>
+      
+      <h2>專業領域</h2>
+      <ul>
+        <li>關鍵基礎設施 (資料中心、飯店、醫院)</li>
+        <li>工業物聯網 (IIoT) 與邊緣計算</li>
+        <li>BMS / SCADA 系統整合</li>
+        <li>硬體原型設計與韌體開發</li>
+      </ul>
+
+      <h2>技術專長</h2>
+      <ul>
+        <li><strong>通訊協定:</strong> Modbus RTU/TCP, BACnet MS/TP & IP, MQTT, OPC UA</li>
+        <li><strong>硬體:</strong> ESP32, Raspberry Pi, 工業物聯網閘道器, RS-485 / RS-232 介面</li>
+        <li><strong>軟體:</strong> C/C++, Node.js, Python, InfluxDB, Grafana</li>
+      </ul>
+    </div>
+    
+    <ContactCTA lang="zh" />
+  </div>
+</BaseLayout>

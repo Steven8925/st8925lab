@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electron Orbit — 6 Rings / 12 Electrons</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+        background-color: #090d16;
+        background-image:
+            radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
+            radial-gradient(circle at 85% 80%, rgba(244, 63, 94, 0.06) 0%, transparent 45%);
+        font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+        color: #f8fafc;
+    }
+    #wrap { position: relative; width: 100%; height: 100%; cursor: grab; }
+    #wrap:active { cursor: grabbing; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #hud {
+        position: absolute; top: 16px; left: 16px;
+        font-size: 11px; line-height: 1.7; letter-spacing: 0.04em;
+        color: #94a3b8; pointer-events: none; user-select: none;
+    }
+    #hud b { color: #38bdf8; font-weight: 500; }
+    #hint {
+        position: absolute; bottom: 16px; left: 16px;
+        font-size: 11px; color: #475569; pointer-events: none; user-select: none;
+    }
+</style>
+</head>
+<body>
+<div id="wrap">
+    <canvas id="c"></canvas>
+    <div id="hud">
+        RINGS <b>6</b><br>
+        ELECTRONS/RING <b>2</b><br>
+        TOTAL e&minus; <b>12</b><br>
+        TILT <b>65&deg;</b><br>
+        RADIUS <b>240px</b><br>
+        FPS <b id="fps">--</b>
+    </div>
+    <div id="hint">drag to rotate &middot; double-click to reset view</div>
+</div>
+
+<script>
+// ---------------------------------------------------------------
+// FIXED PARAMETERS
+// ---------------------------------------------------------------
+const ORBIT_RINGS        = 6;      // orbit planes
+const ELECTRONS_PER_RING = 2;      // -> 12 electrons total
+const RADIUS             = 240;    // px
+const TILT_DEG           = 65;     // deg
+const SPEED              = 1.5;    // rad / s
+const RING_ALPHA         = 0.4;
+const RING_SEGMENTS      = 120;
+const NUCLEUS_PX         = 14;     // scaled by fov each frame
+const TRAIL_POINTS       = 15;
+const TRAIL_DTHETA       = 0.04;   // rad between trail samples
+const CAM_DISTANCE       = 600;    // perspective divide
+const CAM_RX0            = 0.2, CAM_RY0 = 0.3;
+const DRAG_SENS          = 0.008;  // rad / px
+// ---------------------------------------------------------------
+
+const TILT = TILT_DEG * Math.PI / 180;
+const COS_TILT = Math.cos(TILT), SIN_TILT = Math.sin(TILT);
+
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const wrap   = document.getElementById('wrap');
+const fpsEl  = document.getElementById('fps');
+
+let rotX = CAM_RX0, rotY = CAM_RY0;
+let angleOffset = 0, lastTime = performance.now(), fpsSmooth = 60;
+let dragging = false, prevX = 0, prevY = 0;
+
+// --- sizing: backing store in device px, drawing in CSS px -----
+function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const r = wrap.getBoundingClientRect();
+    canvas.width  = Math.round(r.width  * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);   // idempotent
+}
+window.addEventListener('resize', resize);
+resize();
+
+// --- camera drag (mouse + touch via pointer events) ------------
+wrap.addEventListener('pointerdown', e => {
+    dragging = true; prevX = e.clientX; prevY = e.clientY;
+    wrap.setPointerCapture(e.pointerId);
+});
+wrap.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    rotY += (e.clientX - prevX) * DRAG_SENS;
+    rotX += (e.clientY - prevY) * DRAG_SENS;
+    rotX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotX));  // clamp past-vertical
+    prevX = e.clientX; prevY = e.clientY;
+});
+const stop = () => { dragging = false; };
+wrap.addEventListener('pointerup', stop);
+wrap.addEventListener('pointercancel', stop);
+wrap.addEventListener('dblclick', () => { rotX = CAM_RX0; rotY = CAM_RY0; });
+
+// --- ring-local -> world ---------------------------------------
+// circle in XY, tilted about X by TILT, then spun about Z by planeAngle
+function ringPoint(theta, cosP, sinP) {
+    const x0 = RADIUS * Math.cos(theta);
+    const y0 = RADIUS * Math.sin(theta);
+    return [
+        x0 * cosP - (y0 * COS_TILT) * sinP,
+        x0 * sinP + (y0 * COS_TILT) * cosP,
+        y0 * SIN_TILT
+    ];
+}
+
+// --- world -> screen ------------------------------------------
+function project(x, y, z, cx, cy) {
+    const x1 =  x * Math.cos(rotY) + z * Math.sin(rotY);
+    const z1 = -x * Math.sin(rotY) + z * Math.cos(rotY);
+    const y2 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+    const z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+    const fov = CAM_DISTANCE / (CAM_DISTANCE + z2);
+    return { px: cx + x1 * fov, py: cy + y2 * fov, scale: fov, z: z2 };
+}
+
+function render(now) {
+    const delta = Math.min((now - lastTime) / 1000, 0.1);   // clamp tab-switch spikes
+    lastTime = now;
+    if (delta > 0) fpsSmooth += (1 / delta - fpsSmooth) * 0.1;
+    fpsEl.textContent = Math.round(fpsSmooth);
+
+    angleOffset += SPEED * delta;
+
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    const cx = w / 2, cy = h / 2;
+
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+    const drawList = [];
+
+    // nucleus
+    const nuc = project(0, 0, 0, cx, cy);
+    drawList.push({ z: nuc.z, render: () => {
+        const r = NUCLEUS_PX * nuc.scale;
+        const g = ctx.createRadialGradient(nuc.px, nuc.py, 2, nuc.px, nuc.py, r * 3);
+        g.addColorStop(0,   'rgba(244,63,94,1)');
+        g.addColorStop(0.5, 'rgba(244,63,94,0.35)');
+        g.addColorStop(1,   'rgba(244,63,94,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(nuc.px, nuc.py, r * 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(nuc.px, nuc.py, r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 2 * nuc.scale; ctx.stroke();
+    }});
+
+    for (let k = 0; k < ORBIT_RINGS; k++) {
+        const planeAngle = (k * Math.PI) / ORBIT_RINGS;   // fan over half a turn
+        const cosP = Math.cos(planeAngle), sinP = Math.sin(planeAngle);
+
+        // orbit ring
+        const pts = [];
+        let avgZ = 0;
+        for (let i = 0; i <= RING_SEGMENTS; i++) {
+            const [x, y, z] = ringPoint((i * 2 * Math.PI) / RING_SEGMENTS, cosP, sinP);
+            const p = project(x, y, z, cx, cy);
+            pts.push(p); avgZ += p.z;
+        }
+        avgZ /= (RING_SEGMENTS + 1);
+
+        drawList.push({ z: avgZ - 5, render: () => {
+            ctx.strokeStyle = `rgba(56,189,248,${RING_ALPHA})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            pts.forEach((p, i) => i ? ctx.lineTo(p.px, p.py) : ctx.moveTo(p.px, p.py));
+            ctx.stroke();
+        }});
+
+        // electrons on this ring
+        for (let e = 0; e < ELECTRONS_PER_RING; e++) {
+            const a = angleOffset + planeAngle + e * (2 * Math.PI / ELECTRONS_PER_RING);
+            const [ex, ey, ez] = ringPoint(a, cosP, sinP);
+            const ep = project(ex, ey, ez, cx, cy);
+
+            const tail = [];
+            for (let t = 1; t <= TRAIL_POINTS; t++) {
+                const [tx, ty, tz] = ringPoint(a - t * TRAIL_DTHETA, cosP, sinP);
+                tail.push(project(tx, ty, tz, cx, cy));
+            }
+
+            drawList.push({ z: ep.z, render: () => {
+                tail.forEach((tp, t) => {
+                    ctx.fillStyle = `rgba(56,189,248,${(1 - t / TRAIL_POINTS) * 0.7})`;
+                    ctx.beginPath();
+                    ctx.arc(tp.px, tp.py, Math.max(0.2, (3 - t * 0.15) * tp.scale), 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                const s = 7 * ep.scale;
+                const g = ctx.createRadialGradient(ep.px, ep.py, 1, ep.px, ep.py, s * 2.5);
+                g.addColorStop(0,   'rgba(56,189,248,1)');
+                g.addColorStop(0.5, 'rgba(56,189,248,0.4)');
+                g.addColorStop(1,   'rgba(56,189,248,0)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.arc(ep.px, ep.py, s * 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath(); ctx.arc(ep.px, ep.py, s, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5 * ep.scale; ctx.stroke();
+            }});
+        }
+    }
+
+    drawList.sort((a, b) => b.z - a.z);   // painter's algorithm, far -> near
+    drawList.forEach(d => d.render());
+
+    requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

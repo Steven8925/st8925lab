@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Quantum Atomic Orbit Simulation | 3D 原子電子軌道模擬</title>
+    <meta name="description" content="互動式 3D 原子電子軌道模擬器（如拉塞福-波耳原子模型），支援滑鼠拖曳旋轉 3D 視角、多斜向軌道面與動態粒子光學效果。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #090d16;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --border-card: rgba(56, 189, 248, 0.2);
+            --accent-cyan: #38bdf8;
+            --accent-pink: #f43f5e;
+            --accent-purple: #c084fc;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(244, 63, 94, 0.06) 0%, transparent 45%);
+        }
+
+        header {
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-pink) 20%, var(--accent-cyan) 80%);
+            box-shadow: 0 0 16px var(--accent-cyan);
+            animation: pulse-logo 3s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse-logo {
+            0% { transform: scale(0.95); box-shadow: 0 0 12px var(--accent-cyan); }
+            100% { transform: scale(1.05); box-shadow: 0 0 24px var(--accent-pink); }
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.5rem;
+            padding: 1.5rem 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .viewport-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 620px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(16px);
+            cursor: grab;
+        }
+
+        .canvas-container:active {
+            cursor: grabbing;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .canvas-hint {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            pointer-events: none;
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .canvas-overlay-stats {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(9, 13, 22, 0.65);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-line {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-val {
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        .controls-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .val-badge {
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: var(--accent-cyan);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            box-shadow: 0 6px 18px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-active {
+            border-color: var(--accent-cyan);
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent-cyan);
+        }
+
+        .gif-preview-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .gif-container {
+            width: 100%;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0f172a;
+            aspect-ratio: 1 / 1;
+        }
+
+        .gif-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        footer {
+            padding: 1.25rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon"></div>
+            <div>
+                <h1>3D Atomic Orbit Simulator</h1>
+                <div class="subtitle">Multi-Planar Rutherford-Bohr 3D Perspective</div>
+            </div>
+        </div>
+        <a href="../index.html" class="btn" id="btn-back-home">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            返回主頁
+        </a>
+    </header>
+
+    <main>
+        <section class="viewport-section">
+            <div class="canvas-container" id="canvas-wrapper">
+                <canvas id="orbit-canvas"></canvas>
+                
+                <div class="canvas-overlay-stats">
+                    <div class="stat-line"><span class="stat-label">Model:</span> <span class="stat-val" id="stat-model">3D Rutherford Atom</span></div>
+                    <div class="stat-line"><span class="stat-label">3D Orbit Rings:</span> <span class="stat-val" id="stat-planes">4</span></div>
+                    <div class="stat-line"><span class="stat-label">Total Electrons:</span> <span class="stat-val" id="stat-electrons">8</span></div>
+                    <div class="stat-line"><span class="stat-label">Tilt Angle:</span> <span class="stat-val" id="stat-tilt">65°</span></div>
+                    <div class="stat-line"><span class="stat-label">FPS:</span> <span class="stat-val" id="stat-fps">60</span></div>
+                </div>
+
+                <div class="canvas-hint">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                    使用滑鼠拖曳可 3D 旋轉視角
+                </div>
+            </div>
+        </section>
+
+        <aside class="controls-panel">
+            <div class="panel-title">
+                控制面板 (3D Controls)
+                <button class="btn btn-primary" id="btn-play-pause">暫停</button>
+            </div>
+
+            <!-- Orbit Planes Slider -->
+            <div class="control-group">
+                <div class="label-row">
+                    <span>軌道面數量 (Orbit Rings)</span>
+                    <span class="val-badge" id="val-planes">4 環</span>
+                </div>
+                <input type="range" id="input-planes" min="2" max="6" step="1" value="4">
+            </div>
+
+            <!-- Electrons per Orbit Slider -->
+            <div class="control-group">
+                <div class="label-row">
+                    <span>每環電子數 (e⁻ / Ring)</span>
+                    <span class="val-badge" id="val-electrons-per">2 顆</span>
+                </div>
+                <input type="range" id="input-electrons-per" min="1" max="4" step="1" value="2">
+            </div>
+
+            <!-- Speed Slider -->
+            <div class="control-group">
+                <div class="label-row">
+                    <span>旋轉速度 (Speed)</span>
+                    <span class="val-badge" id="val-speed">1.5x</span>
+                </div>
+                <input type="range" id="input-speed" min="0.1" max="4.0" step="0.1" value="1.5">
+            </div>
+
+            <!-- Tilt Angle Slider -->
+            <div class="control-group">
+                <div class="label-row">
+                    <span>軌道傾角 (Tilt Angle)</span>
+                    <span class="val-badge" id="val-tilt">65°</span>
+                </div>
+                <input type="range" id="input-tilt" min="15" max="85" step="5" value="65">
+            </div>
+
+            <!-- Orbit Radius Slider -->
+            <div class="control-group">
+                <div class="label-row">
+                    <span>軌道半徑 (Radius)</span>
+                    <span class="val-badge" id="val-radius">180px</span>
+                </div>
+                <input type="range" id="input-radius" min="100" max="240" step="5" value="180">
+            </div>
+
+            <button class="btn" id="btn-reset-cam">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                重置 3D 視角 (Reset View)
+            </button>
+
+            <!-- GIF Preview Card -->
+            <div class="gif-preview-card">
+                <div class="label-row" style="color: #fff; font-weight: 600;">
+                    <span>3D Matplotlib GIF 預覽</span>
+                </div>
+                <div class="gif-container">
+                    <img src="electron_orbit.gif" alt="3D Electron Orbit GIF">
+                </div>
+                <a href="electron_orbit.gif" download="electron_orbit.gif" class="btn" style="width: 100%;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    下載 3D GIF 動畫
+                </a>
+            </div>
+        </aside>
+    </main>
+
+    <footer>
+        3D Quantum Electron Orbit Simulator &copy; 2026 | Powered by HTML5 Canvas & 3D Math Engine
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('orbit-canvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvas-wrapper');
+
+        // State
+        let isRunning = true;
+        let speed = 1.5;
+        let radius = 180;
+        let orbitPlanes = 4;
+        let electronsPerPlane = 2;
+        let tiltAngleDeg = 65;
+        let angleOffset = 0;
+        let lastTime = performance.now();
+        let fps = 60;
+
+        // 3D Camera Angles
+        let rotX = 0.2;
+        let rotY = 0.3;
+        let isDragging = false;
+        let prevMouseX = 0;
+        let prevMouseY = 0;
+
+        // UI Controls
+        const inputPlanes = document.getElementById('input-planes');
+        const inputElectronsPer = document.getElementById('input-electrons-per');
+        const inputSpeed = document.getElementById('input-speed');
+        const inputTilt = document.getElementById('input-tilt');
+        const inputRadius = document.getElementById('input-radius');
+
+        const valPlanes = document.getElementById('val-planes');
+        const valElectronsPer = document.getElementById('val-electrons-per');
+        const valSpeed = document.getElementById('val-speed');
+        const valTilt = document.getElementById('val-tilt');
+        const valRadius = document.getElementById('val-radius');
+
+        const statPlanes = document.getElementById('stat-planes');
+        const statElectrons = document.getElementById('stat-electrons');
+        const statTilt = document.getElementById('stat-tilt');
+        const statFps = document.getElementById('stat-fps');
+
+        const btnPlayPause = document.getElementById('btn-play-pause');
+        const btnResetCam = document.getElementById('btn-reset-cam');
+
+        function resizeCanvas() {
+            const rect = wrapper.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 3D Mouse Interaction
+        wrapper.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - prevMouseX;
+            const dy = e.clientY - prevMouseY;
+            rotY += dx * 0.008;
+            rotX += dy * 0.008;
+            prevMouseX = e.clientX;
+            prevMouseY = e.clientY;
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Event Listeners
+        inputPlanes.addEventListener('input', (e) => {
+            orbitPlanes = parseInt(e.target.value);
+            valPlanes.textContent = orbitPlanes + ' 環';
+            statPlanes.textContent = orbitPlanes;
+            statElectrons.textContent = orbitPlanes * electronsPerPlane;
+        });
+
+        inputElectronsPer.addEventListener('input', (e) => {
+            electronsPerPlane = parseInt(e.target.value);
+            valElectronsPer.textContent = electronsPerPlane + ' 顆';
+            statElectrons.textContent = orbitPlanes * electronsPerPlane;
+        });
+
+        inputSpeed.addEventListener('input', (e) => {
+            speed = parseFloat(e.target.value);
+            valSpeed.textContent = speed.toFixed(1) + 'x';
+        });
+
+        inputTilt.addEventListener('input', (e) => {
+            tiltAngleDeg = parseInt(e.target.value);
+            valTilt.textContent = tiltAngleDeg + '°';
+            statTilt.textContent = tiltAngleDeg + '°';
+        });
+
+        inputRadius.addEventListener('input', (e) => {
+            radius = parseInt(e.target.value);
+            valRadius.textContent = radius + 'px';
+        });
+
+        btnPlayPause.addEventListener('click', () => {
+            isRunning = !isRunning;
+            btnPlayPause.textContent = isRunning ? '暫停' : '播放';
+            btnPlayPause.classList.toggle('btn-primary', isRunning);
+        });
+
+        btnResetCam.addEventListener('click', () => {
+            rotX = 0.2;
+            rotY = 0.3;
+        });
+
+        // 3D Point Projection Helper
+        function project3D(x, y, z, centerX, centerY) {
+            // Apply Camera Rotations
+            // Rotate around Y
+            let x1 = x * Math.cos(rotY) + z * Math.sin(rotY);
+            let y1 = y;
+            let z1 = -x * Math.sin(rotY) + z * Math.cos(rotY);
+
+            // Rotate around X
+            let x2 = x1;
+            let y2 = y1 * Math.cos(rotX) - z1 * Math.sin(rotX);
+            let z2 = y1 * Math.sin(rotX) + z1 * Math.cos(rotX);
+
+            // Perspective factor
+            const distance = 600;
+            const fov = distance / (distance + z2);
+
+            return {
+                px: centerX + x2 * fov,
+                py: centerY + y2 * fov,
+                scale: fov,
+                z: z2
+            };
+        }
+
+        // Render Loop
+        function render(now) {
+            const delta = (now - lastTime) / 1000;
+            lastTime = now;
+            fps = Math.round(1 / delta) || 60;
+            statFps.textContent = fps;
+
+            if (isRunning) {
+                angleOffset += speed * delta;
+            }
+
+            const width = wrapper.clientWidth;
+            const height = wrapper.clientHeight;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Clear Canvas
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Background Grid / Ambient Space
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < width; x += 40) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+            }
+            for (let y = 0; y < height; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+            }
+
+            // Central Nucleus Projection
+            const nucProj = project3D(0, 0, 0, centerX, centerY);
+
+            // Elements to draw (rings, nucleus, electrons) for Z-sorting
+            const drawList = [];
+
+            // 1. Nucleus
+            drawList.push({
+                type: 'nucleus',
+                z: nucProj.z,
+                render: () => {
+                    ctx.save();
+                    const nucRadius = 14 * nucProj.scale;
+                    const glowGrad = ctx.createRadialGradient(nucProj.px, nucProj.py, 2, nucProj.px, nucProj.py, nucRadius * 3);
+                    glowGrad.addColorStop(0, 'rgba(244, 63, 94, 1)');
+                    glowGrad.addColorStop(0.5, 'rgba(244, 63, 94, 0.35)');
+                    glowGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+
+                    ctx.fillStyle = glowGrad;
+                    ctx.beginPath();
+                    ctx.arc(nucProj.px, nucProj.py, nucRadius * 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(nucProj.px, nucProj.py, nucRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#fca5a5';
+                    ctx.lineWidth = 2 * nucProj.scale;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            });
+
+            // Tilt angle in radians
+            const tiltRad = tiltAngleDeg * (Math.PI / 180);
+
+            // 2. Build 3D Orbit Rings & Electrons
+            for (let k = 0; k < orbitPlanes; k++) {
+                const planeAngle = (k * Math.PI) / orbitPlanes;
+
+                // Orbit Ring Points
+                const ringPoints = [];
+                const ringSegs = 120;
+                let avgZ = 0;
+
+                for (let i = 0; i <= ringSegs; i++) {
+                    const theta = (i * 2 * Math.PI) / ringSegs;
+                    const x0 = radius * Math.cos(theta);
+                    const y0 = radius * Math.sin(theta);
+
+                    // Apply Plane Rotation
+                    const x = x0 * Math.cos(planeAngle) - (y0 * Math.cos(tiltRad)) * Math.sin(planeAngle);
+                    const y = x0 * Math.sin(planeAngle) + (y0 * Math.cos(tiltRad)) * Math.cos(planeAngle);
+                    const z = y0 * Math.sin(tiltRad);
+
+                    const proj = project3D(x, y, z, centerX, centerY);
+                    ringPoints.push(proj);
+                    avgZ += proj.z;
+                }
+                avgZ /= (ringSegs + 1);
+
+                // Add Orbit Ring to Draw List
+                drawList.push({
+                    type: 'ring',
+                    z: avgZ - 5, // slightly behind electrons on average
+                    render: () => {
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        for (let i = 0; i < ringPoints.length; i++) {
+                            const p = ringPoints[i];
+                            if (i === 0) ctx.moveTo(p.px, p.py);
+                            else ctx.lineTo(p.px, p.py);
+                        }
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                });
+
+                // Add Electrons for this Orbit Ring
+                for (let eIdx = 0; eIdx < electronsPerPlane; eIdx++) {
+                    const elecAngle = angleOffset + (k * Math.PI / orbitPlanes) + (eIdx * (2 * Math.PI / electronsPerPlane));
+
+                    // Current Electron 3D Pos
+                    const x0 = radius * Math.cos(elecAngle);
+                    const y0 = radius * Math.sin(elecAngle);
+
+                    const ex = x0 * Math.cos(planeAngle) - (y0 * Math.cos(tiltRad)) * Math.sin(planeAngle);
+                    const ey = x0 * Math.sin(planeAngle) + (y0 * Math.cos(tiltRad)) * Math.cos(planeAngle);
+                    const ez = y0 * Math.sin(tiltRad);
+
+                    const eProj = project3D(ex, ey, ez, centerX, centerY);
+
+                    // Trailing Tail Points
+                    const tailProjs = [];
+                    for (let t = 1; t <= 15; t++) {
+                        const tailA = elecAngle - t * 0.04;
+                        const tx0 = radius * Math.cos(tailA);
+                        const ty0 = radius * Math.sin(tailA);
+
+                        const tx = tx0 * Math.cos(planeAngle) - (ty0 * Math.cos(tiltRad)) * Math.sin(planeAngle);
+                        const ty = tx0 * Math.sin(planeAngle) + (ty0 * Math.cos(tiltRad)) * Math.cos(planeAngle);
+                        const tz = ty0 * Math.sin(tiltRad);
+
+                        tailProjs.push(project3D(tx, ty, tz, centerX, centerY));
+                    }
+
+                    drawList.push({
+                        type: 'electron',
+                        z: eProj.z,
+                        render: () => {
+                            ctx.save();
+                            // Render Tail
+                            for (let t = 0; t < tailProjs.length; t++) {
+                                const tp = tailProjs[t];
+                                const alpha = (1 - t / tailProjs.length) * 0.7;
+                                ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+                                ctx.beginPath();
+                                ctx.arc(tp.px, tp.py, (3 - t * 0.15) * tp.scale, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+
+                            // Render Electron Glow
+                            const eSize = 7 * eProj.scale;
+                            const glowGrad = ctx.createRadialGradient(eProj.px, eProj.py, 1, eProj.px, eProj.py, eSize * 2.5);
+                            glowGrad.addColorStop(0, 'rgba(56, 189, 248, 1)');
+                            glowGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.4)');
+                            glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+                            ctx.fillStyle = glowGrad;
+                            ctx.beginPath();
+                            ctx.arc(eProj.px, eProj.py, eSize * 2.5, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Electron Core
+                            ctx.fillStyle = '#38bdf8';
+                            ctx.beginPath();
+                            ctx.arc(eProj.px, eProj.py, eSize, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = 1.5 * eProj.scale;
+                            ctx.stroke();
+                            ctx.restore();
+                        }
+                    });
+                }
+            }
+
+            // Sort by Z (Back to Front depth sorting)
+            drawList.sort((a, b) => b.z - a.z);
+
+            // Execute Render
+            drawList.forEach(item => item.render());
+
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>

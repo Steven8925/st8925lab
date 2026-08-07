@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('reference', ({ data }) => data.lang === 'en' && !data.draft);
+  return entries.map(entry => ({
+    params: { slug: entry.slug.replace('en/', '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<BaseLayout 
+  title={`${entry.data.title} | ST8925 LAB`}
+  description={entry.data.description}
+  lang="en"
+>
+  <article class="max-w-3xl mx-auto py-12 px-4">
+    <header class="mb-10">
+      <h1 class="text-4xl font-bold mb-4">{entry.data.title}</h1>
+      <p class="text-xl text-gray-600 mb-4">{entry.data.description}</p>
+      <div class="text-sm text-gray-500">Last Reviewed: {entry.data.lastReviewed}</div>
+    </header>
+
+    <div class="prose prose-dark max-w-none">
+      <Content />
+    </div>
+
+    {entry.data.relatedCaseStudySlug && (
+      <footer class="mt-12 p-6 bg-blue-50 rounded-lg border border-blue-100">
+        <h3 class="font-bold text-blue-900 mb-2">Related Real-World Case</h3>
+        <p class="text-blue-800 mb-4">{entry.data.relatedCaseStudy}</p>
+        <a href={`/en/work/${entry.data.relatedCaseStudySlug}`} class="text-blue-600 hover:underline font-medium">Read the case study →</a>
+      </footer>
+    )}
+  </article>
+</BaseLayout>

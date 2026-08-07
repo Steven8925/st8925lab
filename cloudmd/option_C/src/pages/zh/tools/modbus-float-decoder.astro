@@ -1,0 +1,223 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+const lang = 'zh';
+const title = 'Modbus 32 位元浮點數 / 整數解碼器';
+const description = '從 Modbus 暫存器對解碼 32 位元浮點數和整數值。同時測試所有 4 種位元組/字組順序組合。';
+
+const pageJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": title,
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "description": description
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "為什麼 Modbus 中的浮點數有 4 種不同的位元組順序？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Modbus 協定是為 16 位元暫存器設計的，並未定義應該如何傳輸 32 位元浮點數。因此，不同的供應商實作了不同的方式將 32 位元拆分到兩個 16 位元暫存器中，導致了 4 種可能的位元組/字組排列方式。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "什麼是 AB CD 順序？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AB CD 是大端序（Big Endian）格式。最顯著位元組優先傳輸。A 和 B 是第一個暫存器的高位元組和低位元組，C 和 D 是第二個暫存器的高位元組和低位元組。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "我如何知道我的設備使用哪種格式？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "通常文件沒有記載。最好的方法是讀取一個已知值（例如溫度 25.0），將原始的十六進制值輸入此工具，然後看看哪種位元組順序會產生正確的解釋。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "為什麼有些系統使用 CD AB？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CD AB 是小端序字組交換（Little Endian Word Swap）。這在單個 16 位元暫存器為大端序，但 32 位元值儲存為小端序的系統中很常見，這實際上交換了兩個暫存器的順序。"
+          }
+        }
+      ]
+    }
+  ]
+};
+---
+<BaseLayout title={title} description={description} lang={lang} jsonLd={pageJsonLd}>
+  <!-- STATIC SEO CONTENT -->
+  <section class="section-container py-16">
+    <h1 class="section-title text-3xl font-bold mb-2">Modbus 32 位元浮點數 / 整數解碼器</h1>
+    <p class="text-text-dim text-lg mb-8 max-w-3xl">由於 Modbus 規範未定義 32 位元值應如何在 16 位元暫存器間傳輸，供應商使用了不同的位元組和字組交換慣例。IEEE 754 浮點數跨越兩個暫存器，產生了四種可能的排列方式。此工具可同時解碼所有組合。</p>
+
+    <!-- INTERACTIVE DECODER -->
+    <div class="card bg-surface rounded-xl border border-blue/10 p-8 mb-12">
+      <h2 class="text-xl font-bold mb-4">即時解碼器</h2>
+      <div class="flex flex-col md:flex-row gap-6 mb-8">
+        <div class="flex-1">
+          <label class="block text-sm text-text-dim mb-2" for="reg-hi">暫存器 1 (Hex)</label>
+          <input type="text" id="reg-hi" maxlength="4" placeholder="4248" autocomplete="off"
+            class="w-full px-4 py-3 bg-bg border border-blue/20 rounded-lg text-text font-mono focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue/50 uppercase" />
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm text-text-dim mb-2" for="reg-lo">暫存器 2 (Hex)</label>
+          <input type="text" id="reg-lo" maxlength="4" placeholder="0000" autocomplete="off"
+            class="w-full px-4 py-3 bg-bg border border-blue/20 rounded-lg text-text font-mono focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue/50 uppercase" />
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="border-b border-blue/15 text-left">
+              <th scope="col" class="p-3 font-semibold">位元組順序</th>
+              <th scope="col" class="p-3 font-semibold">名稱</th>
+              <th scope="col" class="p-3 font-semibold">Float32</th>
+              <th scope="col" class="p-3 font-semibold">Int32</th>
+              <th scope="col" class="p-3 font-semibold">UInt32</th>
+            </tr>
+          </thead>
+          <tbody id="decoder-results">
+            <tr class="border-b border-blue/5"><td class="p-3 font-mono text-blue-light">AB CD</td><td class="p-3 text-text-dim">大端序 (Big Endian)</td><td class="p-3 font-mono" id="f-abcd">—</td><td class="p-3 font-mono" id="i-abcd">—</td><td class="p-3 font-mono" id="u-abcd">—</td></tr>
+            <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono text-blue-light">CD AB</td><td class="p-3 text-text-dim">小端序字組交換</td><td class="p-3 font-mono" id="f-cdab">—</td><td class="p-3 font-mono" id="i-cdab">—</td><td class="p-3 font-mono" id="u-cdab">—</td></tr>
+            <tr class="border-b border-blue/5"><td class="p-3 font-mono text-blue-light">BA DC</td><td class="p-3 text-text-dim">大端序位元組交換</td><td class="p-3 font-mono" id="f-badc">—</td><td class="p-3 font-mono" id="i-badc">—</td><td class="p-3 font-mono" id="u-badc">—</td></tr>
+            <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono text-blue-light">DC BA</td><td class="p-3 text-text-dim">小端序位元組交換</td><td class="p-3 font-mono" id="f-dcba">—</td><td class="p-3 font-mono" id="i-dcba">—</td><td class="p-3 font-mono" id="u-dcba">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3 STATIC PRE-RENDERED EXAMPLES -->
+    <h2 class="text-2xl font-bold mb-6">範例</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <caption class="text-left text-text-dim mb-3">常見浮點數編碼範例</caption>
+        <thead>
+          <tr class="border-b border-blue/15">
+            <th scope="col" class="text-left p-3 font-semibold">浮點數值</th>
+            <th scope="col" class="text-left p-3 font-semibold">AB CD (大端序)</th>
+            <th scope="col" class="text-left p-3 font-semibold">CD AB (字組交換)</th>
+            <th scope="col" class="text-left p-3 font-semibold">DC BA (小端序)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">50.0</td><td class="p-3 font-mono">4248 0000</td><td class="p-3 font-mono">0000 4248</td><td class="p-3 font-mono">0000 4842</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover bg-surface/50"><td class="p-3 font-mono">1.234</td><td class="p-3 font-mono">3f9d f3b6</td><td class="p-3 font-mono">f3b6 3f9d</td><td class="p-3 font-mono">b6f3 9d3f</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">-100.5</td><td class="p-3 font-mono">c2c9 0000</td><td class="p-3 font-mono">0000 c2c9</td><td class="p-3 font-mono">0000 c9c2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- BYTE ORDER REFERENCE -->
+    <h2 class="text-2xl font-bold mb-6">位元組順序參考</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <thead><tr class="border-b border-blue/15">
+          <th scope="col" class="text-left p-3 font-semibold">順序</th>
+          <th scope="col" class="text-left p-3 font-semibold">名稱</th>
+          <th scope="col" class="text-left p-3 font-semibold">描述</th>
+        </tr></thead>
+        <tbody>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">AB CD</td><td class="p-3">大端序</td><td class="p-3 text-text-dim">標準 IEEE 754 網路位元組順序。高字組在前，高位元組在前。</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">CD AB</td><td class="p-3">小端序字組交換</td><td class="p-3 text-text-dim">在某些 PLC 中很常見。低字組在前，高字組在後。</td></tr>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">BA DC</td><td class="p-3">大端序位元組交換</td><td class="p-3 text-text-dim">高字組在前，但每個字組內的位元組交換。</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">DC BA</td><td class="p-3">小端序位元組交換</td><td class="p-3 text-text-dim">真正的小端序。從最低位元組一直到最高位元組。</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <h2 class="text-2xl font-bold mb-6">常見問題</h2>
+    <div class="space-y-4 mb-12">
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">為什麼 Modbus 中的浮點數有 4 種不同的位元組順序？</summary><p class="mt-3 text-text-dim">Modbus 協定是為 16 位元暫存器設計的，並未定義應該如何傳輸 32 位元浮點數。因此，不同的供應商實作了不同的方式將 32 位元拆分到兩個 16 位元暫存器中，導致了 4 種可能的位元組/字組排列方式。</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">什麼是 AB CD 順序？</summary><p class="mt-3 text-text-dim">AB CD 是大端序（Big Endian）格式。最顯著位元組優先傳輸。A 和 B 是第一個暫存器的高位元組和低位元組，C 和 D 是第二個暫存器的高位元組和低位元組。</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">我如何知道我的設備使用哪種格式？</summary><p class="mt-3 text-text-dim">通常文件沒有記載。最好的方法是讀取一個已知值（例如溫度 25.0），將原始的十六進制值輸入此工具，然後看看哪種位元組順序會產生正確的解釋。</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">為什麼有些系統使用 CD AB？</summary><p class="mt-3 text-text-dim">CD AB 是小端序字組交換（Little Endian Word Swap）。這在單個 16 位元暫存器為大端序，但 32 位元值儲存為小端序的系統中很常見，這實際上交換了兩個暫存器的順序。</p></details>
+    </div>
+
+    <!-- RELATED CASE STUDY LINK -->
+    <div class="card border border-blue/20 bg-blue/5 rounded-xl p-6">
+      <p class="text-text-dim mb-4">了解更多關於安全解釋 OT 資料的資訊。</p>
+      <a href="/zh/work/chiller-ot-monitoring" class="text-blue-light font-semibold hover:underline inline-block mr-6">冰水主機 OT 案例研究 →</a>
+      <a href="/zh/blog/float-assembly" class="text-blue-light font-semibold hover:underline inline-block">浮點數組合參考文章 →</a>
+    </div>
+  </section>
+
+  <!-- DECODER SCRIPT -->
+  <script is:inline>
+    (function() {
+      const regHi = document.getElementById('reg-hi');
+      const regLo = document.getElementById('reg-lo');
+      if (!regHi || !regLo) return;
+
+      const results = {
+        abcd: { f: document.getElementById('f-abcd'), i: document.getElementById('i-abcd'), u: document.getElementById('u-abcd') },
+        cdab: { f: document.getElementById('f-cdab'), i: document.getElementById('i-cdab'), u: document.getElementById('u-cdab') },
+        badc: { f: document.getElementById('f-badc'), i: document.getElementById('i-badc'), u: document.getElementById('u-badc') },
+        dcba: { f: document.getElementById('f-dcba'), i: document.getElementById('i-dcba'), u: document.getElementById('u-dcba') }
+      };
+
+      function updateResults() {
+        const hiStr = regHi.value.trim();
+        const loStr = regLo.value.trim();
+        
+        const validHex = /^[0-9a-fA-F]{0,4}$/;
+        if (!validHex.test(hiStr) || !validHex.test(loStr)) return;
+        
+        if (hiStr.length !== 4 || loStr.length !== 4) {
+          clearResults();
+          return;
+        }
+
+        const hi = parseInt(hiStr, 16);
+        const lo = parseInt(loStr, 16);
+        
+        const A = (hi >> 8) & 0xFF;
+        const B = hi & 0xFF;
+        const C = (lo >> 8) & 0xFF;
+        const D = lo & 0xFF;
+
+        decodeAndSet(A, B, C, D, results.abcd);
+        decodeAndSet(C, D, A, B, results.cdab);
+        decodeAndSet(B, A, D, C, results.badc);
+        decodeAndSet(D, C, B, A, results.dcba);
+      }
+
+      function decodeAndSet(b0, b1, b2, b3, resultEls) {
+        const buf = new ArrayBuffer(4);
+        const view = new DataView(buf);
+        const bytes = new Uint8Array(buf);
+        bytes[0] = b0; bytes[1] = b1; bytes[2] = b2; bytes[3] = b3;
+        
+        const fVal = view.getFloat32(0, false);
+        const iVal = view.getInt32(0, false);
+        const uVal = view.getUint32(0, false);
+
+        resultEls.f.textContent = isNaN(fVal) ? 'NaN' : Number(fVal.toPrecision(7)).toString();
+        resultEls.i.textContent = iVal.toString();
+        resultEls.u.textContent = uVal.toString();
+      }
+
+      function clearResults() {
+        for (const k in results) {
+          results[k].f.textContent = '—';
+          results[k].i.textContent = '—';
+          results[k].u.textContent = '—';
+        }
+      }
+
+      regHi.addEventListener('input', updateResults);
+      regLo.addEventListener('input', updateResults);
+    })();
+  </script>
+</BaseLayout>

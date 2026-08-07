@@ -1,0 +1,223 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+const lang = 'en';
+const title = 'Modbus 32-bit Float / Int32 Decoder';
+const description = 'Decode 32-bit float and integer values from Modbus register pairs. Test all 4 byte/word order combinations simultaneously.';
+
+const pageJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": title,
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "description": description
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why are there 4 different byte orders for floats in Modbus?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The Modbus protocol was designed for 16-bit registers and does not define how 32-bit floating-point numbers should be transmitted. Consequently, different vendors implemented different ways to split the 32 bits into two 16-bit registers, resulting in 4 possible byte/word arrangements."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is AB CD order?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AB CD is Big Endian format. The most significant byte is transmitted first. A and B are the high and low bytes of the first register, C and D are the high and low bytes of the second register."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I know which format my device uses?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Often, it's not documented. The best approach is to read a known value (like a temperature of 25.0), enter the raw hex values into this tool, and see which byte order yields the correct interpretation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do some systems use CD AB?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "CD AB is Little Endian Word Swap. It's common in systems where the individual 16-bit registers are Big Endian, but the 32-bit value is stored as Little Endian, effectively swapping the order of the two registers."
+          }
+        }
+      ]
+    }
+  ]
+};
+---
+<BaseLayout title={title} description={description} lang={lang} jsonLd={pageJsonLd}>
+  <!-- STATIC SEO CONTENT -->
+  <section class="section-container py-16">
+    <h1 class="section-title text-3xl font-bold mb-2">Modbus 32-bit Float / Int32 Decoder</h1>
+    <p class="text-text-dim text-lg mb-8 max-w-3xl">Because the Modbus specification doesn't define how 32-bit values should be transmitted across its 16-bit registers, vendors use different byte and word swapping conventions. IEEE 754 floating-point numbers span two registers, creating four possible arrangements. This tool decodes all combinations simultaneously.</p>
+
+    <!-- INTERACTIVE DECODER -->
+    <div class="card bg-surface rounded-xl border border-blue/10 p-8 mb-12">
+      <h2 class="text-xl font-bold mb-4">Live Decoder</h2>
+      <div class="flex flex-col md:flex-row gap-6 mb-8">
+        <div class="flex-1">
+          <label class="block text-sm text-text-dim mb-2" for="reg-hi">Register 1 (Hex)</label>
+          <input type="text" id="reg-hi" maxlength="4" placeholder="4248" autocomplete="off"
+            class="w-full px-4 py-3 bg-bg border border-blue/20 rounded-lg text-text font-mono focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue/50 uppercase" />
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm text-text-dim mb-2" for="reg-lo">Register 2 (Hex)</label>
+          <input type="text" id="reg-lo" maxlength="4" placeholder="0000" autocomplete="off"
+            class="w-full px-4 py-3 bg-bg border border-blue/20 rounded-lg text-text font-mono focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue/50 uppercase" />
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="border-b border-blue/15 text-left">
+              <th scope="col" class="p-3 font-semibold">Byte Order</th>
+              <th scope="col" class="p-3 font-semibold">Name</th>
+              <th scope="col" class="p-3 font-semibold">Float32</th>
+              <th scope="col" class="p-3 font-semibold">Int32</th>
+              <th scope="col" class="p-3 font-semibold">UInt32</th>
+            </tr>
+          </thead>
+          <tbody id="decoder-results">
+            <tr class="border-b border-blue/5"><td class="p-3 font-mono text-blue-light">AB CD</td><td class="p-3 text-text-dim">Big Endian</td><td class="p-3 font-mono" id="f-abcd">—</td><td class="p-3 font-mono" id="i-abcd">—</td><td class="p-3 font-mono" id="u-abcd">—</td></tr>
+            <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono text-blue-light">CD AB</td><td class="p-3 text-text-dim">Little Endian Word Swap</td><td class="p-3 font-mono" id="f-cdab">—</td><td class="p-3 font-mono" id="i-cdab">—</td><td class="p-3 font-mono" id="u-cdab">—</td></tr>
+            <tr class="border-b border-blue/5"><td class="p-3 font-mono text-blue-light">BA DC</td><td class="p-3 text-text-dim">Big Endian Byte Swap</td><td class="p-3 font-mono" id="f-badc">—</td><td class="p-3 font-mono" id="i-badc">—</td><td class="p-3 font-mono" id="u-badc">—</td></tr>
+            <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono text-blue-light">DC BA</td><td class="p-3 text-text-dim">Little Endian Byte Swap</td><td class="p-3 font-mono" id="f-dcba">—</td><td class="p-3 font-mono" id="i-dcba">—</td><td class="p-3 font-mono" id="u-dcba">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3 STATIC PRE-RENDERED EXAMPLES -->
+    <h2 class="text-2xl font-bold mb-6">Examples</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <caption class="text-left text-text-dim mb-3">Common float encoding examples</caption>
+        <thead>
+          <tr class="border-b border-blue/15">
+            <th scope="col" class="text-left p-3 font-semibold">Float Value</th>
+            <th scope="col" class="text-left p-3 font-semibold">AB CD (Big Endian)</th>
+            <th scope="col" class="text-left p-3 font-semibold">CD AB (Word Swap)</th>
+            <th scope="col" class="text-left p-3 font-semibold">DC BA (Little Endian)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">50.0</td><td class="p-3 font-mono">4248 0000</td><td class="p-3 font-mono">0000 4248</td><td class="p-3 font-mono">0000 4842</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover bg-surface/50"><td class="p-3 font-mono">1.234</td><td class="p-3 font-mono">3f9d f3b6</td><td class="p-3 font-mono">f3b6 3f9d</td><td class="p-3 font-mono">b6f3 9d3f</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">-100.5</td><td class="p-3 font-mono">c2c9 0000</td><td class="p-3 font-mono">0000 c2c9</td><td class="p-3 font-mono">0000 c9c2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- BYTE ORDER REFERENCE -->
+    <h2 class="text-2xl font-bold mb-6">Byte Order Reference</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <thead><tr class="border-b border-blue/15">
+          <th scope="col" class="text-left p-3 font-semibold">Order</th>
+          <th scope="col" class="text-left p-3 font-semibold">Name</th>
+          <th scope="col" class="text-left p-3 font-semibold">Description</th>
+        </tr></thead>
+        <tbody>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">AB CD</td><td class="p-3">Big Endian</td><td class="p-3 text-text-dim">Standard IEEE 754 network byte order. High word first, high byte first.</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">CD AB</td><td class="p-3">Little Endian Word Swap</td><td class="p-3 text-text-dim">Common in some PLCs. Low word first, high word second.</td></tr>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">BA DC</td><td class="p-3">Big Endian Byte Swap</td><td class="p-3 text-text-dim">High word first, but bytes within each word are swapped.</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">DC BA</td><td class="p-3">Little Endian Byte Swap</td><td class="p-3 text-text-dim">True Little Endian. Low byte first all the way to high byte.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <h2 class="text-2xl font-bold mb-6">FAQ</h2>
+    <div class="space-y-4 mb-12">
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">Why are there 4 different byte orders for floats in Modbus?</summary><p class="mt-3 text-text-dim">The Modbus protocol was designed for 16-bit registers and does not define how 32-bit floating-point numbers should be transmitted. Consequently, different vendors implemented different ways to split the 32 bits into two 16-bit registers, resulting in 4 possible byte/word arrangements.</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">What is AB CD order?</summary><p class="mt-3 text-text-dim">AB CD is Big Endian format. The most significant byte is transmitted first. A and B are the high and low bytes of the first register, C and D are the high and low bytes of the second register.</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">How do I know which format my device uses?</summary><p class="mt-3 text-text-dim">Often, it's not documented. The best approach is to read a known value (like a temperature of 25.0), enter the raw hex values into this tool, and see which byte order yields the correct interpretation.</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">Why do some systems use CD AB?</summary><p class="mt-3 text-text-dim">CD AB is Little Endian Word Swap. It's common in systems where the individual 16-bit registers are Big Endian, but the 32-bit value is stored as Little Endian, effectively swapping the order of the two registers.</p></details>
+    </div>
+
+    <!-- RELATED CASE STUDY LINK -->
+    <div class="card border border-blue/20 bg-blue/5 rounded-xl p-6">
+      <p class="text-text-dim mb-4">Learn more about interpreting OT data safely.</p>
+      <a href="/en/work/chiller-ot-monitoring" class="text-blue-light font-semibold hover:underline inline-block mr-6">Chiller OT Case Study →</a>
+      <a href="/en/blog/float-assembly" class="text-blue-light font-semibold hover:underline inline-block">Float Assembly Reference Article →</a>
+    </div>
+  </section>
+
+  <!-- DECODER SCRIPT -->
+  <script is:inline>
+    (function() {
+      const regHi = document.getElementById('reg-hi');
+      const regLo = document.getElementById('reg-lo');
+      if (!regHi || !regLo) return;
+
+      const results = {
+        abcd: { f: document.getElementById('f-abcd'), i: document.getElementById('i-abcd'), u: document.getElementById('u-abcd') },
+        cdab: { f: document.getElementById('f-cdab'), i: document.getElementById('i-cdab'), u: document.getElementById('u-cdab') },
+        badc: { f: document.getElementById('f-badc'), i: document.getElementById('i-badc'), u: document.getElementById('u-badc') },
+        dcba: { f: document.getElementById('f-dcba'), i: document.getElementById('i-dcba'), u: document.getElementById('u-dcba') }
+      };
+
+      function updateResults() {
+        const hiStr = regHi.value.trim();
+        const loStr = regLo.value.trim();
+        
+        const validHex = /^[0-9a-fA-F]{0,4}$/;
+        if (!validHex.test(hiStr) || !validHex.test(loStr)) return;
+        
+        if (hiStr.length !== 4 || loStr.length !== 4) {
+          clearResults();
+          return;
+        }
+
+        const hi = parseInt(hiStr, 16);
+        const lo = parseInt(loStr, 16);
+        
+        const A = (hi >> 8) & 0xFF;
+        const B = hi & 0xFF;
+        const C = (lo >> 8) & 0xFF;
+        const D = lo & 0xFF;
+
+        decodeAndSet(A, B, C, D, results.abcd);
+        decodeAndSet(C, D, A, B, results.cdab);
+        decodeAndSet(B, A, D, C, results.badc);
+        decodeAndSet(D, C, B, A, results.dcba);
+      }
+
+      function decodeAndSet(b0, b1, b2, b3, resultEls) {
+        const buf = new ArrayBuffer(4);
+        const view = new DataView(buf);
+        const bytes = new Uint8Array(buf);
+        bytes[0] = b0; bytes[1] = b1; bytes[2] = b2; bytes[3] = b3;
+        
+        const fVal = view.getFloat32(0, false);
+        const iVal = view.getInt32(0, false);
+        const uVal = view.getUint32(0, false);
+
+        resultEls.f.textContent = isNaN(fVal) ? 'NaN' : Number(fVal.toPrecision(7)).toString();
+        resultEls.i.textContent = iVal.toString();
+        resultEls.u.textContent = uVal.toString();
+      }
+
+      function clearResults() {
+        for (const k in results) {
+          results[k].f.textContent = '—';
+          results[k].i.textContent = '—';
+          results[k].u.textContent = '—';
+        }
+      }
+
+      regHi.addEventListener('input', updateResults);
+      regLo.addEventListener('input', updateResults);
+    })();
+  </script>
+</BaseLayout>

@@ -1,0 +1,22 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+const allReferences = await getCollection('reference', ({ data }) => data.lang === 'zh' && !data.draft);
+allReferences.sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="技術參考 | ST8925 LAB" description="技術參考資料與指南" lang="zh">
+  <div class="max-w-4xl mx-auto py-12 px-4">
+    <h1 class="text-4xl font-bold mb-8">技術參考資料</h1>
+    <div class="grid gap-6">
+      {allReferences.map(ref => (
+        <a href={`/zh/reference/${ref.slug.replace('zh/', '')}`} class="block bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition border border-gray-100">
+          <h2 class="text-2xl font-bold mb-2 text-blue-900">{ref.data.title}</h2>
+          <p class="text-gray-600 mb-4">{ref.data.description}</p>
+          <div class="text-sm text-gray-400">最後檢閱: {ref.data.lastReviewed}</div>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
