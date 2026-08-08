@@ -16,10 +16,11 @@ From a matplotlib atom animation to a breathing night-Earth homepage. This docum
 | 2 | 原子核換成夜間地球 Swap the nucleus for a night Earth | [§3](#3-階段-2--夜間地球) |
 | 3 | 呼吸、導覽列、透鏡 Breathing, top bar, lens | [§4](#4-階段-3--呼吸導覽列透鏡) |
 | 4 | 貼地文字、地標、時鐘 Surface text, markers, clock | [§5](#5-階段-4--貼地文字地標時鐘) |
-| — | 全部抓到的錯誤 All bugs found | [§6](#6-全部抓到的錯誤) |
-| — | 全部被推翻的規格 All overturned requirements | [§7](#7-全部被推翻的規格) |
-| — | 參數演變總表 Parameter evolution | [§8](#8-參數演變總表) |
-| — | 驗證方法論 Verification methodology | [§9](#9-驗證方法論) |
+| 5 | 星雲爆炸、雙向連動、擴充性 Burst, linking, scalability | [§6](#6-階段-5--星雲爆炸與雙向連動) |
+| — | 全部抓到的錯誤 All bugs found | [§7](#7-全部抓到的錯誤) |
+| — | 全部被推翻的規格 All overturned requirements | [§8](#8-全部被推翻的規格) |
+| — | 參數演變總表 Parameter evolution | [§9](#9-參數演變總表) |
+| — | 驗證方法論 Verification methodology | [§10](#10-驗證方法論) |
 
 ---
 
@@ -540,7 +541,274 @@ const ENABLE_GEO_LOOKUP = false;   // 預設關閉
 
 ---
 
-## 6. 全部抓到的錯誤
+## 6. 階段 5 — 星雲爆炸與雙向連動
+
+**需求 / Request**：6 條軌道與頁首 6 個 projects 為 1:1，顏色亦 1:1。點擊 project 時，同色軌道的光點產生星雲爆炸動畫；反之點擊軌道光點，開啟同色的 project。未來會陸續增加專案，軌道須同步增加，規則不變。
+
+Six orbits map 1:1 to six nav projects, colours included. Clicking a project bursts the matching ring's light point; clicking a light point opens the matching project. Future projects must add orbits automatically under the same rules.
+
+### 6.1 使用者決策 / User Decisions
+
+| 問題 Question | 選擇 Choice |
+|---|---|
+| 可點擊範圍 Clickable points | 每環 4 顆全部可點 All 4 per ring |
+| 導向時機 Navigation timing | 播完動畫再同頁導向 After the full animation（900ms → 修正為 1400ms）|
+| 臨時頁形式 Placeholder pages | 單一 `project.html?id=01` Single page + query |
+| 超過 7 色 Beyond 7 hues | 手寫擴充到 12 色 Hand-authored 12-colour palette |
+| 目標被遮擋時 Target occluded | 照樣爆炸，被地球遮住 Burst anyway, occluded |
+
+### 6.2 顏色上限：7 → 12 / Raising the Colour Ceiling
+
+原 `RAINBOW` 只有 7 色，`slice(0, ORBIT_RINGS)` 在第 8 個專案就會取到 `undefined`。新增 5 色填入原 7 色的**色相空隙**，明度以二分搜尋調整至對比 ≥ 7.30。
+
+The original palette had 7 hues; an 8th project would have indexed past the end. Five hues were added in the gaps of the original seven, lightness binary-searched until contrast cleared AAA.
+
+| 色相° Hue | 名稱 Name | Hex | 對比 Contrast | |
+|---|---|---|---|---|
+| 0.0 | red | `#ff6b6b` | 7.26 | 原有 |
+| 31.0 | orange | `#ffa94d` | 10.59 | 原有 |
+| 47.8 | yellow | `#ffe066` | 15.46 | 原有 |
+| **89.1** | **lime** | **`#61af0e`** | **7.34** | **新增** |
+| 130.0 | green | `#69db7c` | 11.54 | 原有 |
+| **167.8** | **teal** | **`#0eb08f`** | **7.32** | **新增** |
+| 206.8 | blue | `#4dabf7` | 8.14 | 原有 |
+| **231.4** | **azure** | **`#8595f5`** | **7.31** | **新增** |
+| 255.1 | indigo | `#a78bfa` | 7.41 | 原有 |
+| **282.7** | **purple** | **`#d077f4`** | **7.32** | **新增** |
+| **311.1** | **magenta** | **`#f265d8`** | **7.32** | **新增** |
+| 338.8 | violet | `#f783ac` | 8.44 | 原有 |
+
+**原 7 色一個位元都沒動**，故 6 專案時的視覺與 v3 完全相同。最低對比 7.26，全數 ≥ AAA。
+
+> ⚠️ **上限仍在，只是從 7 推到 12。** 第 13 個專案會使兩專案同色，雙向對應即失效。`app.js` 有執行期 `console.error` 警告，`verify.py` 亦會失敗。
+> The ceiling still exists — it moved from 7 to 12. A 13th project breaks the colour mapping; both a runtime error and a failing check guard it.
+
+> ⚠️ **最小相鄰色相差 16.8°（orange↔yellow），是原本就存在的一對，非新增所致。** 兩者同時出現時可能不易分辨。
+> The tightest hue gap is a pre-existing pair, not one of the additions.
+
+### 6.3 唯一資料源 / Single Source of Truth
+
+新增 `config.js`，由首頁與專案頁**共同載入**：
+
+```javascript
+const PROJECTS = [ { id: '01', label: 'PROJECT 01' }, ... ];
+const ORBIT_RINGS = PROJECTS.length;      // 環數不再寫死
+// 色相必須隨 URL 傳遞，原因見 §6.7 錯誤 A / the hue must travel, see §6.7 bug A
+const PROJECT_URL = (id, hue) =>
+    `project.html?id=${id}` + (hue ? `&hue=${encodeURIComponent(hue)}` : '');
+```
+
+`ORBIT_RINGS` 由 `PROJECTS.length` 推導。環平面角 `k·π/N` 本來就依 N 計算，**已自動適應**。
+
+**新增一個專案的完整程序 = 在 `PROJECTS` 加一筆。** 環數、平面角、配色、導覽列、可點光點全部自動跟上。
+
+Adding a project is one array entry. Ring count, plane angles, colours, nav and click targets all follow.
+
+### 6.4 星雲爆炸 / Nebula Burst
+
+```javascript
+BURST_DURATION    = 1400   BURST_PARTICLES  = 140
+BURST_SPEED_MIN   = 70     BURST_SPEED_MAX  = 300   // px/s
+BURST_DAMPING     = 0.945  BURST_RING_MAX   = 120   // px
+BURST_FLASH_SCALE = 5.0    BURST_PARTICLE_R = 2.4
+BURST_CLOUDS      = 7      BURST_CLOUD_R    = 78    // 瀰漫雲團 / haze
+BURST_GLOW_MULT   = 4.5    BURST_SPARKS     = 16    // 光暈與星芒
+```
+
+> 上表為**修正後**的數值。初版為 900ms／48 顆／無雲團，經使用者實測回報「不明顯」後改為現值 —— 診斷過程見 §6.7 錯誤 B。
+> These are the corrected values; the first version was 900 ms / 48 particles /
+> no haze and was reported as too faint. See §6.7 bug B.
+
+五層合成 / Five layers：
+
+| 層 Layer | 行為 Behaviour |
+|---|---|
+| 1 瀰漫雲團 Haze | 7 團大半徑低 alpha 漸層,**抬升中間調** |
+| 2 衝擊波 Shockwave | 半徑 `120·prog`，線寬隨 `fade` 變細 |
+| 3 核心閃光 Core flash | `1 − prog·3`，於 1/3 處收乾 |
+| 4 粒子＋光暈 Particles | 140 顆，各帶 ×4.5 光暈與白色核心 |
+| 5 十字星芒 Sparks | 16 顆帶星芒 |
+
+**加成混合為必要條件**：`ctx.globalCompositeOperation = 'lighter'`，繪製後**必須還原**,否則後續所有繪製都會變成加成。
+
+**為何用阻尼而非等速**：等速會散成均勻圓環，像煙火；阻尼使粒子減速後聚攏，尾端疏密不均，才有星雲感。實測 1400ms 時最遠粒子行進 **90.1 px**，落在 120 px 衝擊波內。速度分佈另加 `sqrt()` 偏向外側，使內外密度均勻。
+
+Damping rather than constant velocity: constant speed produces an even ring (a firework); damping makes particles bunch as they slow, which reads as a nebula. Measured travel at 1400 ms is 90.1 px, inside the 120 px shockwave.
+
+爆炸**參與正常深度排序**（`drawList.push({ z: b.z, ... })`），因此轉到地球背面的爆炸會被正確遮住 —— 依使用者選擇，物理誠實優先於回饋明確。
+
+### 6.5 雙向連動 / Bidirectional Linking
+
+兩個方向**共用同一入口** `openProject(ringIndex)`，因此不可能各自飄移：
+
+```
+點 nav   → openProject(i)          → 爆炸 → 1400ms → 導向
+點光點   → openProject(hit.ring)   → 爆炸 → 1400ms → 導向
+```
+
+導向時**必須傳遞實際色相**（見 §6.7 錯誤 A）：
+
+```javascript
+PROJECT_URL(PROJECTS[ringIndex].id, ringColours[ringIndex].name);
+// → project.html?id=01&hue=blue
+```
+
+**點擊 vs 拖曳判定**（必要，否則拖曳收尾會誤觸發）：
+
+```javascript
+CLICK_MAX_MOVE = 6      // px
+CLICK_MAX_MS   = 400    // ms
+HIT_PADDING    = 8      // px 命中寬容
+```
+
+位移 < 6px **且** 按壓 < 400ms 才算點擊。
+
+**命中偵測**：`render()` 每幀重建 `hitTargets[]`。被地球遮擋的光點在迴圈中已 `continue`，**根本不會進入列表，因此天然不可點** —— 不需額外判斷。重疊時取最近者，結果可預期。
+
+Occluded points never enter the hit list because the occlusion `continue` precedes registration, so they are unclickable by construction rather than by an extra test.
+
+### 6.6 抓到的錯誤 / Bugs Found in This Stage
+
+**錯誤 1：`hitTargets.push({ ring: r })` 用錯迴圈變數。**
+環迴圈變數是 `k`，而 `r` 在該作用域是**顏色的紅色分量**。若不檢查,每個光點都會註冊成「第 255 環」。改用 `k`。
+
+The ring loop variable is `k`; `r` in that scope is the red channel. Every point would have registered against a nonexistent ring.
+
+**錯誤 2：`project.html` 原本載入 `app.js`。**
+`app.js` 需要 `#scene` canvas 與 `geodata.js`，在專案頁會直接拋錯。且我在註解中寫了「app.js 有 bootstrap guard」——**那個 guard 並不存在，是我憑空敘述的**。改為抽出 `config.js` 供兩頁共用。
+
+I had claimed app.js contained a bootstrap guard. It did not — that was an unverified assertion. Fixed by extracting config.js.
+
+**錯誤 3：`verify.py` 的 `plane angles` 檢查寫死 6 環角度。**
+擴充至 12 專案時，`app.js` **行為正確**（15° 間隔），卻是**檢查腳本**誤報失敗。期望值改為由 `ORBIT_RINGS` 推導。
+
+這正好印證 §9.1 的原則 2：**寫死的期望值會在規格變動時說謊。** 諷刺的是這條原則本身就寫在本文件裡，而我仍在新增檢查時犯了同一個錯 —— 是實際跑「加到 12 個專案」才抓到的。
+
+The harness, not the app, was wrong. This is the same hardcoding trap documented in §9.1, and it was caught only by actually scaling to 12.
+
+**錯誤 4：`hues unused per load` 改寫後變成恆真檢查。**
+我一度寫成 `check(x, x)` —— 比較自己與自己，永遠不可能失敗。改為斷言真正必須成立的條件：`len(RAINBOW) - ORBIT_RINGS >= 0`（絕不短缺）。
+
+A tautological check that compared a value against itself and could never fail.
+
+### 6.7 使用者實測回報的兩個錯誤 / Two Bugs Found by User Testing
+
+這兩項都是**我在沙箱無法驗證、只有真實瀏覽器才會暴露**的問題（見 §6.9）。
+
+#### 錯誤 A：專案頁顏色與點擊的軌道不符 ⚠️
+
+**現象**：點 project 進入後，頁面顏色與原本 project／軌道的顏色不同。
+
+**根因**：兩端用了**不同的取色方式**。
+
+```javascript
+// 首頁：洗牌後的配色 / homepage — SHUFFLED
+const ringColours = pickRingColours();   // Fisher-Yates，每次載入重洗
+ringColours[i]
+
+// 專案頁：未洗牌的原始索引 / project page — UNSHUFFLED
+RAINBOW[idx % RAINBOW.length]            // ← 錯誤
+```
+
+首頁每次載入都會洗牌，**第 i 環並非第 i 色**。兩者只有在洗牌恰好讓索引 i 留在原位時才相符。
+
+**實測機率**（20,000 次模擬）：
+
+| 情況 | 機率 |
+|---|---|
+| 單一專案顏色相符 | **8.4%**（≈ 1/12）|
+| 六個專案全部相符 | **0.000%** |
+
+**顏色不符才是常態，相符反而是例外。** 這也解釋了為何我先前的「說明文字」把它當成預期行為 —— 那段說明本身就是錯的，我當時是在**替 bug 找藉口**而非修它。
+
+**修正**：色相隨 URL 傳遞，讓專案頁顯示**使用者實際點到的顏色**。
+
+```javascript
+const PROJECT_URL = (id, hue) =>
+    `project.html?id=${id}` + (hue ? `&hue=${encodeURIComponent(hue)}` : '');
+
+// app.js 導向時傳入實際色相
+PROJECT_URL(PROJECTS[ringIndex].id, ringColours[ringIndex].name);
+
+// project.html 優先採用傳來的色相，直接開啟才退回索引
+const col = RAINBOW.find(c => c.name === hue) || RAINBOW[idx % RAINBOW.length];
+```
+
+The homepage reshuffles per load, so ring i is not palette entry i. The project
+page derived its colour from the index, matching the clicked colour only ~8.4%
+of the time. The hue now travels in the URL.
+
+#### 錯誤 B：爆炸不夠明顯，不像星雲
+
+**現象**：爆炸動畫太淡、太短，不像使用者提供的星雲參考圖。
+
+**量化診斷**：以亮度分佈比對參考圖與舊版爆炸（灰階百分位）。
+
+| 對象 | 中位數 | **p90** | p99 | >140 佔比 |
+|---|---|---|---|---|
+| 參考星雲圖（5 張）| 15–47 | **68–136** | 126–223 | 0.6–9.0% |
+| **舊版爆炸** | 7 | **7** | 114 | **0.3%** |
+| **新版爆炸（150ms）**| 7 | **156** | 255 | 10.6% |
+
+**p90 = 7 幾乎等於純黑** —— 舊版是「黑底上的稀疏亮點」，而參考圖的關鍵特徵是**瀰漫的亮霧**。這正是「不明顯」的量化根因。
+
+**五項修正**：
+
+| 項目 | 舊 | 新 | 作用 |
+|---|---|---|---|
+| 混合模式 | `source-over` | **`lighter`（加成）** | 重疊處累加趨白，星雲發光的關鍵 |
+| 瀰漫雲團 | 無 | **7 團** | 抬升中間調，形成霧氣 |
+| 粒子光暈 | 無 | **半徑 ×4.5** | 亮點融入霧氣而非硬邊碎點 |
+| 粒子數 | 48 | **140** | 密度足以成雲 |
+| 時長 | 900ms | **1400ms** | 舊版太短來不及看清 |
+
+另外淡出曲線由線性改為 `(1−prog)^1.7` —— 線性淡出**大半時間都偏暗**，這也是舊版顯得淡的原因之一。速度分佈加 `sqrt()` 偏向外側，使內外密度均勻。
+
+繪製後必須還原 `globalCompositeOperation`，否則後續所有繪製都會變成加成混合。
+
+Measured against the reference images: their 90th-percentile luminance is
+68–136, whereas the old burst measured 7 — essentially black. It was sparse
+dots, not the diffuse haze that makes a nebula read as one.
+
+### 6.8 順手修正 / Incidental Fixes
+
+- `href="#top"`、`href="#contact"` 兩個死連結（§7 遺留）→ 改為 `./` 與 `mailto:`
+- `verify.py` 重複的 `[7]` 段號 → 預覽圖改為 `[14]`
+
+### 6.9 驗證 / Verification
+
+檢查數 **85 → 127**。新增 `[12] 星雲爆炸`、`[13] 擴充性與顏色傳遞`。
+
+**實際擴充測試**（只改 `config.js`，其餘檔案一律未動）：
+
+| 專案數 N | 結果 | 環平面角間隔 |
+|---|---|---|
+| 3 | ✅ 全數通過 | 60.0° |
+| 6（現行）| ✅ 127 項通過 | 30.0° |
+| 12（上限）| ✅ 全數通過 | 15.0° |
+| 13（超限）| ✅ **正確失敗** | — |
+
+N=13 時 `palette covers the projects` 與 `no hue shortage` 皆失敗，證明上限**會被明確擋下而非默默壞掉**。
+
+Scaling was tested by editing only config.js. N=13 fails loudly, which is the desired behaviour.
+
+### 6.10 本階段未驗證 / Not Verified in This Stage
+
+沙箱無瀏覽器、`node` 因 `cjs-module-lexer` 損壞而不可用（見 §9.3），因此：
+
+1. **爆炸動畫從未在 Canvas 上執行。** `preview_burst.png` 是以**相同常數與相同粒子數學**在 Pillow 重繪的時間軸，證明時序與形狀，**不**證明 Canvas 的漸層與 `globalAlpha` 疊加外觀。
+2. **點擊從未真正發生。** 命中半徑、點擊/拖曳門檻皆為數學驗證，未經真實 pointer 事件。
+3. **導向從未執行。** `location.href` 與 `?id=` 解析未在瀏覽器測試。
+4. **`project.html` 在 `file://` 下的 fallback 未實測。**
+
+**「證明整個流程無誤」僅達靜態與數學層面，互動需在瀏覽器實測。**
+
+> 使用者實測已推翻其中兩項假設（§6.7）。靜態驗證通過**不等於**視覺與互動正確 —— 這是本階段最重要的教訓。
+> User testing overturned two assumptions. Passing static checks does not mean the visuals or interactions are right.
+
+---
+
+## 7. 全部抓到的錯誤
 
 | # | 階段 | 錯誤 Bug | 如何抓到 How it was caught |
 |---|---|---|---|
@@ -552,14 +820,26 @@ const ENABLE_GEO_LOOKUP = false;   // 預設關閉
 | 6 | 4 | verify.py 常數解析器不支援十六進位（`0x55`）| 執行時 `KeyError` |
 | 7 | 4 | v1 遺留檢查 `--gap-below-earth` 已失效 | 執行時 `[FAIL]` |
 | 8 | 4 | 文字寬度 `0.62` 係數未揭露為估算 | 驗證員指出非 `ctx.measureText()` 實測 |
+| 9 | 5 | `hitTargets.push({ring: r})` 用錯迴圈變數（`r` 是紅色分量，環變數為 `k`）| 讀取迴圈實際變數名，未憑印象 |
+| 10 | 5 | `project.html` 載入需要 canvas 的 `app.js`；且我聲稱的 bootstrap guard **並不存在** | 檢查 app.js 實際內容，發現該 guard 是我憑空敘述 |
+| 11 | 5 | `verify.py` 的 plane angles 寫死 6 環角度，N=12 時誤報 | 實際把專案加到 12 個來跑 |
+| 12 | 5 | `hues unused` 改寫成 `check(x, x)` 恆真檢查 | 自我複查改動後的斷言 |
+| 13 | 5 | **專案頁用未洗牌的 `RAINBOW[idx]` 取色，與點擊的軌道不符（僅 8.4% 相符）** | **使用者實測錄影** |
+| 14 | 5 | **爆炸 p90 亮度僅 7（近純黑），不像星雲** | **使用者提供參考圖，量化比對亮度分佈** |
 
 **第 3 項最難發現**：靜態畫面完全正常，只有拖曳時才會顯露。是靠「同一數字在不同相機角度下必須改變」這個必要條件抓到的。
+
+**第 13、14 項只有真人實測才會發現。** 兩者都通過了當時的 117 項檢查（修正後增為 127）—— 因為我的檢查驗的是「常數存在且數學正確」，而非「看起來對不對」。靜態驗證能證明幾何與資料一致，**不能證明視覺效果達到意圖**。
+
+更該記的是第 13 項的次級失誤：我曾在專案頁寫下說明文字，把顏色不符**描述成預期行為**。那段文字是在替 bug 找藉口，而非修正它 —— 當實作與意圖不符時，正確反應是修實作，不是改敘述去合理化它。
+
+**第 11 項最值得記**：失敗的是**檢查腳本**而非程式。這正是 §10.1 原則 2 所警告的「寫死期望值」—— 而該原則就寫在本文件裡，我仍在新增檢查時重犯。只有實際擴充到 12 個專案才會暴露。
 
 **第 8 項的後續**：加入敏感度分析後發現 `0.62` 是**保守高估**（真實等寬字型 0.55~0.60），臨界值 **0.966** —— 字寬要再大 **56%** 才會壓到海岸線。結論穩固，但已在 SPEC 標明為估算值。
 
 ---
 
-## 7. 全部被推翻的規格
+## 8. 全部被推翻的規格
 
 | # | 原始需求 Original | 問題 Problem | 決議 Resolution |
 |---|---|---|---|
@@ -575,12 +855,15 @@ const ENABLE_GEO_LOOKUP = false;   // 預設關閉
 | 10 | 時間貼在地球上 | 23 字元佔地球 44~60% 寬 | 移到地球下方 |
 | 11 | 「亂數顏色」| 全 RGB 亂數會抽到看不見的色 | 限定彩虹 7 色抽 2 |
 | 12 | 部署地 IP 定位 | 三個 API 皆不可用，且站未部署 | 寫好但預設關閉 |
+| 13 | 彩虹 7 色即足夠 | 第 8 個專案會取到 `undefined` | 手寫擴充至 12 色，全數 AAA |
+| 14 | `ORBIT_RINGS = 6` 硬寫 | 專案增加時軌道不會跟著加 | 改為 `PROJECTS.length` 推導 |
+| 15 | `#project-01` 錨點連結 | 目標 id 不存在，點了沒反應 | 改為 `project.html?id=01` 實頁 |
 
 ---
 
-## 8. 參數演變總表
+## 9. 參數演變總表
 
-### 8.1 全程未變的參數 / Constants That Never Changed
+### 9.1 全程未變的參數 / Constants That Never Changed
 
 從階段 1 到階段 4 完全未動：
 
@@ -590,7 +873,7 @@ RING_SEGMENTS = 120    TRAIL_POINTS = 15      TRAIL_DTHETA = 0.04
 LEAD_SCALE = 1.5       ORBIT_RADIUS = 240
 ```
 
-### 8.2 各階段的變化 / Changes by Stage
+### 9.2 各階段的變化 / Changes by Stage
 
 | 參數 | 階段 1 | 階段 2 (v1) | 階段 3-4 (v3) |
 |---|---|---|---|
@@ -603,16 +886,29 @@ LEAD_SCALE = 1.5       ORBIT_RADIUS = 240
 | 專案位置 | 無 | 地球下方 200px | **頂部導覽列** |
 | 軌道半徑 | 240 固定 | 240 固定 | **211.2~288.0 呼吸** |
 
-### 8.3 v3 新增的 28 個常數 / 28 Constants Added in v3
+### 9.3 階段 5 的變化 / Changes in Stage 5
 
-v1 的 24 個常數**全部保留未改**，v3 純新增：
+| 參數 | v3 | v4（本階段）|
+|---|---|---|
+| `ORBIT_RINGS` | `6`（硬寫）| **`PROJECTS.length`（推導）** |
+| `RAINBOW` 色數 | 7 | **12** |
+| 專案上限 | 7 | **12** |
+| 專案連結 | `#project-01`（死連結）| **`project.html?id=01`** |
+| 可調常數 | 52 | **66**（app.js）+ 3（config.js）= **69** |
+| 檔案數 | 3（執行）| **5**（+`config.js`、+`project.html`）|
+| 混合模式 | `source-over` | **爆炸期間 `lighter`** |
+| 驗證項數 | 85 | **127** |
+
+### 9.3 v3 新增的 30 個常數 / 30 Constants Added in v3
+
+v1 的常數**全部保留未改**，v3 純新增（依功能分組，合計 **30**，已與實際名稱數核對）：
 
 ```
 呼吸 Breathing (5)：BREATH_AMPLITUDE BREATH_PERIOD MOUSE_BREATH_MAX
                     MOUSE_BREATH_RANGE MOUSE_DAMPING
 站名 Wordmark (3)： PULSE_PERIOD PULSE_DARK PULSE_BRIGHT
 透鏡 Lens (4)：     LENS_MAX_SCALE LENS_RADIUS LENS_LIFT LENS_DAMPING
-貼字 Emboss (7)：   SURFACE_TEXT SURFACE_TEXT_SITES OCEAN_BASE EMBOSS_PERIOD
+貼字 Emboss (8)：   SURFACE_TEXT SURFACE_TEXT_SITES OCEAN_BASE EMBOSS_PERIOD
                     EMBOSS_MIN_MULT EMBOSS_MAX_MULT EMBOSS_FONT_PX EMBOSS_FADE_COS
 地標 Markers (5)：  MARKER_PERIOD MARKER_DOT_R MARKER_RING_MAX MARKER_COLOUR
                     MARKER_SITES
@@ -620,7 +916,7 @@ v1 的 24 個常數**全部保留未改**，v3 純新增：
 其他 Other (2)：    CLOCK_TZ_OFFSET SITE_NAME
 ```
 
-### 8.4 檔案大小演變 / File Size Evolution
+### 9.4 檔案大小演變 / File Size Evolution
 
 | 階段 Stage | 檔案 Files | 總計 Total |
 |---|---|---|
@@ -629,15 +925,16 @@ v1 的 24 個常數**全部保留未改**，v3 純新增：
 | 2 (v1) | html 3.5 + app 14.6 + geo 24.3 + verify 19.3 | **61.7 KB** |
 | 4 (v3) | html 7.7 + app 35.7 + geo 24.3 + verify 31.3 | **99.0 KB** |
 
-網站執行只需 `index.html` + `app.js` + `geodata.js` = **67.7 KB**。
+網站執行需 `index.html` + `config.js` + `geodata.js` + `app.js` + `project.html` = **92.6 KB**（v3 時為 3 檔 67.7 KB）。
+單檔驗收版 `ST8925-LAB-standalone.html` 為 **88.8 KB**。
 
 ---
 
-## 9. 驗證方法論
+## 10. 驗證方法論
 
-### 9.1 驗證腳本的設計原則 / Design Principles
+### 10.1 驗證腳本的設計原則 / Design Principles
 
-`verify.py` 從階段 2 開始存在，到階段 4 成長為 **85 項檢查**。
+`verify.py` 從階段 2 開始存在，到階段 5 成長為 **127 項檢查**。
 
 **原則 1：常數從原始碼解析，不重新輸入**
 
@@ -648,6 +945,9 @@ for name, raw in re.findall(r'^const ([A-Z_]+)\s*=\s*([^;]+);', src, re.M):
 若有人改了 `app.js` 的數值，檢查立即反映。腳本不會與被檢驗的實作悄悄脫節。
 
 **原則 2：邊界從資料推導，不寫死**
+
+> ⚠️ 階段 5 證明這條原則**很容易在新增檢查時被自己違反**：我把 plane angles 的期望值寫死為 6 環的角度，擴充到 12 時檢查失敗、程式卻是對的。原則寫在文件裡不代表下次不會再犯，**唯一可靠的是實際改變規模去跑一次**。
+> Stage 5 showed how easily this principle is violated when adding new checks. Writing it down does not prevent recurrence; actually changing the scale and re-running does.
 
 海洋邊界直接從 `geodata.js` 解出赤道帶的無陸地缺口，而非我手打的估計值。這正是抓到 §5.7 錯誤的關鍵 —— 若沿用手打邊界，該錯誤會通過檢查。
 
@@ -663,14 +963,14 @@ check('occluded() early-out test', occ.group(1).strip(), 'p.z <= 0')
 
 不只驗算 `0.62` 這個估算值下的結果，還二分搜尋出臨界值 `0.966`，證明結論容忍 56% 的誤差。
 
-### 9.2 85 項檢查的分佈 / Distribution of the 85 Checks
+### 10.2 127 項檢查的分佈 / Distribution of the 127 Checks
 
 | 節次 Section | 主題 Topic | 檢查數 |
 |---|---|---|
 | 1 | 光點數與遮擋隨相機變化 | 5 |
 | 2 | 環平面角與光點間隔 | 3 |
 | 3 | z 軸正負號約定 | 4 |
-| 4 | 配色洗牌與對比 | 8 |
+| 4 | 配色洗牌與對比 | 9 |
 | 5 | 地理資料 | 9 |
 | 6 | 版面與標籤 | 11 |
 | 7 | 呼吸 | 6 |
@@ -678,9 +978,11 @@ check('occluded() early-out test', occ.group(1).strip(), 'p.z <= 0')
 | 9 | 貼地浮雕文字 | 13 |
 | 10 | 地標紅點 | 9 |
 | 11 | 時間列 | 9 |
-| **合計** | | **85** |
+| 12 | 星雲爆炸與點擊判定 | 20 |
+| 13 | 擴充性、顏色傳遞 | 21 |
+| **合計** | | **127** |
 
-### 9.3 始終未驗證的部分 / What Was Never Verified
+### 10.3 始終未驗證的部分 / What Was Never Verified
 
 這四項從頭到尾都無法在此環境驗證：
 
@@ -700,7 +1002,12 @@ check('occluded() early-out test', occ.group(1).strip(), 'p.z <= 0')
 
 ---
 
-## 10. 目錄結構 / Directory Layout
+## 11. 目錄結構 / Directory Layout
+
+> ⚠️ 下列 `atom_orbit/` 與 `night_earth/` 為**歷史階段產物，目前已不存在於工作區**；
+> 保留於此僅為記錄演變過程。實際存在的只有 `test/` 與 `night_earth_v2/`。
+> Only `test/` and `night_earth_v2/` still exist; the two intermediate
+> directories are recorded for history and are no longer on disk.
 
 ```
 workspace/
@@ -726,20 +1033,27 @@ workspace/
 │   ├── preview_*.png      3 個相機角度
 │   └── SPEC.md
 │
-└── night_earth_v2/        階段 3-4：v3 最終版
+└── night_earth_v2/        階段 3-5：目前版本
     ├── index.html         頂部導覽列 + 時間列
-    ├── app.js             52 個常數
+    ├── config.js          ★ 唯一資料源：PROJECTS + RAINBOW(12 色)
+    ├── app.js             66 個可調常數，含星雲爆炸與命中偵測
     ├── geodata.js         同 v1
-    ├── verify.py          85 項檢查
-    ├── preview_*.png
-    ├── SPEC-v3.md         完整規格書
+    ├── project.html       ★ 臨時專案頁，吃 ?id= 參數
+    ├── verify.py          127 項檢查
+    ├── make_standalone.py ★ 打包單一檔案
+    ├── ST8925-LAB-standalone.html  ★ 單檔驗收版
+    ├── preview_*.png      3 個相機角度 + 爆炸時間軸
+    ├── SPEC-v4.md         完整規格書
     ├── README.md          本文件
     └── PROMPT.md          重建規格
+
+執行需 `index.html` + `config.js` + `geodata.js` + `app.js` + `project.html`。
+單檔驗收用 `ST8925-LAB-standalone.html`，可直接以 file:// 開啟。
 ```
 
 ---
 
-## 11. 授權 / Licence
+## 12. 授權 / Licence
 
 地理資料來自 **Natural Earth**，公有領域，無需標示。
 Geographic data from **Natural Earth** — public domain, no attribution required.
