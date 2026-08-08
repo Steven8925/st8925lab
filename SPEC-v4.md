@@ -477,19 +477,19 @@ N=13 時 `palette covers the projects` 與 `no hue shortage` 皆失敗 —— �
 
 ```javascript
 BURST_DURATION     = 1400   // ms
-BURST_PARTICLES    = 280
-BURST_SPEED_MIN    = 280    // px/s (再加大100%，共4倍規模)
-BURST_SPEED_MAX    = 1200   // px/s (再加大100%，共4倍規模)
+BURST_PARTICLES    = 400
+BURST_SPEED_MIN    = 560    // px/s (再加大100%，共8倍超大規模)
+BURST_SPEED_MAX    = 2400   // px/s (再加大100%，共8倍超大規模)
 BURST_DAMPING      = 0.945  // 每幀阻尼 / per-frame
-BURST_RING_MAX     = 480    // px 衝擊波 (再加大100%) / shockwave
-BURST_FLASH_SCALE  = 20.0   // (再加大100%)
-BURST_PARTICLE_R   = 9.6    // px (再加大100%)
-BURST_CLOUDS       = 12     // 瀰漫雲團 / diffuse blobs
-BURST_CLOUD_R      = 312    // px (再加大100%)
+BURST_RING_MAX     = 960    // px 衝擊波 (再加大100%) / shockwave
+BURST_FLASH_SCALE  = 40.0   // (再加大100%)
+BURST_PARTICLE_R   = 19.2   // px (再加大100%)
+BURST_CLOUDS       = 16     // 瀰漫雲團 / diffuse blobs
+BURST_CLOUD_R      = 624    // px (再加大100%)
 BURST_GLOW_MULT    = 4.5    // 粒子光暈倍率 / glow radius
-BURST_SPARKS       = 32     // 十字星芒 / cross flares
+BURST_SPARKS       = 48     // 十字星芒 / cross flares
 ```
-> **觸發機制與擴散視覺**：點擊專案或導覽列時，該同色軌道上的**所有光點（POINTS_PER_RING）一同觸發爆破**，且爆破體積與擴散擴展半徑全數再放大 100%（共 4 倍超大視覺規模）。
+> **觸發機制與擴散視覺**：點擊專案或導覽列時，該同色軌道上的**所有光點（POINTS_PER_RING）一同觸發爆破**，且爆破體積與擴散擴展半徑全數再放大 100%（共 8 倍震撼極致星雲規模）。
 
 ### 13.2 「不明顯」的量化診斷 ⚠️ / Diagnosing "Not Obvious Enough"
 

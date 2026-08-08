@@ -467,21 +467,21 @@ const GEO_LOOKUP_TIMEOUT = 3000;  // ms
 // nav entry is clicked. Navigation happens when the animation finishes.
 // 由該環主光點射出；點擊軌道光點或導覽列皆會觸發，動畫結束後才導向。
 const BURST_DURATION     = 1400;  // 動畫總長 ms / total animation length
-const BURST_PARTICLES    = 280;   // 粒子數 / particle count (280)
-const BURST_SPEED_MIN    = 280;   // 粒子初速下限 px/s（再加大100%） / min initial speed (4x)
-const BURST_SPEED_MAX    = 1200;  // 粒子初速上限 px/s（再加大100%） / max initial speed (4x)
+const BURST_PARTICLES    = 400;   // 粒子數 / particle count (400)
+const BURST_SPEED_MIN    = 560;   // 粒子初速下限 px/s（再加大100%） / min initial speed (8x)
+const BURST_SPEED_MAX    = 2400;  // 粒子初速上限 px/s（再加大100%） / max initial speed (8x)
 const BURST_DAMPING      = 0.945; // 每幀阻尼，星雲感來源 / per-frame damping
-const BURST_RING_MAX     = 480;   // 衝擊波最大半徑 px（再加大100%） / max shockwave radius (4x)
-const BURST_FLASH_SCALE  = 20.0;  // 核心閃光倍率（再加大100%） / core flash multiplier (4x)
-const BURST_PARTICLE_R   = 9.6;   // 粒子半徑 px（再加大100%） / particle radius (4x)
+const BURST_RING_MAX     = 960;   // 衝擊波最大半徑 px（再加大100%） / max shockwave radius (8x)
+const BURST_FLASH_SCALE  = 40.0;  // 核心閃光倍率（再加大100%） / core flash multiplier (8x)
+const BURST_PARTICLE_R   = 19.2;  // 粒子半徑 px（再加大100%） / particle radius (8x)
 // A nebula reads as a bright diffuse HAZE, not as sparse dots on black.
 // Measured against the reference images: their 90th-percentile luminance is
 // 68..136, whereas a dots-only burst measured 7 (essentially black).
 // These three constants supply that haze. 星雲的關鍵是瀰漫的亮霧而非疏散亮點。
-const BURST_CLOUDS       = 12;    // 瀰漫雲團數 / diffuse cloud blobs
-const BURST_CLOUD_R      = 312;   // 雲團最大半徑 px（再加大100%） / max cloud radius (4x)
+const BURST_CLOUDS       = 16;    // 瀰漫雲團數 / diffuse cloud blobs
+const BURST_CLOUD_R      = 624;   // 雲團最大半徑 px（再加大100%） / max cloud radius (8x)
 const BURST_GLOW_MULT    = 4.5;   // 粒子光暈倍率 / per-particle glow radius
-const BURST_SPARKS       = 32;    // 十字星芒數 / cross-flare sparks
+const BURST_SPARKS       = 48;    // 十字星芒數 / cross-flare sparks
 
 // --- 點擊判定 / Click detection --------------------------------
 // A press only counts as a click if the pointer barely moved and was not

@@ -550,9 +550,9 @@ const ENABLE_GEO_LOOKUP = false;   // 預設關閉
 
 ## 6. 階段 5 — 星雲爆炸與雙向連動
 
-**需求 / Request**：6 條軌道與頁首 6 個 projects 為 1:1，顏色亦 1:1。點擊 project 或軌道光點時，同色軌道上的**所有光點一同產生爆破**，且爆破體積與擴散半徑再加大 100%（共 4 倍超大視覺規模）；動畫結束後開啟同色的 project。未來會陸續增加專案，軌道須同步增加，規則不變。
+**需求 / Request**：6 條軌道與頁首 6 個 projects 為 1:1，顏色亦 1:1。點擊 project 或軌道光點時，同色軌道上的**所有光點一同產生爆破**，且爆破體積與擴散半徑再加大 100%（共 8 倍震撼極致星雲規模）；動畫結束後開啟同色的 project。未來會陸續增加專案，軌道須同步增加，規則不變。
 
-Six orbits map 1:1 to six nav projects, colours included. Clicking a project bursts all light points on the matching ring simultaneously at 4x scale (enlarged by another 100%); clicking a light point opens the matching project. Future projects must add orbits automatically under the same rules.
+Six orbits map 1:1 to six nav projects, colours included. Clicking a project bursts all light points on the matching ring simultaneously at 8x scale (enlarged by another 100%); clicking a light point opens the matching project. Future projects must add orbits automatically under the same rules.
 
 ### 6.1 使用者決策 / User Decisions
 
