@@ -404,10 +404,10 @@ Includes 62 major world cities sorted alphabetically (A-Z) by country English na
 
 ### 7.4 位置與響應式 / Placement & Responsiveness
 
-`top: calc(50% + var(--bar-h)/2 + 250px)`
+`top: calc(50% + var(--bar-h)/2 + 300px)`
 
-250px 的依據：必須避開呼吸**最小時**的軌道（211px），而非只避開地球（130px）。
-250px clearance ensures the clock clears the orbit ring at its minimum breath (211px), not just the globe (130px).
+300px 的依據：向下調降 50px，確保避開呼吸**最小時**的軌道（211px）與維持更寬鬆的視覺間距。
+300px clearance ensures the clock clears the orbit ring at its minimum breath (211px) with generous spacing.
 
 矮螢幕（`max-height: 760px`）改貼底部（`bottom: 40px`）；窄螢幕（`max-width: 560px`）改為兩行（`flex-direction: column`）。
 Short viewports (`max-height: 760px`) pin to the bottom (`bottom: 40px`); narrow viewports (`max-width: 560px`) stack vertically into two lines.

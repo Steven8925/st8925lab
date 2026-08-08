@@ -511,7 +511,7 @@ CLOCK_TZ_OFFSET = 8
 - **動態時區格式化 / Dynamic Timezone Formatting**：透過 `Intl.DateTimeFormat` 解析選定城市的本地時間與時區名稱（`tzStamp()`），另一側保持固定 GMT+8 時間。
 - **互動穿透 / Pointer Events Fix**：父層 `#clock` 設定 `pointer-events: none;`，子選單 `#world-clock-select` 獨立設置 `pointer-events: auto;` 以保持正常的點擊與選取互動。
 
-時鐘位置 `top: calc(50% + var(--bar-h)/2 + 250px)`。250px 的依據：必須避開呼吸**最小時**的軌道（211px），而非只避開地球（130px）。
+時鐘位置 `top: calc(50% + var(--bar-h)/2 + 300px)`。300px 的依據：向下調降 50px，確保避開呼吸**最小時**的軌道（211px）與維持更寬鬆的視覺間距。
 
 ### 5.6 IP 定位的隱私取捨 / Geolocation Privacy Trade-off
 
