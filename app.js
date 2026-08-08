@@ -110,18 +110,18 @@ const GEO_LOOKUP_TIMEOUT = 3000;  // ms
 // 由該環主光點射出；點擊軌道光點或導覽列皆會觸發，動畫結束後才導向。
 const BURST_DURATION     = 1400;  // 動畫總長 ms / total animation length
 const BURST_PARTICLES    = 140;   // 粒子數 / particle count
-const BURST_SPEED_MIN    = 70;    // 粒子初速下限 px/s / min initial speed
-const BURST_SPEED_MAX    = 300;   // 粒子初速上限 px/s / max initial speed
+const BURST_SPEED_MIN    = 140;   // 粒子初速下限 px/s（加大100%） / min initial speed (2x)
+const BURST_SPEED_MAX    = 600;   // 粒子初速上限 px/s（加大100%） / max initial speed (2x)
 const BURST_DAMPING      = 0.945; // 每幀阻尼，星雲感來源 / per-frame damping
-const BURST_RING_MAX     = 120;   // 衝擊波最大半徑 px / max shockwave radius
-const BURST_FLASH_SCALE  = 5.0;   // 核心閃光倍率 / core flash multiplier
-const BURST_PARTICLE_R   = 2.4;   // 粒子半徑 px / particle radius
+const BURST_RING_MAX     = 240;   // 衝擊波最大半徑 px（加大100%） / max shockwave radius (2x)
+const BURST_FLASH_SCALE  = 10.0;  // 核心閃光倍率（加大100%） / core flash multiplier (2x)
+const BURST_PARTICLE_R   = 4.8;   // 粒子半徑 px（加大100%） / particle radius (2x)
 // A nebula reads as a bright diffuse HAZE, not as sparse dots on black.
 // Measured against the reference images: their 90th-percentile luminance is
 // 68..136, whereas a dots-only burst measured 7 (essentially black).
 // These three constants supply that haze. 星雲的關鍵是瀰漫的亮霧而非疏散亮點。
 const BURST_CLOUDS       = 7;     // 瀰漫雲團數 / diffuse cloud blobs
-const BURST_CLOUD_R      = 78;    // 雲團最大半徑 px / max cloud radius
+const BURST_CLOUD_R      = 156;   // 雲團最大半徑 px（加大100%） / max cloud radius (2x)
 const BURST_GLOW_MULT    = 4.5;   // 粒子光暈倍率 / per-particle glow radius
 const BURST_SPARKS       = 16;    // 十字星芒數 / cross-flare sparks
 
@@ -290,10 +290,10 @@ function breathFactor() {
 // 因此天然不可點，不需額外判斷。
 let hitTargets = [];
 
-// Screen position of each ring's lead point, refreshed every frame. Used to
-// launch a burst from the correct place when the NAV bar is clicked.
-// 各環主光點的螢幕座標，供點擊導覽列時從正確位置發射爆炸。
-let leadScreen = new Map();
+// Screen positions of each ring's light points, refreshed every frame. Used to
+// launch bursts from all light points on the same ring simultaneously.
+// 各環所有光點的螢幕座標，供點擊時該軌道上所有光點一同爆破。
+let ringPointsScreen = new Map();
 
 let bursts = [];          // 進行中的爆炸 / active bursts
 let navLocked = false;    // 導向中，避免重複觸發 / guards double activation
@@ -455,19 +455,18 @@ function drawBurst(b) {
 
 // Single entry point for BOTH directions: clicking a light point and clicking
 // a nav entry both land here, so the two paths cannot drift apart.
-// 雙向共用同一入口，兩條路徑不會各自飄移。
+// 雙向共用同一入口；點擊軌道光點或導覽列皆在此使該軌道上所有光點一同爆破。
 function openProject(ringIndex) {
     if (navLocked) return;
     navLocked = true;
 
-    const lead = leadScreen.get(ringIndex);
-    if (lead) {
-        spawnBurst(ringIndex, lead.px, lead.py, lead.z);
+    const points = ringPointsScreen.get(ringIndex);
+    if (points && points.length > 0) {
+        for (const pt of points) {
+            spawnBurst(ringIndex, pt.px, pt.py, pt.z);
+        }
     } else {
-        // Lead point is behind the globe this frame, so there is no screen
-        // position to launch from. Navigation still proceeds after the same
-        // delay, keeping the timing identical whichever side is clicked.
-        // 主光點正在背面時無座標可用，仍延遲相同時間再導向，時序一致。
+        // Fallback if no points captured for this frame
         spawnBurst(ringIndex, stage.clientWidth / 2,
                    stage.clientHeight / 2 + STAGE_Y_OFFSET, 1e6);
     }
@@ -713,7 +712,7 @@ function render(now) {
     // Rebuilt from scratch each frame; stale entries would let the user click
     // a point that is no longer there. 每幀重建，避免點到已消失的光點。
     hitTargets = [];
-    leadScreen.clear();
+    ringPointsScreen.clear();
 
     // Breathing scales the ORBITS ONLY. earthPx deliberately does not use it,
     // so the globe stays pinned at the centre exactly as specified.
@@ -798,14 +797,12 @@ function render(now) {
             const baseA = isLead ? 1 : DIM_ALPHA;
             const size  = POINT_SIZE * (isLead ? LEAD_SCALE : 1);
 
-            // Register for click detection. All POINTS_PER_RING points of a
-            // ring map to the same project, so any of them can be clicked.
-            // Reached only when the point was NOT occluded (see the continue
-            // above), so hidden points are excluded automatically.
-            // 同環所有光點對應同一專案，皆可點擊；被遮擋者已在上方 continue。
+            // Register for click detection and burst location capture. All
+            // POINTS_PER_RING points of a ring map to the same project.
             hitTargets.push({ ring: k, px: p.px, py: p.py,
                               r: size * p.scale });
-            if (isLead) leadScreen.set(k, { px: p.px, py: p.py, z: p.z });
+            if (!ringPointsScreen.has(k)) ringPointsScreen.set(k, []);
+            ringPointsScreen.get(k).push({ px: p.px, py: p.py, z: p.z });
 
             drawList.push({ z: p.z, render: () => {
                 for (const { p: tp, t } of tail) {

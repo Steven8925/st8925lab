@@ -478,17 +478,18 @@ N=13 時 `palette covers the projects` 與 `no hue shortage` 皆失敗 —— �
 ```javascript
 BURST_DURATION     = 1400   // ms
 BURST_PARTICLES    = 140
-BURST_SPEED_MIN    = 70     // px/s
-BURST_SPEED_MAX    = 300    // px/s
+BURST_SPEED_MIN    = 140    // px/s (加大100%)
+BURST_SPEED_MAX    = 600    // px/s (加大100%)
 BURST_DAMPING      = 0.945  // 每幀阻尼 / per-frame
-BURST_RING_MAX     = 120    // px 衝擊波 / shockwave
-BURST_FLASH_SCALE  = 5.0
-BURST_PARTICLE_R   = 2.4    // px
+BURST_RING_MAX     = 240    // px 衝擊波 (加大100%) / shockwave
+BURST_FLASH_SCALE  = 10.0   // (加大100%)
+BURST_PARTICLE_R   = 4.8    // px (加大100%)
 BURST_CLOUDS       = 7      // 瀰漫雲團 / diffuse blobs
-BURST_CLOUD_R      = 78     // px
+BURST_CLOUD_R      = 156    // px (加大100%)
 BURST_GLOW_MULT    = 4.5    // 粒子光暈倍率 / glow radius
 BURST_SPARKS       = 16     // 十字星芒 / cross flares
 ```
+> **觸發機制與擴散視覺**：點擊專案或導覽列時，該同色軌道上的**所有光點（POINTS_PER_RING）一同觸發爆破**，且爆破體積與擴散擴展半徑全數放大 100%（2 倍視覺規模）。
 
 ### 13.2 「不明顯」的量化診斷 ⚠️ / Diagnosing "Not Obvious Enough"
 
