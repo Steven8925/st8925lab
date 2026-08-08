@@ -162,7 +162,7 @@
     #clock {
         position: fixed;
         left: 50%;
-        top: calc(50% + var(--bar-h) / 2 + 300px);
+        top: calc(50% + var(--bar-h) / 2 + 350px);
         transform: translateX(-50%);
         display: flex;
         align-items: center;
@@ -390,6 +390,7 @@ const CAM_RY0            = 0.0;   // 相機初始偏航 / initial camera yaw
 const DRAG_SENS          = 0.006; // 拖曳靈敏度 rad/px / drag sensitivity
 const OCCLUSION_MARGIN   = 0.985; // 遮擋判定邊界 / occlusion test margin
 const BACKFACE_ALPHA     = 0.0;   // 被遮擋光點透明度 / occluded point alpha
+const STAGE_Y_OFFSET     = -50;   // 地球與軌跡垂直偏移 px（負數為上移） / Globe & orbit vertical offset (negative = up)
 
 // --- 呼吸 / Breathing ------------------------------------------
 // 只作用於軌道與光點，地球半徑恆為 EARTH_RADIUS。
@@ -584,7 +585,7 @@ stage.addEventListener('pointermove', e => {
     // 滑鼠疊加量：以距地球中心的距離正規化，越遠膨脹越多。
     const r = stage.getBoundingClientRect();
     const dx = e.clientX - (r.left + r.width / 2);
-    const dy = e.clientY - (r.top + r.height / 2);
+    const dy = e.clientY - (r.top + r.height / 2 + STAGE_Y_OFFSET);
     const dist = Math.hypot(dx, dy);
     pointerInside = true;
     mouseBreathTarget = Math.min(1, dist / MOUSE_BREATH_RANGE) * MOUSE_BREATH_MAX;
@@ -826,7 +827,7 @@ function openProject(ringIndex) {
         // delay, keeping the timing identical whichever side is clicked.
         // 主光點正在背面時無座標可用，仍延遲相同時間再導向，時序一致。
         spawnBurst(ringIndex, stage.clientWidth / 2,
-                   stage.clientHeight / 2, 1e6);
+                   stage.clientHeight / 2 + STAGE_Y_OFFSET, 1e6);
     }
 
     setTimeout(() => {
@@ -1077,7 +1078,7 @@ function render(now) {
     const orbitR = ORBIT_RADIUS * breath;
 
     const w = stage.clientWidth, h = stage.clientHeight;
-    const cx = w / 2, cy = h / 2;
+    const cx = w / 2, cy = h / 2 + STAGE_Y_OFFSET;
     const earthPx = EARTH_RADIUS * sceneScale;
 
     ctx.fillStyle = '#04070e';
