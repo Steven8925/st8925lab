@@ -614,7 +614,7 @@ Adding a project is one array entry. Ring count, plane angles, colours, nav and 
 ### 6.4 星雲爆炸 / Nebula Burst
 
 ```javascript
-BURST_DURATION    = 1400   BURST_PARTICLES  = 140
+BURST_DURATION    = 1400   BURST_PARTICLES  = 400
 BURST_SPEED_MIN   = 70     BURST_SPEED_MAX  = 300   // px/s
 BURST_DAMPING     = 0.945  BURST_RING_MAX   = 120   // px
 BURST_FLASH_SCALE = 5.0    BURST_PARTICLE_R = 2.4

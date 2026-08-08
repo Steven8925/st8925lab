@@ -737,7 +737,7 @@ def check_burst():
 
     dur = C['BURST_DURATION']
     check('burst duration', dur, 1400, 'lengthened so the haze is readable')
-    check('particle count', C['BURST_PARTICLES'], 140)
+    check('particle count', C['BURST_PARTICLES'], 400)
     # A nebula reads as a diffuse haze. Measured on the reference images the
     # 90th-percentile luminance is 68..136; a dots-only burst measured 7.
     # These three constants supply the haze that closes that gap.
