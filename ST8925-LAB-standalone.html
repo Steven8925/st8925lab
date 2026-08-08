@@ -1,3 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST8925 LAB</title>
+<meta name="description" content="旋轉的夜間地球，五大洲以城市燈光顯示輪廓，外圈傾斜軌道上有光點環繞並隨滑鼠呼吸；每條軌道對應一個專案。Rotating night Earth with city-light continents and breathing orbit rings, one ring per project.">
+<style>
+    :root {
+        --bg: #04070e;
+        --text: #e8eef7;
+        --muted: #64748b;
+        --bar-h: 64px;                 /* 導覽列高度 / top bar height */
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    }
+
+    /* ===========================================================
+       頂部導覽列 / Top bar
+       毛玻璃：軌道呼吸時最大可達 288px，會通到列後方。
+       Frosted glass: the orbit reaches 288px at peak breath and
+       passes behind the bar.
+       =========================================================== */
+    #topbar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: var(--bar-h);
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0 clamp(1rem, 3vw, 2.25rem);
+        background: rgba(4, 7, 14, 0.55);
+        backdrop-filter: blur(14px) saturate(120%);
+        -webkit-backdrop-filter: blur(14px) saturate(120%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* --- 站名 / Wordmark --------------------------------------
+       色彩由 JS 每幀寫入（5 秒正弦亦滅），故此處不設 color。
+       Colour is written per frame by JS (5 s sine pulse), so no
+       colour is declared here.
+       ---------------------------------------------------------- */
+    #wordmark {
+        display: inline-flex;
+        align-items: baseline;
+        font-size: clamp(1rem, 2.2vw, 1.45rem);
+        font-weight: 700;
+        letter-spacing: .16em;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+        /* 放大時不撐開版面 / magnified glyphs must not reflow the bar */
+        padding: .35rem 0;
+        flex: none;
+    }
+    #wordmark .glyph {
+        display: inline-block;
+        /* 由 JS 每幀寫入 transform，故不設 transition，
+           否則會與阻尼插值疊加成雙重延遲。
+           JS writes transform every frame, so no transition here —
+           it would compound with the damping into a double lag. */
+        transform-origin: 50% 100%;
+        will-change: transform;
+    }
+    #wordmark .glyph.space { width: .5em; }
+
+    /* --- 專案導覽 / Project nav -------------------------------- */
+    #projects {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: clamp(.4rem, 1.4vw, 1.4rem);
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    #projects::-webkit-scrollbar { display: none; }
+    .project {
+        --c: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        color: var(--c);
+        text-decoration: none;
+        font-size: clamp(.62rem, 1.1vw, .78rem);
+        font-weight: 600;
+        letter-spacing: .1em;
+        padding: .42rem .7rem;
+        border: 1px solid color-mix(in srgb, var(--c) 24%, transparent);
+        border-radius: 7px;
+        background: color-mix(in srgb, var(--c) 5%, transparent);
+        transition: transform .18s ease, box-shadow .18s ease,
+                    background .18s ease, border-color .18s ease;
+        white-space: nowrap;
+        flex: none;
+    }
+    .project .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--c);
+        box-shadow: 0 0 7px var(--c);
+        flex: none;
+    }
+    .project:hover, .project:focus-visible {
+        transform: translateY(-2px);
+        border-color: var(--c);
+        background: color-mix(in srgb, var(--c) 13%, transparent);
+        box-shadow: 0 0 16px color-mix(in srgb, var(--c) 38%, transparent);
+        outline: none;
+    }
+
+    /* --- 右側按鈕 / Right-hand CTA ----------------------------- */
+    #cta {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: clamp(.62rem, 1.1vw, .78rem);
+        font-weight: 600;
+        letter-spacing: .1em;
+        color: #cbd5e1;
+        text-decoration: none;
+        padding: .45rem .95rem;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 7px;
+        transition: background .18s ease, border-color .18s ease, color .18s ease;
+        white-space: nowrap;
+    }
+    #cta:hover, #cta:focus-visible {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.34);
+        color: #ffffff;
+        outline: none;
+    }
+
+    /* ===========================================================
+       舞台 / Stage
+       =========================================================== */
+    #stage {
+        position: absolute;
+        inset: 0;
+        cursor: grab;
+        touch-action: none;
+    }
+    #stage:active { cursor: grabbing; }
+    #scene { display: block; width: 100%; height: 100%; }
+
+    /* ===========================================================
+       時間列 / Clock row
+       置於地球下方。地球半徑 130px，故偏移量須大於 130 加上
+       呼吸最小時的軌道 211px 才不會被壓到。
+       Sits below the globe. The offset must clear the orbit at its
+       smallest breath (211px), not just the 130px globe.
+       =========================================================== */
+    #clock {
+        position: fixed;
+        left: 50%;
+        top: calc(50% + var(--bar-h) / 2 + 250px);
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        white-space: nowrap;
+        font-size: clamp(.6rem, 1.15vw, .8rem);
+        font-weight: 600;
+        letter-spacing: .06em;
+        z-index: 15;
+        pointer-events: none;
+        user-select: none;
+    }
+    /* 顏色由 JS 於載入時抽色寫入 / colour is assigned by JS on load */
+    #clock .sep { color: #334155; }
+
+    /* --- 世界時間下拉選單 / World clock select ----------------------- */
+    #clock-world-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+    }
+    #world-clock-select {
+        background: rgba(15, 23, 42, 0.75);
+        color: #e8eef7;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: clamp(.78rem, 1.5vw, 1.01rem);
+        font-weight: 400;
+        padding: .25rem .5rem;
+        cursor: pointer;
+        outline: none;
+        backdrop-filter: blur(10px);
+        transition: border-color .18s ease, box-shadow .18s ease;
+        pointer-events: auto;
+    }
+    #world-clock-select:hover, #world-clock-select:focus-visible {
+        border-color: rgba(255, 255, 255, 0.38);
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.12);
+    }
+    #world-clock-select option {
+        background: #0b1526;
+        color: #e8eef7;
+        padding: .3rem;
+    }
+
+    #hint {
+        position: fixed; bottom: 14px; left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px; letter-spacing: .08em; color: var(--muted);
+        pointer-events: none; user-select: none;
+        z-index: 15;
+    }
+
+    /* 矮螢幕：時間列改貼底部，避免與軌道重疊 */
+    /* Short viewports: pin the clock to the bottom instead of overlapping */
+    @media (max-height: 760px) {
+        #clock { top: auto; bottom: 40px; }
+    }
+    @media (max-width: 560px) {
+        #clock { flex-direction: column; gap: .2rem; }
+        #clock .sep { display: none; }
+    }
+
+    @media (max-width: 720px) {
+        :root { --bar-h: 56px; }
+        #cta { display: none; }        /* 小螢幕讓出空間 / reclaim space */
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .project, #cta { transition: none; }
+    }
+</style>
+</head>
+<body>
+
+<header id="topbar">
+    <a id="wordmark" href="./" aria-label="ST8925 LAB"></a>
+    <nav id="projects" aria-label="Projects"></nav>
+    <a id="cta" href="mailto:hello@st8925.lab">CONTACT</a>
+</header>
+
+<div id="stage">
+    <canvas id="scene"></canvas>
+</div>
+
+<div id="clock">
+    <div id="clock-world-wrapper">
+        <select id="world-clock-select" aria-label="Select World City"></select>
+        <span id="clock-local"></span>
+    </div>
+    <span class="sep">·</span>
+    <span id="clock-gmt8"></span>
+</div>
+
+<div id="hint">拖曳旋轉 · drag to rotate · 雙擊重置 · double-click to reset</div>
+
+<script>
+// ===============================================================
+//  SHARED CONFIG / 共用設定
+//  Loaded by BOTH index.html (the orbit) and project.html (the pages),
+//  so the two can never disagree about what projects exist or what
+//  colour each one is. This is the single source of truth.
+//  首頁與專案頁共用本檔，兩者對「有哪些專案、各是什麼顏色」永不分歧。
+// ===============================================================
+
+// 提亮版彩虹 — 每色對 #04070e 背景的對比 >= 7.26，已達 WCAG AAA (7.0)
+// Brightened rainbow — every hue scores >= 7.26 against the #04070e backdrop,
+// clearing WCAG AAA (7.0). Run verify.py for the full contrast table.
+//
+// The first seven are the original palette, unchanged byte for byte, so a
+// six-project site looks exactly as it did before. The last five were added
+// to raise the ceiling from 7 to 12: each sits in a hue gap of the original
+// seven, with its lightness binary-searched until the contrast cleared AAA.
+// 前七色為原始配色，一個位元都沒動；後五色填入原七色的色相空隙，
+// 明度以二分搜尋調整至對比達 AAA，使專案上限由 7 提高到 12。
+const RAINBOW = [
+    { name: 'red',     hex: '#ff6b6b', rgb: [255, 107, 107] },
+    { name: 'orange',  hex: '#ffa94d', rgb: [255, 169,  77] },
+    { name: 'yellow',  hex: '#ffe066', rgb: [255, 224, 102] },
+    { name: 'green',   hex: '#69db7c', rgb: [105, 219, 124] },
+    { name: 'blue',    hex: '#4dabf7', rgb: [ 77, 171, 247] },
+    { name: 'indigo',  hex: '#a78bfa', rgb: [167, 139, 250] },
+    { name: 'violet',  hex: '#f783ac', rgb: [247, 131, 172] },
+    { name: 'lime',    hex: '#61af0e', rgb: [ 97, 175,  14] },
+    { name: 'teal',    hex: '#0eb08f', rgb: [ 14, 176, 143] },
+    { name: 'azure',   hex: '#8595f5', rgb: [133, 149, 245] },
+    { name: 'purple',  hex: '#d077f4', rgb: [208, 119, 244] },
+    { name: 'magenta', hex: '#f265d8', rgb: [242, 101, 216] },
+];
+
+// ---------------------------------------------------------------
+// PROJECTS — add a project here and nowhere else / 唯一資料源
+// ---------------------------------------------------------------
+// One entry == one project == one orbit ring == one colour.
+// ORBIT_RINGS, the ring plane angles (k*pi/N), the nav bar, the colour
+// assignment and the clickable light points ALL derive from this array.
+// Adding an entry is the complete procedure for adding a project.
+// 一筆 = 一個專案 = 一條軌道 = 一個顏色。環數、平面角、導覽、配色、
+// 可點光點全部由此推導；新增專案只需在此加一筆，別處都不用改。
+//
+// Hard limit: RAINBOW.length (12). Beyond that two projects would share a
+// hue and the colour<->project mapping the click-linking depends on breaks.
+// Guarded at runtime in app.js.
+// 硬上限 RAINBOW.length (12)；超過會使兩專案同色，雙向對應即失效。
+const PROJECTS = [
+    { id: '01', label: 'PROJECT 01' },
+    { id: '02', label: 'PROJECT 02' },
+    { id: '03', label: 'PROJECT 03' },
+    { id: '04', label: 'PROJECT 04' },
+    { id: '05', label: 'PROJECT 05' },
+    { id: '06', label: 'PROJECT 06' },
+];
+
+// Single page + query string, so adding a project needs no new file.
+// 單一頁面吃參數，新增專案不必建檔。
+//
+// The hue is carried in the URL because the homepage RESHUFFLES the palette
+// on every load: ring i is not palette entry i. Without passing it, the
+// project page would show the colour of ring index i in the UNSHUFFLED
+// palette, which matches what the user clicked only about 1 time in 12.
+// 首頁每次載入都會洗牌，第 i 環並非第 i 色。若不隨 URL 傳遞色相，
+// 專案頁只會顯示「未洗牌」的第 i 色，與使用者點到的顏色約 12 次才對 1 次。
+const PROJECT_URL = (id, hue) =>
+    `project.html?id=${id}` + (hue ? `&hue=${encodeURIComponent(hue)}` : '');
+
+</script>
+<script>
+// Auto-generated coastline + landmass point data.
+// Source: Natural Earth 110m land polygons (public domain), via geojson.xyz.
+// Encoding: each point = 4 base64 chars = 23 bits.
+//   bits 22..11 : (lon + 180) * 10   [0..3600]
+//   bits 10..0  : (lat + 90)  * 10   [0..1800]
+// Quantisation error <= 0.05 deg (~5.5 km), far below one pixel at R=130.
+const GEO_B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+const COAST_PACKED = "JXhbJBBbI8hhJQhiJYBlBXhsBTB0BghyBnhqKphwKrBnKhhgKNBbJ3BdJ9hkKHhrKNhzKZB5EyClEoCgEfilETCiEJCmGgizGdCvGPCvGFC0GOi1Iti2IlCxIbCxITixINC2IVi8IdDAIdjJIgDRInjQIqjHIti/JXEBJPD9JLD1JMjuJEDpI+DiI8jaJDDTJJjNJMjEJQi8JRC0JTirJUCjJNCbJECVI5CPIqCLIeCFIMCFIDiBIRB8IKh2H+ByIChqIKhiIfBdIwhXJJBSJahLJihFJzhMKJBSKkhRKyhULJhYLghcL1BhLvhpLfhqLQhtLRh1Lgh7LuCBL6CHMLCKMaiNMniTMyiZM0igM1ioNBCtNKCzNPi7NZC3NgC8Nni8NyC6N+i8OGC5ORi+OdDBOoDGOwDHO3jDPADCPIDIPQDEPaDJPmDJPwjFP5DDQGDDQSDFQcjKQnDNQsDVQzjTQ9DQRFDKRMDRRVDWRgDZRpDeRyjgR6jlSCjpSKDvSTjySeDwSiDpSpjjSzDfS8jcTEjiTPDeTaDdTfDWTgDOTaDITaDBTbC7TaC0TmCzTri6TyDCT2DKUCDLUKjRUPDYUYjdUgDjUqjkU1DlU7DrU/DpVHDkVRjkVcjlVmDjVxDlV5jmWADtWGD0WODvWUjpWeDmWojoWxDtW6jwXCDtXKjpXTjlXeDkXmDpXvjqX6DqYEjpYOjrYYjsYjDtYnD0YrDyYuDqY2jnZBDoZMDoZWjoZfDjZjDcZsjYZ3jVaDDTaLDUaUDOafjManDGawjBa9jAbKC/bVi7bbi0bXCsbTCkbJCfbACYa5CRa1iIa2iAa6h4bGhya3htaphoamhgaohYawBQa/hIbRhBbjA6b7A5cIAxcIAocIAgcIAXcIAPcIAGAAACAAALAAATAAAcAAAkAAAtAAg1AMA4AbA3AvA9BCA2BhAwCIAwCoguC5g2CVA6CEhBCHhJCDhRB1hYCLBaCchaCnhhCdBpCIhsB4hwBuB4BsiAB0B/CEiACSB/CfiFCpiKCpiSC1CRDDiVDSiYDfidDuidD9icEMibEcCbEsCbE4igFGCgFOCfFVCaFhCYFvCUF+iWGNCTGMCbGCChF/CpGDCsGRCsGaimGnClG1CoHBinHGiuHQCoHbClHpCjHxinH6ilIGChISijIfCoIsiqI0CyIzC6IvjCItjKIwDTIzDbIxjjI3DrI9jxJDD4JKD+JSECJakGJhkLJkEGI3FkI+FhI7FcI1FfIwlZIplZIjFdIclhIXFnISluIPlzIVlvIbFqIhFpIkFwIol2IuFzIxFrJil/JdF7JYF8JTF8JWGBJbmBTdGSTcGZTfGbTkmZZgHpZlnrZpnpZqHgZoHZZmHWZinQZdnSZbHaZZniZXnqbonpbrHlbpnebmHXbknQbhnNbdHIbbHAbYm4bUGzbOGybJG1bEm5bHnBbLnHbQHMbVHRbZHXbcnebfnkbhnsblHsbvoTbxIVbzISb1oLb6oIb/IMcAIFb+H9b5n7b4n0b2HsbynmbunmbvHtbun1bqH4brn/btoGbtoObroWboocblojbjorbnInbrojbtIbbDqmbAKra8qwa5q2a6K7a+K2bBKxbFKrcBLQb9LNb6rSb+LVcBrccELgcILjcGLdABLjbILibKLhbILnbFLrbGLxR/L0SArsR/LkR9LoR9LgR7rZR7LRR6LJR4rBR3K5R1qwR0qoRzKgRyKYRwqQRuKKRpqGRlqFRhKJRfKQReqYRcqgRcqpReqwRgq2RiK+RhLGRgLORgLWRiLeRkriRpLmRsroRwLuRzL0Rzr7R3L+R4sFR6sLR9MEZTrzZXL1ZaLvZaroZbrfZeLYZerQZfrIZjLEZnK/Zqq6ZsK0ZvKtZwKlZzqkZ2KhZ3KYZ6qTZ9qNaAqGaBp+aBp1aDJuaDplaCpdaBpVaBJMZ/pEZ9o9Z6I3Z4IvZ2IoZ0IgZyoYZyIPZuoKZpIKZkoFZgn/ZcIBZYoGZWoHZSoBZNoDZIoFZDoIZAIOY/IWY8IeY3IgY4InY2IqYyokYxonYzouY1o2Y0I4YwoyYtIsYqIpYoIvYlo2YjI8YgJBYbJEYWpHYSJJYNJIYIJGYDpEX+pBX6JBX1o9XxI6XvIyXqIxXlIxXgIxXbIvXXIrXTImXOImXJIoXFItXDIzXGo4XHJBXGJJXEJRXDJZXCJhXAJoW+pwW8p4W7J+W8p+W8KDW/J9W+KFW8KNW7qVW9KdW9KlW/KoXAKlXDKrXHKwXKq0XPK1XTK4XXK7XbK8Xfq/XjLEXlrLXnrSXoraXrLgXtLYXuLcXvrjXxrlX0LsX2ryX5r1X8r4YAr4YELzYHrvYMLuYLr2YOL9YPsCYSsIYWsJYbMLYZMRYZMUYdMSYgsOYlMMYosKYssMYwMKYvsDYsL/Yrr3YpLwYsLqYwLmY0LiY3LcY7raY+rVZCrUZFLbZGrjZILrZILzZHr7ZIsDZJMLZKsTZMsZZOMRZQMKZRsDauMYarMdauMbXbsgXXskXaMmXeMkakMiajMoanMlapsnansuapMvarMnXuMcXuskXyMpX1stX5swX9swYAMvX8MrX4MoX0skXVsxXXMtXSsrXOsqXMssXQMwXostXkMrXgMrXbssXeMxXiMvXmMvXqMzahMyadM2acs6agM2ajsxaUM9aUNAaXM7WntAWrs/WutDWzNBW3M/W5s4W9s3XBs1XFsxXDsuW/suW7swW3MwWzMxWusyWqs0Wms3WiM3WeM4WaM6WXM/WTNAWVtGWZNJWdNIWhNEYjM/YjNHYlNMaMNCaJtKaJNRaLtMaOtFZ4tKZ0tGZwtFZstIZqNNZttMZxtOZzNPZ2tOZ5tUZ6NaZ9tYZ8tQX8tfX6NkX+NlYSNdYOthYKNiYGNiYENmYINoYMNnYQNlZ/tYZ9NfZ5tkZ2NoZ4NpZ8NlZ/NgaBtZYjtwYktoYoNkYrNnYuNtYxtxY1tzY5txY9tuZBtrZFtqZJtmZNtjZRthZVteZZtaZctUZetNZitKZmNHZmNCZjM/Zls4ZoszZrMrZuspZwskZxshZ1seZzsaZwMcZrseZnsfZkMlZhMqZesyZbM2ZXM3ZTM0ZQsvZPMpZLMoZHMpZDssZAMxY8MzY4MwY0MwY2M4Y5M8Y4NEY2NMYzNQYvNUYrNXYnNYYjtdYgNfYdNbYbtjYYNoYcNqYgNrYetuYaNuYXtzYTt1YRN7YVN8YZN/YdN/YhN9XzuMXwOHXsOHXoOIXjuIXfuHXcuDXeN8XhN2XkN7Xot8Xst+Xqt6XoN1XkNxXmNrXoNkXpNdXrtWXrtOXoNOXpNVXnNVXjtWXitdXgtjXgNpXdtkXeNbXeNTXdNMXZNOXaNWXaNeXXNiXWtqXYNyXZN6XauCXcOKXfuPXjOPXnOOXruNXwONXzuRYHOHYEOFYFt9YDt+YCOGYBOOYCOXYEOWYHOSWRNJWNtOWKNTWGtYWDtdWBNkV+NqV8NyV6N5V3uAV0uGVzOOVxOWVuObVrOhVounVlOtViOzVgu6Vku6Vou5Vsu2VvuwVyuqV2OlV4ufV7uZWAOZWDuUWGOOWJOIWKuCWKt8WON4WPtwWStsWVtoWWNgWVNXWVNPXUuRXWONXRuMXPuFXPt9XMt3XLNwXKtoXJNgXINfXENcXBNfW9NiW5tkW1NiWyNmWuNmWrNpWqtyWoN3Wlt/WlOHWlOPWnuWWrOWWvOWWwudW0OhW4OjW7uoW+OvXBO1XEu6XIO/XKvGXNvJXQvDXTO+XXO7XWO2XVOyXRuuXPOmXQugXSOYX8vQX8PIX6vGX5PMX3vFX3u+X0O/XxPDXwvLXvPRXsPOXovMXlvMXnvUXrPYXuvYXyPYX0veX3PhX5PkX7veUWPAUTvHUTPPUSvXUUPgUVvlUYvgUbPYUcvRUcvIUaPCJPPoJPvuJTPxXtvkXqvfXoPlXqvsXsvxXsvrXvPxXwPwXRPcXOPYXQvfXUPlXWvrXZPzXaPxXYvqXVvkXpv4Xrv0XoPuXmPwXmP4X4v1X2P0X1vvX0vqXzvwXxv3X0v5XyQAX0wBXiv/XgQEXeQLXiQKXmw8XnQ3XowvXnwnXkQiXkQZXmQTXqQTXuQPXvwJXwwCXtQGXqwLXnwLXkQNXfwOXgwVXfQUXcQbXbwjXdQlXdwsXeQ0Xfw8I4Q4I0Q4I2Q9I6w8H/w2H8w8IBQ9IFQ7IFw3IdxJIhxLImRIIpRFIsRCItw8IqQ8Ilw7IiQ8Ifw2IdQ5IYw6IUw6IQw7ISQ+IWw9IaQ/IYRGIVxKWoQ6Wjw9WjRFWmRKWqxNWuxLWtREB4xGB4xOB8RMB9RFB0xWByRYBtRcBmxiH5xkH9xjIBReIFRZIJRXILxTIQRQIPRMIKxLIGRMIBxLIBROIAxTH8xVH6RcH1xdHxxgHtRhHpxkHoxnHkxkHgxhHcxeHeRiHhRoHlxqHqRsHuxrHzRqH+R3H8x+H/R9IAx1XgRgXdxmXcxvXex2Xhx9XlR/XlR4XjxwH6SMH7SQH/SPIByIIAyPIBSQYkTSYgzTYdzMYaTPYbzWYfzYYjzaQuTjQqTfQmThQozlQtzmP/TmQETmQHTkQDTiP/TjP5zlPQT6PPzyPLT2PGT5PCz+PGUBPL0BPRUCO1UZO00QOyUMOuUMOuUUOtUdOx0fZDTwZDToY/ziY6zfY1zeYxTcYtTWYpTVYnzcYjzdYezcYaTYYVTXYVzTYXzNYWTFYUS+YQS8YQTEYNzKYLTRYQTUYTTbYXTfYazmYfzoYlTpYqToYszuYuz2YyT2Y2T4Y6T+Y90EY/0MZAUUZA0cZE0hZIUdZJ0VZJ0NZG0GZFT+OyUiOvUpOxUwOz0tZY0+ZbU7Za00ZU0yZR0rZNUqZI0vZGUnZCUkY/0pZAUxZEU2ZH06ZIVCZJ1LZNVGZR1AJL1UJL1QJGVSJC1YJF1WJI1xJDV1JF13JL10EU1qEPVuEKVzEF13ECV+EHV+EN17ESV2EW1wEa1qJo13Js15JuVzJz1zJ41wJ41qJ7VmJ81dJ6VWJ11aJ1VhJxVcJs1aJt1fJn1gJh1gJb1hJd1nJe1tJiV0JkV8Jn2EJtWIJtWCDxWeDwWWDz2PDv2SDsWZDqWgZU14ZXVwZS1wZPVsZNVkZP1dZR1VZP1VZMVTZKVUZKVdZKVlZJ1uZK12ZLV/ZJ2HZIWPZI2YZNWeZN2kZPWbZQ2TZQWKZR2CNcWLNV2KNT2ONWWWNUWeNYWkNdWqNj2qNnWkNl2cNkWUPA2oO7WuO+WzPDWyCBW9CAXECHXICKXCNxXHN0XFN6XDN4W7N020N62wN92pOC2jOE2bOI2VOMWQOJ2JOJWCODWAN81/N2V+Nx16Nr15NoV7Ns2BNyWGNtWINrWNNt2SNtWaNzWaN1WgNw2nNq2rNq2yNoWwNnW4NmXANoXINtXON1XOBBXcBEXgHzXuH2X0HkXyHiX3HqX5Ax4AA338AwX9ApYAHfYRHm4LHsYFHzYCHs3/HlYEHf4AHYX7HT4AHT4EHVYMHW4UM74UM+4OM4YHMv4DMnX/MeYBMU4DMXYIMOYMMUYPMP4TMM4YMU4cMcYWMj4aMs4ZM1YdICYnIGYuIM4qAb4gAi4iAsYeAy4YAq4TAl4OAjYGAbYKAT4PAMYTAGYWAA4WAA4PAAYVAAYeAAYmAAYvAB41AK4vAS4pAZ4jGd42GT44GW4+Ge4+Gl43cD5McIZLAAZMAI5OG/YyHEY2HK40HK4rHP4kHU4sHYY0HY48HhY+HrY6Ht4yHsYqHsYiHkYdHa4cHV4ZHR4RHN4JHGYFG+4AG8X5G130Gw3tGtXlGrXdGq3VGv3QGz3KG13CG73AHC2+HJ26HPW0HWWxHcWtHj2sHo2pHoWgHp2YHsWQHwWKH1WFH5WLH7WTH52bH3WjH4WpH+WtIDW0IFW8ID3EH/3LH83SIA3ZH/3hH+3qH93yIE30INXyIVXzIb3tIg3nIoXlIoXdIpXUIu3PIz3MI53RI9XZJB3fJE3XJI3QJM3IJQXAJP24JUWzJZ2tJg2qJl2lJo2eJtWYJt2QJp2KJkWFJd2CJZV8JTV6JM15JGV7I/V7I416I010IvVwIq1qInVjIjVcIjVZIn1eIr1lIw1qI2VuI81wJCVtJAVnI/VfJA1XJEVQJJ1OJP1PJTVVJV1XJYVQJVVLJQVHJK1EJFVAJAU7I704I5U+I81EJB1II81JI21II0VDIvU/Ip07Ik03IiUwIjUoIlUpIk0kIfUiIZ0gIUUeIYUeIb0dIWUbIR0aIR0UIPUNIMUMILUKIM0DIJz8IIz8IHUDIG0LIGUEIDUCIGz9IHz1IJTuIIzmIFTfIAzcH8zXH4zSH1TMHxzHHuTAHsy5HtywHvSoHxyhHySYHzyQHzyIHySAHuSBHrSHHpSPHmyWHmSeHlymHiytHeywHaSsHWyyHSS0HNSzHIS0HESxHFypHCSoG9yoG5ytG0ysGwStGryrGnymGjyhGfydGdSWGdSNGeSFGcR9Gbx1GbRsGbRkGcxcGeRUGgxNGixGGlxAGqQ+GtQ6Gxw9G2Q+G6RAG+RFG/xNHAxVHERZHIxbHNRbHRxaHRRTHOxMHOxEHNQ8HKw8HKw1HKwtHIwmHJQiHMwjHRQiHVQjHZwjHdwiHhQeHkQZHjwRHiwJHiwBHhv5HhvyHjvrHmvlHpPeHsvcHwveH0vhH4vkH8PiH/vdIDvaIGvgIJvkIKvsINPyIRP0IVP0IYv5IcP+Ifv+IfP3IdP0IdvsIcPlIevfIgvlIfPsIgvzIkv1Ilv8Inv4Irv2IvPxIxvuI2PuI6PtI+PpJBvrJEvvJJPvJNvvJLvtJMPoJQPmJUPiJVPaJZPYJcvUJfvOJhvIJkvDJoO/Jsu+JwPAJ0u+J4u8J8u5J/u0KCOuKEupKGOgKHOYKKOUKJOMKGuGKKuDKOuCKRN+KSN5KVN+KZt8Kdt5Kht2KlNxKlNqKpNrKtNrKxNpK1NnK5tnK9tmLBNiLEtdLINXLLtTLPtRLTtOLVNGLWM+LWM2LVMuLTMmLQMgLNMaLKMULIMMLFsFLCsALBL4LBrwLBrnLBLfLALWK+rPK9rHK8q+K6K4K4KwK3KoKzKkKwqeKsKeKnqcKjqZKfKVKbKSKXKNKUKHKRqAKRJ4KRJvKQJnKNJhKKJaKIJSKFJLKBpFJ+I/J8I4J5IxJ1orJxImJsIoJnoqJjIsJgIwJhopJlojJmIbJoIVJmINJjIGJeICJZIAJTn/JOH/JNH6JMnyJLnrJGHpJBHrI+nmJAHeJFHfJFnZJAnVI+HOI9HFI5HCI0G9IyG1I2GvI7msI6GkI1meIymXIvmQIrGKIrmCIuF6IqF5IkF1IhluIeFqIXluISl0INF6IMGCILmKIKmSIKGaILGjIOGqIQGvIKGyINm4IPHAIQHIIUHJIWnNIXnWIXndIUnaITHSIRHYIRngISnpITnxIVH5IVIBIUoJIVIRIXoXIZIfIaonIcovIdo3IfJAIeJIIeJQIfJZIephIgJpIhpxIiJ6IiqCIjKKIjqTIkKbIlKkIlqsIlq0IlK9IkrGIjrNIfrSIdLYIZrcIVrgIRrkIOLpIKruIHr0IGr7IFMDICsKIAsRH+sZH8sgH6soH5MwH2s3H0M+HxNDHuNIHutPHttXHvteHzNjH1NqHytqHvttHwN1HxN7HyuDHzuKH3OOH5uUH7OZH9OfIAOkICOrIBOxIAu5IBPBIAPJH9PPH9PWH6vcH2vdHzvYHyvSHyPNHvPQHsvRHpPWHmPVHivZHhPgHdvkHbPoHZvmHXPsHXPyHVP4HSP+HOwDHPQGHMwIHIQIHEQLHAQOG8QPG4QUG1QZGyQfGuQkGqQmGlwjGhwhGdwjGZQmGVQqGRQsGNQvGJQzGFw3GBQ5F9w+F5xCF2RHF0RPF0xUF1RcFzRkFwxqFuRxFqR3FnR9FjyCFhSIFfyOFcSUFaSbFWSfFTSlFRStFPS1FNy8FJS/FFzAFGS4FHywFKypFOSjFQScFSyVFVyPFXSHFZyAFax4FeR0FhRtFeRoFcRwFYx1FUx6FTSBFSSJFOSOFKyRFGyVFGyaFJSfFHSmFDSrFAyyE+S6E8TCE6zKE4TRE0TVEwTZErzcEozhEmTpEjTwEgz3EfT/Eb0FEZUNEX0UEW0cEXUlEWUtEW01EX09EYVGEY1OEYVXEW1fEVVnEa1lEeVfEgVfEfVnEdVuEX10ES15ENV9EHWAEE2IEEWQD+WUD82cD32jD12qDwWwDu24Dp2+Dm3GDg3KDY3KDR3ODMXUDFXZC9XcC1XcCtXfCmXkCfXiCd3bCWXYCO3UCNXbCPXjCTXoCNXkCI3cCC3WCFXQCAXJB53EB1W+Bu25BqWzBj2wBdWtBW2oBP2lBNWnBTWsBZWxBf20BlW5BrW/Bv3FBxXOBvXPBpXNBlXQBh3SBa3PBa3XBV3bBO3dBJ3jBGXqBIXyBM36BUX7Ba3/Bf4EBe4KBZYKBR4JBIYKBB4PA84VBFYaBO4eBS4ZBbYaBVYhBO4nBG4uBE40BPY2BVY9Bb5EBm5IBxZLB8ZMCDZJCMZGCYZFCkZCCwZAC7ZADG48DRY4Da42DjY8DuY9D45BEA4/EGZEENY9EUZAEW47EeY+Eo48EzY4E+Y1FIYyFFYsFM4pFX4qFg4pFnYpFk4wFuYzF3YwF/4tGJYoGUYqGXYvGg4wGj4oGl4qGrYvGs43Gl4+GiZGGj5OGr5SG0ZMG5ZEG2Y9FMZcFXZaFfZdFlZWFpZUFnZcFuZfF2ZYF45QF85IGGZDGK48GEY5GAY0F1Y3FqY2FfYzFTYyFLY1FBY4E64+FC5CFO5DFJ5GE85FE0ZJE/ZNEy5PEyZVE55cFFZhF0ZdFvZkH9ZdHyZfHzZmIA5jHYZbHe5iHqZkHw5cHyZVH9ZaIH5YIRZSIYZPIf5KIq5GIx4/I0Y3It4yI3YtJA4pJGYiJO4fJL4XJGYQI/YSI5YZIw4bIxYTI34NI+YHJA3+I+33I2X7Iu4AIwX9I132I4XwIv3yIn32If36Ic4AIV4GIOYKIHYHH+YIH94PIF4RIQYSIR4ZIWYgIX4oIR4vIIY0IF45H94+H2Y/Hp4+Hd4/HSZCHHZGHJZMHCZQHCZZHG5hHTZlHT5gGcZlGaZeGhZYGfZQGT5OGLZUGD5bGNZcGK5jZD5hZGZmZR5iGsZUGlZaGkZiGr5pG65oG75iEe5KEXZPEP5UETZdEYZlEW5rEmZsE1ZqFAZlE6ZfEwZZEp5SZp5wZfZ1Zs51Gl5vGjZ2GuZ1ZUZwZD5wY3ZxYyZ4Y859ZNZ7Gb57GZ5zGL5zGGZ4GDZ/GR6CFx58Fx50FkZxFWZtFLZuFT50FDZzE5Z2E+5+FNZ+FY54Fg56FdaBFm6ASXZHSPZMSGZQSK5XSOZfSRZlSYZsSbZzSoZ5S15+TG6ATWaFTZ5/TLZ6S8Z2Sw5wSnZpShZiSbZaSaZSSgZKG6aEG+58HL54Hb55Hs55H05yHrZtHb5tHMZsG9ZvG051GxZ9GjaBGi6IE96EExZ/EiZ8Ej6CEuaKE/aMWh6DWy6CW+Z7W6Z0WuZuWsZpW5ZoW9ZjXK5lXW5iXg5eXsZgXxZlX/5jYH5cYG5UYMZNYVZJYY5RYh5OYt5PY45QY+ZTY/ZaZLZbZZZZZnZXZx5TZ55NaEZJaRZKaeZJajZCanY7ay48a+47bK48bR41baY2bXY+bgZAbsY+b349cC45cIYycIYqcIYicIYZcIYQcC4Kb8YJcBYBcFX6cC3zb6X1byXwbqXtbjXobc3ibYXbbSXgbLXebD3aa+Xba23baz3TavXMaw3Ga0XAaz23auW0atWsaq2mal2hakWZaeWWab2PaY2IaUWDaSWLaQ2TaP2caO2kaN2saO21aQ29aUXEaaXIaf3OakXUap3bav3ha2Xna43va431azXwauXqan3kajXmagXuaX3raRXnaL3gaH3ZaJ3TaB3RZ5XQZ43XZwXYZp3UZhXVZZXVZRXTZJ3QZEXKY/XEY529Y023Yv2xYqWqYrWnYxWjY2WeY7WiZBWfZF2ZZHWRZE2JZDWBZC14ZB1wZAVoY81hY41aY21SYy1LYvVFYrU+YnU4Yi0zYdUwYZU0YU0vYQ0rYNUlYM0dYIUXYD0UYBUNYFUHYIUAYKz5YLzwYLToYITiYDTfX+zcX8ThX8zpX7TxX+T1X7z8X3z9Xz0BX2UIX20QXx0TXsURXn0NXi0KXkUOXlUVXlUcXg0bXc0WXY0PXUUMXQUIXS0BXWz9XaT4Xez8XjT8XoT6Xmz0XhzyXeTsXaTnXYzgXdTcXezUXhTMXjzFXly+Xjy4XkSxXmSrXlSjXiSeXfyXXdSQXbSIXYSBXVx6XSR1XORwXKRrXGRoXBxmW+RjW7RiW3ReWyxbWuRaWsxSWpxQWoxYWmxbWiRdWeRZWaRUWXROWVRGWVw/WYQ4WawxWdwqWhQlWjwfWlQXWmQOWmwGWmP+Wkv2WhPxWdvtWaPoWXPiWTvdWRPeWRPlWPPrWLPuWHvzWGP6WDQAV+wCV8wGV7QKV4wGV4P+V2v2V1PuV0PmV2PgV4vbV6PTV7vMV/PIWCvDWFu+WIO3WJOvWJOmWKOfWMuYWMuRWIuSWFOXWBucV/OiV8upV7OwV5u4V5vAV3PHV1POVyPUVwPUVvPYVvvgVwvoVwvwVxv4VwwAVwQIVuQQVtQYVswgVrQoVowrVlQmVhwiVdQjVbwoVcwwVcQ5VZxAVYRIVVRLVSRSVQxaVPRiVMxoVIxnVHxfVERfVAxeU8xdU4RbU3RUU0xOUwxKUsxFUpw/Umw5UjQ0UfwvUdwoUZwlUVwiUUQaUVQSUVwKUUwCUTv6UTvxURvrUPPmUPPgULPdUJPWUGPXUDPeUBvmUAPuT+v2T8P9T6QET5wNT4wVT2QcT0QjTzQsTyQ0TxQ8TwRETwRNTvxVTtRYTpRUTkxVThRbTeRhTfxmTcRsTYxxTVR2TSx9TPSCTKyBTGSATBSAS8yAS4R/SzSASuyCSqSESlyFSiyJShSSScySSYSPSUSOSPSQSLyWSHyaSESfSBymR/yuR8SwR4SyR0SwR1SoR2ygR4yYR8STR/SNR/SFSBx+SCSCSESJSGSDSFR6SHR1SLx2SQR1SUR5SXR/SayFSdyLSdyFSeR9Sgx2SkxySpRwSsRqSvRkStRdSqRWSnxQSkxMSlRDShxASew6Sbw3SYwySVwuSRQsSNQqSJwmSHwfSDwcR/wZR7wWR4QRR0QQRwQMRsQKRoQIRkwDRgwCRdQFRcQNRbQVRZQcRaQjRZwrRXwyRUQ4RSRARQxIRNxORKRTRHxaRHRiRGRqRERyRAR2Q+R9Q8SFQ6SMQ3STQ0yaQxyeQySmQxyoQwSgQuSZQqyeQoymQmyuQnSoQoygQrSYQtSRQuyJQxSCQzx6Q2x0Q1xsQ5RmQ8RgQ9xYQ9RRQ+RJQ/RARCQ7RFQ0RHQtRIQlRLQeROwaRSQURVQORYQIRbwDRcP8RbP4RePyRhPsRlPuRpvvRtvwRyPzR2P2R6P2R+v4SCP8SDv3SDPuSBvmSAveR+vWR9PPR7PHR5PAR2u4R0OyRxurRuulRrufRouZRlOURhOQReOLRbOFRYN/RVt4RStyRPtsRNNnRLNgRJtYRHNRRGNJRHNCRJM8RIM0RJMsRKskRNMeROsWROMORPMFRPL9RPL0RPLsRNLlRKLeRGraRCLXQ+rTQ7LNQ3rIQ0rCQyK8Qyq0Q0qsQ2KmQ1qeQ2KWQzqQQvKMQrKIQnKDQop9Qnp1QmpsQlJkQhJfQepYQcJRQZJKQVpEQSI+QOI4QJo1QFIyQBIxP8IxP3IxPyIvPtIsPpIoPkorPgovPfI0PeI8PfJEPeJLPbJTPZJaPXJiPUppPRpwPQJ4PPKAPNqIPMqQPMKZPMKhPKKpPIKwPGK4PELAPCrHO/rOO+rWO+reO/LnPArvPBr3PDL/PGMGPIMNPIsVPHMcPFMkPFMsPFs0PEM8PCNDPBNKO/tSO9NZO6NfO3NlO0NsOyNzOwN6OxuCOzOKOzOSO0OaO1OiOzOpOwOuOuOzOqOwOmOvOhuvOfO1OdO9OaPCOVvDORvCONPBOJO/OFO8OBO5N9O1N5O0N1O2NxO3Nsu4Nou2Nku0NguxNcuwNYuzNVO4NRu9NOPCNLPINHPLNEPRNCPYNAvgM+PmM7PsM4vyM1P3MyP8MwQDMwwMMuwTMswYMvweMxwlMyQuMzQ2MzQ+MyxGMyRPMvxVMvRdMxxjMyxrM1RzM4R5M6SAM7SIM+yONBSUNESbNIydNMSiNQSnNTyuNTy2NTy+NVTGNXTNNbTSNfzXNizdNlTlNoTqNszmNxzmN3TkN7zmOATqOFTtOJzxOOzzOUT0OZT0OeTzOjT3OoT3OtT1OyT4O3T4O5T1O6zzO5TsO6zkO4TdO3zWO7TSO/zOPEzMPJzLPOTIPRzDPUy9PZS7PeS4PiS0Pmy2PoS9PoTFPsTLPxTMP2TLP5zGP+TEQCTAQHTAQMS+QQy7QVS5QZy9QeS/Qiy+QlS9QqS6Quy7QxTCQyzKQ0TSQ2TZQ4ThQ4zpQ3zwQ1zyQwzyQszuQnztQjTyQeTzQazuQWTwQRTzQNT2QKz+QIUEQJULQI0RQMUYQR0YQV0dQZ0gQfUfQkUjQpUnQu0oQ0UoQ5UkQ+UgRD0eRJUfRO0fRT0jRUUrRQ0yRMU2RH08RDVAQ+VFQ+VKRCVQRA1WRGVZRFVcQ/VaQ51XQ0VUQz1MQ5VKQ4VHQy1EQt1AQr1GQm1JQrVOQoVSQi1UQeVWQbVPQYVIQUVEQTU8QQ01QO0tQQ0lQVUhQQUeQL0aQH0WQFUcP/UdP7UaP9UUP4UVP10VP30OP4UIP8UCP6z9P4z8P2T4P3zwPzTyPvz4PuUAPr0IPpUPPmUVPk0dPl0lPiUrPdUwPYU0PTU5PQ0/PO1GPK1GPI1KPGVNPCVIPCVAPGU6PJUzPM0sPRUoPUUkPX0gPc0cPg0WPd0VPY0YPXURPZ0MPW0GPT0APTUGPT0NPRUVPNUaPI0fPD0hO/UnO7UtO4U0O208OxU/Os07On03Oi00OdU1OX00OTUwOTUoOP0iOKUfOHUZOEUSOD0LOC0EOAz8N8T4N4zzNzTzNuTyNqTtNlzuNjT2NeT2NZz2NYT6NYUCNU0INWUQNX0YNYUgNXUoNWUwNY02Nd05NjU4NpU4Nu02N002N602N9U+N91GN+VON7VWN31cNy1hNt1lNvVsN11sN71qN7VyN91zODV0OJV4OMV/ORWEOW2IOZ2QOcWXOi2bOo2dOuWdOvWkOt2sOs21Ot29O0XBO5XEO328O522O12xO12pO6WkO+WhPEWkPKWePQWiPWWlPdWoPi2kPn2oPuWsPt20Pt28Px3DP23CP82+P93HP8XLP5XTP/XXQH3YQP3XQV3cQO3hQGXgP+XcP2XbPxXhPvXoPu3xPu35PzYAP5YHQAYNQB4UP5YXPxYTPu4LPq4EPkX+Pd34PbXvPa3nPfXgPg3ZPdXRPYXMPXXEPV27PR21PMWzPH2uPEWzPB27O/XDO83LO6XTO1XTOv3NOo3JOiXNOfXUOeXdOd3lOdXuOhX1OoX6Ov4AO2YGO74NPA4UPFYcPKYkPPYrPW4yPd44Pl4/Pw5CP6ZFQDZKQP5MQa5HQcZDQfY8QoY9Qx44Q842RF4wROYqRR4jRNYcRD4YQ6YbQwYfQs4cQyYVQy4NQ24GQ94EQ64MRCYNRK4KRMYQRP4XRXYdRf4ZRiYgRf4oReYwRmYwRt4qRoYmRsYfR0YjR54qSD4uSNYzSS4ySU4tSeYwSoY0SvYvS141Sx49S749TG45TP40TY4uTd4zTYY6TUY/TR5ITW5PTcZXThZeTvZcTu5UTt5MTwZETvY7Tx4zTzYrTu4kTpYcTv4cT2YiT7YpT5YxT143T1Y/T35HTx5OT6ZVT7ZcT+ZVT+ZNUAZRUI5XUVZVUaZUUXZdUX5lUmZmU1ZnU0ZvU+50VL55VY59Vn57V1aAV+aGWK6MWTaJR80aR/UWR70SR50KR40DR7T8R/z4SET0SJzzSOz1SRz6SRUCSRUKSOUQSMUUSM0cSRUaSV0eSSUlSO0oSMUhSK0mSLUuSG0ySD04SAU/SDVBSE1ISKVKSN1MSOVVSKVYSEVaR+1WR5VTR1VNRw1JRt1CRxU7Rx0zR00sR30lGjaOFOaNFZaRPwaMPsaSP46RFSaWGY6TGdaYGlaRGI6RF2aUF1abGD6aGP6UV+aQV46UV+acWOaZPuaaPjaVPdaNPZ6EPMaIPKaPO/6WO56ePGakPRajQI6hP1aePlaiPf6oPzaoRyakRo6qR2arSC6sVj6aVWagVM6nVZ6uVr6sV16lV4acHP6aHFaTGyaUGwacGkahGjapGq6wG76sHN6mJL6/JE64I1azIyauIlanIXagID6dIJ6XIBaQH3aJH+6FHz5/Hj6AHSaAHE6DHNaJHPaPHZaNHM6UHZaaHT6iHb6mHn6pHOapHBawG+a4HV69Hl69H4bDIX7EMVbBMNa7Lt66L2a5MNa4MTazMdazM263NHaxM1arMiamMo6iMi6aMh6RMlaJMdaEMfZ+MiZ2Mf5wMdZrMd5mMTZhMTZcMSZXMIZXMSZSMW5KMP5FMIZLMF5KMA5DMMZCMRY/MI46L/Y0L14wLq4tLhYqLb4jLVYcLMYYLC4UK7YQK44IK24AKwX5KvXyKu3pKsXhKnXdKgXhKZ3lKR3mKNXtKJ31KE38KA4EJ/YMJ74UJ44cJ3YjJ5YrJ/4yKFY5KD4+J545Jy4+Jz5HJ+5HJ95KJ05PJuZTJyZbJs5jJoZrJg5yJa55JMZ9I6Z9Iq5+IgaFIu6JIraLIZ6PIbaWIt6aI86gIxamI+6tJMa0Jd65J464KJa8Kfa2Ka66KjbBK+bFLa7I";
+const LAND_PACKED  = "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";
+
+function unpackGeo(s) {
+    const idx = {};
+    for (let i = 0; i < 64; i++) idx[GEO_B64[i]] = i;
+    const out = new Float32Array((s.length / 4) * 2);
+    for (let i = 0, o = 0; i < s.length; i += 4, o += 2) {
+        const v = (idx[s[i]] << 18) | (idx[s[i + 1]] << 12) |
+                  (idx[s[i + 2]] << 6) | idx[s[i + 3]];
+        out[o]     = ((v >>> 11) / 10 - 180) * Math.PI / 180;  // lon rad
+        out[o + 1] = ((v & 2047)  / 10 -  90) * Math.PI / 180;  // lat rad
+    }
+    return out;
+}
+
+</script>
+<script>
 // ===============================================================
 //  NIGHT EARTH — orbiting light points around a rotating night Earth
 //  All tunable values are named constants in the block below.
@@ -472,10 +830,8 @@ function openProject(ringIndex) {
     }
 
     setTimeout(() => {
-        // Carry the ring's ACTUAL hue, not its index, because the palette is
-        // reshuffled per load. 傳遞實際色相而非索引，因配色每次載入洗牌。
-        window.location.href = PROJECT_URL(PROJECTS[ringIndex].id,
-                                           ringColours[ringIndex].name);
+        window.__showProject(ringIndex);   // standalone overlay
+        navLocked = false;                 // allow repeat activation
     }, BURST_DURATION);
 }
 
@@ -1209,3 +1565,67 @@ if (document.fonts && document.fonts.ready) {
 }
 requestAnimationFrame(render);
 requestAnimationFrame(updateTopBar);
+
+</script>
+
+<div id="proj-overlay">
+  <div id="proj-card">
+    <div id="proj-halo"></div>
+    <h1 id="proj-title">Welcome to Project</h1>
+    <div id="proj-sub">ST8925 LAB</div>
+    <div id="proj-proof"></div>
+    <button id="proj-close">&larr; BACK TO ORBIT</button>
+  </div>
+</div>
+<style>
+  #proj-overlay{position:fixed;inset:0;z-index:60;display:none;
+    align-items:center;justify-content:center;background:rgba(4,7,14,.93);
+    backdrop-filter:blur(6px);}
+  #proj-overlay.on{display:flex;}
+  #proj-card{--c:#fff;text-align:center;display:flex;flex-direction:column;
+    align-items:center;gap:22px;padding:40px 26px;}
+  #proj-halo{width:82px;height:82px;border-radius:50%;
+    background:radial-gradient(circle,#fff 0%,var(--c) 38%,transparent 72%);
+    animation:projpulse 2.6s ease-in-out infinite;}
+  @keyframes projpulse{0%,100%{transform:scale(1);opacity:.92}
+                       50%{transform:scale(1.14);opacity:1}}
+  #proj-title{font-size:clamp(22px,5vw,38px);color:var(--c);letter-spacing:.06em;}
+  #proj-sub{color:#64748b;font-size:12px;letter-spacing:.2em;}
+  #proj-proof{border:1px solid color-mix(in srgb,var(--c) 34%,transparent);
+    border-radius:10px;padding:15px 20px;font-size:12.5px;line-height:2;
+    color:#64748b;text-align:left;min-width:min(400px,88vw);}
+  #proj-proof b{color:var(--c);}
+  #proj-close{background:none;border:0;border-bottom:1px solid transparent;
+    color:#64748b;font:inherit;font-size:13px;letter-spacing:.1em;
+    cursor:pointer;padding-bottom:2px;}
+  #proj-close:hover{color:var(--c);border-color:var(--c);}
+</style>
+<script>
+window.__showProject = function (i) {
+    // ringColours is the SHUFFLED assignment actually on screen. Using
+    // RAINBOW[i] here would show a different colour from the one clicked,
+    // which is only correct about 1 time in 12.
+    // ringColours 才是畫面上實際的洗牌結果；用 RAINBOW[i] 會顯示不同顏色。
+    const p = PROJECTS[i], c = ringColours[i];
+    const card = document.getElementById('proj-card');
+    card.style.setProperty('--c', c.hex);
+    document.getElementById('proj-title').textContent = 'Welcome to ' + p.label;
+    document.getElementById('proj-proof').innerHTML =
+        '<div>project id &nbsp; <b>' + p.id + '</b></div>' +
+        '<div>ring index &nbsp; <b>' + i + '</b></div>' +
+        '<div>palette hue &nbsp; <b>' + c.name + '</b> &nbsp; <b>' + c.hex + '</b></div>' +
+        '<div>total projects &nbsp; <b>' + PROJECTS.length + '</b></div>' +
+        '<div style="opacity:.6;letter-spacing:0;line-height:1.5;margin-top:8px">' +
+        'Standalone preview. On the real site this is project.html?id=' + p.id +
+        '.<br>單檔預覽版；實際站台為獨立頁面。</div>';
+    document.getElementById('proj-overlay').classList.add('on');
+};
+document.getElementById('proj-close').onclick = () =>
+    document.getElementById('proj-overlay').classList.remove('on');
+document.getElementById('proj-overlay').onclick = e => {
+    if (e.target.id === 'proj-overlay') e.currentTarget.classList.remove('on');
+};
+</script>
+
+</body>
+</html>

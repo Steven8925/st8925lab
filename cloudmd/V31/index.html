@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ST8925 LAB</title>
-<meta name="description" content="旋轉的夜間地球，五大洲以城市燈光顯示輪廓，外圈傾斜軌道上有光點環繞並隨滑鼠呼吸；每條軌道對應一個專案。Rotating night Earth with city-light continents and breathing orbit rings, one ring per project.">
+<meta name="description" content="旋轉的夜間地球，五大洲以城市燈光顯示輪廓，外圈六道傾斜軌道上有光點環繞並隨滑鼠呼吸。Rotating night Earth with city-light continents and six breathing orbit rings.">
 <style>
     :root {
         --bg: #04070e;
@@ -17,7 +17,10 @@
     body {
         background: var(--bg);
         color: var(--text);
-        font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+        font-family: Candara, "Calibri", "Segoe UI", Optima, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
     }
 
     /* ===========================================================
@@ -50,8 +53,8 @@
     #wordmark {
         display: inline-flex;
         align-items: baseline;
-        font-size: clamp(1rem, 2.2vw, 1.45rem);
-        font-weight: 700;
+        font-size: clamp(1.3rem, 2.86vw, 1.885rem);
+        font-weight: 400;
         letter-spacing: .16em;
         cursor: pointer;
         user-select: none;
@@ -90,10 +93,10 @@
         gap: .45rem;
         color: var(--c);
         text-decoration: none;
-        font-size: clamp(.62rem, 1.1vw, .78rem);
-        font-weight: 600;
+        font-size: clamp(.81rem, 1.43vw, 1.01rem);
+        font-weight: 400;
         letter-spacing: .1em;
-        padding: .42rem .7rem;
+        padding: .42rem .75rem;
         border: 1px solid color-mix(in srgb, var(--c) 24%, transparent);
         border-radius: 7px;
         background: color-mix(in srgb, var(--c) 5%, transparent);
@@ -122,8 +125,8 @@
         display: inline-flex;
         align-items: center;
         gap: .4rem;
-        font-size: clamp(.62rem, 1.1vw, .78rem);
-        font-weight: 600;
+        font-size: clamp(.81rem, 1.43vw, 1.01rem);
+        font-weight: 400;
         letter-spacing: .1em;
         color: #cbd5e1;
         text-decoration: none;
@@ -162,14 +165,14 @@
     #clock {
         position: fixed;
         left: 50%;
-        top: calc(50% + var(--bar-h) / 2 + 250px);
+        top: calc(50% + var(--bar-h) / 2 + 350px);
         transform: translateX(-50%);
         display: flex;
         align-items: center;
         gap: .8rem;
         white-space: nowrap;
-        font-size: clamp(.6rem, 1.15vw, .8rem);
-        font-weight: 600;
+        font-size: clamp(.78rem, 1.5vw, 1.04rem);
+        font-weight: 400;
         letter-spacing: .06em;
         z-index: 15;
         pointer-events: none;
@@ -177,6 +180,14 @@
     }
     /* 顏色由 JS 於載入時抽色寫入 / colour is assigned by JS on load */
     #clock .sep { color: #334155; }
+
+    #hint {
+        position: fixed; bottom: 14px; left: 50%;
+        transform: translateX(-50%);
+        font-size: 13px; letter-spacing: .08em; color: var(--muted);
+        pointer-events: none; user-select: none;
+        z-index: 15;
+    }
 
     /* --- 世界時間下拉選單 / World clock select ----------------------- */
     #clock-world-wrapper {
@@ -209,18 +220,10 @@
         padding: .3rem;
     }
 
-    #hint {
-        position: fixed; bottom: 14px; left: 50%;
-        transform: translateX(-50%);
-        font-size: 10px; letter-spacing: .08em; color: var(--muted);
-        pointer-events: none; user-select: none;
-        z-index: 15;
-    }
-
     /* 矮螢幕：時間列改貼底部，避免與軌道重疊 */
     /* Short viewports: pin the clock to the bottom instead of overlapping */
-    @media (max-height: 760px) {
-        #clock { top: auto; bottom: 40px; }
+    @media (max-height: 880px) {
+        #clock { top: auto; bottom: 45px; }
     }
     @media (max-width: 560px) {
         #clock { flex-direction: column; gap: .2rem; }
@@ -239,9 +242,9 @@
 <body>
 
 <header id="topbar">
-    <a id="wordmark" href="./" aria-label="ST8925 LAB"></a>
+    <a id="wordmark" href="#top" aria-label="ST8925 LAB"></a>
     <nav id="projects" aria-label="Projects"></nav>
-    <a id="cta" href="mailto:hello@st8925.lab">CONTACT</a>
+    <a id="cta" href="#contact">CONTACT</a>
 </header>
 
 <div id="stage">
@@ -259,7 +262,6 @@
 
 <div id="hint">拖曳旋轉 · drag to rotate · 雙擊重置 · double-click to reset</div>
 
-<script src="config.js"></script>
 <script src="geodata.js"></script>
 <script src="app.js"></script>
 </body>
