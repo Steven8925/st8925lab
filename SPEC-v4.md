@@ -404,10 +404,10 @@ Includes 62 major world cities sorted alphabetically (A-Z) by country English na
 
 ### 7.4 位置與響應式 / Placement & Responsiveness
 
-`top: calc(50% + var(--bar-h)/2 + 350px)`
+`top: calc(50% + var(--bar-h)/2 + 320px)`
 
-350px 的依據：地球與軌跡整體上移 50px（`STAGE_Y_OFFSET = -50`），時間列向下調降 50px，確保視覺視覺重心平衡與更寬鬆的排版間距。
-350px clearance combined with Earth/orbit upward offset (`STAGE_Y_OFFSET = -50`) ensures clear visual hierarchy and generous spacing.
+320px 的依據：地球與軌跡整體上移 50px（`STAGE_Y_OFFSET = -50`），時間列微調上移 30px 至 320px 偏移位置，確保視覺重心平衡與最佳排版間距。
+320px clearance combined with Earth/orbit upward offset (`STAGE_Y_OFFSET = -50`) ensures balanced visual hierarchy and optimal spacing.
 
 矮螢幕（`max-height: 760px`）改貼底部（`bottom: 40px`）；窄螢幕（`max-width: 560px`）改為兩行（`flex-direction: column`）。
 Short viewports (`max-height: 760px`) pin to the bottom (`bottom: 40px`); narrow viewports (`max-width: 560px`) stack vertically into two lines.
