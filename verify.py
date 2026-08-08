@@ -2,11 +2,11 @@
 """Night Earth — verification harness / 驗證腳本
 
 Re-implements the projection, occlusion and colour logic of app.js in Python so
-every number in SPEC.md section 9 can be reproduced by anyone with the delivered
+every number in SPEC-v4.md can be reproduced by anyone with the delivered
 files. Constants are PARSED OUT OF app.js, not retyped, so this script cannot
 silently drift from the implementation it is checking.
 
-以 Python 重現 app.js 的投影、遮擋與配色邏輯，讓 SPEC.md 第 9 節的每個數字
+以 Python 重現 app.js 的投影、遮擋與配色邏輯，讓 SPEC-v4.md 的每個數字
 都可被重現。常數直接從 app.js 解析，不重新輸入，因此本腳本不會與被檢驗的
 實作悄悄脫節。
 
@@ -25,6 +25,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(HERE, 'app.js')
+CONFIG = os.path.join(HERE, 'config.js')
+PROJECT_HTML = os.path.join(HERE, 'project.html')
 GEO = os.path.join(HERE, 'geodata.js')
 HTML = os.path.join(HERE, 'index.html')
 
@@ -56,6 +58,7 @@ def check_close(label, got, want, tol, note=''):
 # ---------------------------------------------------------------
 def load_constants():
     src = open(APP, encoding='utf-8').read()
+    cfg = open(CONFIG, encoding='utf-8').read()
     out = {}
     for name, raw in re.findall(r'^const ([A-Z_]+)\s*=\s*([^;]+);', src, re.M):
         raw = raw.strip()
@@ -66,10 +69,16 @@ def load_constants():
                 out[name] = float(raw) if '.' in raw else int(raw)
         except ValueError:
             pass                      # non-numeric consts (arrays) skipped
-    return src, out
+    # ORBIT_RINGS is no longer a literal — it is derived from PROJECTS in
+    # config.js. Deriving it the same way here keeps the harness honest: if
+    # a project is added, every geometry check below follows automatically.
+    # ORBIT_RINGS 已改為由 config.js 的 PROJECTS 推導，此處以相同方式取得，
+    # 新增專案時下方所有幾何檢查會自動跟上。
+    out['ORBIT_RINGS'] = len(re.findall(r"\{\s*id:\s*'(\d+)'", cfg))
+    return src, cfg, out
 
 
-SRC, C = load_constants()
+SRC, CFG, C = load_constants()
 
 ORBIT_RINGS      = C['ORBIT_RINGS']
 POINTS_PER_RING  = C['POINTS_PER_RING']
@@ -87,7 +96,7 @@ COS_TILT, SIN_TILT = math.cos(TILT), math.sin(TILT)
 RAINBOW = [(n, tuple(int(x) for x in rgb.split(',')))
            for n, rgb in re.findall(
                r"name:\s*'(\w+)',\s*hex:\s*'#[0-9a-f]{6}',\s*rgb:\s*\[([^\]]+)\]",
-               SRC)]
+               CFG)]
 
 
 # ---------------------------------------------------------------
@@ -226,7 +235,14 @@ def check_geometry():
     print('\n[2] Ring plane angles and point spacing / 環平面角與光點間隔')
     angles = [round(math.degrees(k * math.pi / ORBIT_RINGS), 1)
               for k in range(ORBIT_RINGS)]
-    check('plane angles (deg)', angles, [0.0, 30.0, 60.0, 90.0, 120.0, 150.0])
+    # Expectation is DERIVED from the ring count, not pinned to the 6-ring
+    # case, so adding a project rescales the fan instead of failing here.
+    # Caught by actually scaling to 12: this line used to assert the 6-ring
+    # angles and failed even though app.js was correct.
+    # 期望值由環數推導而非寫死 6 環；此行原本寫死,在擴充至 12 時誤報失敗。
+    check('plane angles (deg)', angles,
+          [round(180.0 * k / ORBIT_RINGS, 1) for k in range(ORBIT_RINGS)],
+          f'{ORBIT_RINGS} rings evenly spanning 180 deg')
     gaps = set()
     for e in range(POINTS_PER_RING):
         a1 = e * (2 * math.pi / POINTS_PER_RING)
@@ -269,7 +285,10 @@ def check_sign_convention():
 
 def check_colours():
     print('\n[4] Colour shuffle and contrast / 配色與對比')
-    check('palette size', len(RAINBOW), 7)
+    check('palette size', len(RAINBOW), 12,
+          'raised from 7 to 12 to lift the project ceiling')
+    check('palette covers the projects', len(RAINBOW) >= ORBIT_RINGS, True,
+          f'{ORBIT_RINGS} projects need {ORBIT_RINGS} distinct hues')
     rng = random.Random(0)
     dup = 0
     used = {n: 0 for n, _ in RAINBOW}
@@ -288,8 +307,14 @@ def check_colours():
     spread = max(used.values()) - min(used.values())
     check_close('selection spread (uniformity)', spread / TRIALS, 0.0, 0.03,
                 'each hue appears about equally often')
-    check('hues unused per load', len(RAINBOW) - ORBIT_RINGS, 1,
-          'expected: 7 - 6 = 1')
+    # Not "== 1" any more: the surplus varies with the project count. What
+    # must hold is that there is never a shortage, since a shortage would
+    # force two projects to share a hue and break the click mapping.
+    # 不再固定為 1：餘裕隨專案數變動。真正必須成立的是「絕不短缺」，
+    # 短缺會使兩專案同色，雙向對應即失效。
+    check('no hue shortage', len(RAINBOW) - ORBIT_RINGS >= 0, True,
+          f'{len(RAINBOW)} hues - {ORBIT_RINGS} projects '
+          f'= {len(RAINBOW) - ORBIT_RINGS} spare')
 
     BG = (4, 7, 14)
     bg_hex = re.search(r"ctx\.fillStyle = '(#[0-9a-f]{6})';\s*\n\s*ctx\.fillRect\(0, 0, w, h\)", SRC)
@@ -361,7 +386,7 @@ def check_markup():
     check('top bar height', m.group(1).strip() if m else None, '64px')
     check('top bar is frosted', 'backdrop-filter: blur(' in html, True)
     check('wordmark present', 'id="wordmark"' in html, True)
-    labels = re.findall(r"'(PROJECT \d{2})'", SRC)
+    labels = re.findall(r"label:\s*'(PROJECT \d{2})'", CFG)
     check('project labels', labels,
           [f'PROJECT {i:02d}' for i in range(1, ORBIT_RINGS + 1)])
     check('no PROEJCT typo', 'PROEJCT' in SRC or 'PROEJCT' in html, False)
@@ -379,7 +404,7 @@ def check_markup():
 
 
 def render_previews():
-    print('\n[7] Rendering preview frames / 產生預覽圖')
+    print('\n[14] Rendering preview frames / 產生預覽圖')
     try:
         from PIL import Image, ImageDraw
     except ImportError:
@@ -470,8 +495,9 @@ def render_previews():
             fn()
         out = os.path.join(HERE, f'preview_{tag}.png')
         im.save(out)
+        spare = [c[0] for c in pool[ORBIT_RINGS:]]
         print(f'    wrote {os.path.basename(out)}  '
-              f'rings={[c[0] for c in cols]}  unused={pool[ORBIT_RINGS][0]}')
+              f'rings={[c[0] for c in cols]}  unused={spare}')
 
 
 def check_breathing():
@@ -705,6 +731,162 @@ def check_clock():
           True, 'shuffled, so the two can never be equal')
 
 
+def check_burst():
+    """Nebula burst constants, and the click/drag disambiguation."""
+    print('\n[12] Nebula burst / 星雲爆炸')
+
+    dur = C['BURST_DURATION']
+    check('burst duration', dur, 1400, 'lengthened so the haze is readable')
+    check('particle count', C['BURST_PARTICLES'], 140)
+    # A nebula reads as a diffuse haze. Measured on the reference images the
+    # 90th-percentile luminance is 68..136; a dots-only burst measured 7.
+    # These three constants supply the haze that closes that gap.
+    # 星雲需瀰漫亮霧：參考圖 p90 為 68..136，純亮點版僅 7。
+    check('diffuse clouds present', C['BURST_CLOUDS'] >= 5, True,
+          f"{C['BURST_CLOUDS']} blobs")
+    check('particles carry a glow halo', C['BURST_GLOW_MULT'] >= 3, True,
+          f"radius x{C['BURST_GLOW_MULT']}")
+    check('additive blending used',
+          "ctx.globalCompositeOperation = 'lighter';" in SRC, True,
+          'overlapping haze accumulates toward white')
+    check('composite mode restored',
+          'ctx.globalCompositeOperation = prev;' in SRC, True,
+          'otherwise later frames would blend wrongly')
+    # A linear fade spends most of its life dim, which is what made v1 faint.
+    # 線性淡出會使大半時間偏暗，正是前版太淡的主因。
+    check('fade holds brightness then falls',
+          'Math.pow(1 - prog, 1.7)' in SRC, True)
+    check('speed range is ordered',
+          C['BURST_SPEED_MIN'] < C['BURST_SPEED_MAX'], True,
+          f"{C['BURST_SPEED_MIN']} < {C['BURST_SPEED_MAX']} px/s")
+    check('damping is a decay, 0 < d < 1',
+          0 < C['BURST_DAMPING'] < 1, True, f"{C['BURST_DAMPING']}")
+
+    # The flash must die well before the burst ends, otherwise the core would
+    # still be blazing at navigation time and the burst would read as a cut.
+    # 閃光需在爆炸結束前收乾，否則導向瞬間核心仍亮，會像被硬切。
+    flash_ends = dur / 3.0
+    check('core flash ends in the first third',
+          flash_ends < dur * 0.4, True, f'{flash_ends:.0f} ms of {dur:.0f} ms')
+
+    # Damped travel must not exceed the shockwave, or particles would outrun
+    # the ring they are supposed to sit inside.
+    # 阻尼位移不得超過衝擊波，否則粒子會跑到環外。
+    dt, v, travel = 1 / 60.0, C['BURST_SPEED_MAX'], 0.0
+    k = C['BURST_DAMPING']
+    for _ in range(int(dur / 1000 * 60)):
+        travel += v * dt
+        v *= k
+    check('particles stay near the shockwave',
+          travel < C['BURST_RING_MAX'] * 1.6, True,
+          f'{travel:.1f} px travelled vs {C["BURST_RING_MAX"]:.0f} px ring')
+
+    # Click/drag threshold sanity: the tolerance must be smaller than the
+    # smallest gap between two light points, or one click could ambiguously
+    # match two rings. Worst case is two lead points at adjacent angles.
+    # 點擊寬容度須小於光點最小間距，否則一次點擊可能同時命中兩環。
+    hit_r = POINT_SIZE * C['LEAD_SCALE'] + C['HIT_PADDING']
+    check('hit radius is finite and positive', hit_r > 0, True, f'{hit_r:.1f} px')
+    check('click travel threshold below hit radius',
+          C['CLICK_MAX_MOVE'] < hit_r, True,
+          f"{C['CLICK_MAX_MOVE']} px < {hit_r:.1f} px")
+    check('click hold threshold is sub-second', C['CLICK_MAX_MS'] <= 400, True)
+
+    # Both directions must funnel through one function, or they will drift.
+    # 雙向必須共用同一函式，否則行為會各自飄移。
+    check('nav click calls openProject', 'openProject(i);' in SRC, True)
+    check('point click calls openProject',
+          'if (hit) openProject(hit.ring);' in SRC, True)
+    check('burst joins the depth sort',
+          'drawList.push({ z: b.z, render: () => drawBurst(b) });' in SRC, True)
+    check('navigation waits for the burst',
+          f'}}, BURST_DURATION);' in SRC, True)
+    check('double activation guarded', 'if (navLocked) return;' in SRC, True)
+
+    # Occluded points are skipped before registration, so they cannot be hit.
+    # 被遮擋的光點在註冊前已被跳過，因此不可能被點到。
+    reg = SRC.index('hitTargets.push(')
+    occ = SRC.index('if (occluded(p, cx, cy, earthPx) && BACKFACE_ALPHA === 0) continue;')
+    check('occluded points are unclickable', occ < reg, True,
+          'the occlusion continue precedes hit registration')
+
+
+def check_scalability():
+    """Adding a project must scale everything with no other edit."""
+    print('\n[13] Scalability / 擴充性')
+
+    # PROJECTS must be the ONLY place the count is stated.
+    # 專案數只能有一個宣告來源。
+    check('ORBIT_RINGS derived, not hardcoded',
+          'const ORBIT_RINGS = PROJECTS.length;' in SRC, True)
+    check('no literal ring count left in app.js',
+          re.search(r'^const ORBIT_RINGS\s*=\s*\d+;', SRC, re.M), None)
+    check('PROJECTS defined once, in config.js',
+          (SRC.count('const PROJECTS'), CFG.count('const PROJECTS')), (0, 1))
+    check('RAINBOW defined once, in config.js',
+          (SRC.count('const RAINBOW'), CFG.count('const RAINBOW')), (0, 1))
+    check('over-capacity is guarded',
+          'PROJECTS.length > RAINBOW.length' in SRC, True)
+
+    # Ring plane angles must stay evenly distributed over pi for ANY N.
+    # A ring rotated by pi occupies the same plane, so the fan spans pi, not 2pi.
+    # 任意 N 下環平面角須均分於 pi（旋轉 pi 後同平面，故非 2pi）。
+    for n in (6, 7, 12):
+        angles = [k * math.pi / n for k in range(n)]
+        gaps = [round(math.degrees(angles[i + 1] - angles[i]), 6)
+                for i in range(n - 1)]
+        check(f'N={n}: plane angles evenly spaced',
+              len(set(gaps)) <= 1, True,
+              f'{len(angles)} rings, gap {180 / n:.1f} deg')
+        check(f'N={n}: no two rings share a plane',
+              len(set(round(a, 9) for a in angles)), n)
+
+    # The palette must still supply distinct hues at the ceiling.
+    check('12 projects still get 12 distinct hues',
+          len(set(n for n, _ in RAINBOW[:12])), 12)
+
+    # Every project needs a reachable page.
+    phtml = open(PROJECT_HTML, encoding='utf-8').read()
+    check('project page reads the id parameter',
+          "params.get('id')" in phtml, True)
+    check('project page falls back to an index',
+          'index.classList' in phtml or "getElementById('index')" in phtml, True)
+    check('project page shares config.js',
+          '<script src="config.js">' in phtml, True)
+    check('project url built from the id',
+          'project.html?id=${id}' in CFG, True)
+
+    # --- colour handoff / 顏色傳遞 -------------------------------------
+    # The homepage RESHUFFLES the palette every load, so ring i is NOT
+    # palette entry i. If the project page derived its colour from the index
+    # it would match what the user clicked only 1 time in len(RAINBOW).
+    # 首頁每次載入洗牌，第 i 環並非第 i 色；若專案頁用索引取色，
+    # 與使用者實際點到的顏色僅約 1/len(RAINBOW) 機率相符。
+    check('hue travels in the url', 'hue=${encodeURIComponent(hue)}' in CFG, True)
+    check('orbit page sends the shuffled hue',
+          'ringColours[ringIndex].name' in SRC, True)
+    check('project page prefers the handed-over hue',
+          "RAINBOW.find(c => c.name === hue)" in phtml, True)
+    check('project page still has an index fallback',
+          'RAINBOW[idx % RAINBOW.length]' in phtml, True,
+          'used only when opened directly')
+
+    # Quantify the bug this guards against, so the reason stays on record.
+    rng = random.Random(3)
+    TRIALS, hits = 20000, 0
+    for _ in range(TRIALS):
+        pool = list(range(len(RAINBOW)))
+        for i in range(len(pool) - 1, 0, -1):
+            j = rng.randint(0, i)
+            pool[i], pool[j] = pool[j], pool[i]
+        hits += sum(1 for i in range(ORBIT_RINGS) if pool[i] == i)
+    rate = hits / (TRIALS * ORBIT_RINGS)
+    check_close('index-derived colour would mismatch',
+                rate, 1 / len(RAINBOW), 0.01,
+                f'index matching only {rate*100:.1f}% of the time -> '
+                f'the hue must travel explicitly')
+
+
 def main():
     print('=' * 66)
     print(' Night Earth verification / 夜間地球驗證')
@@ -721,6 +903,8 @@ def main():
     check_surface_text()
     check_markers()
     check_clock()
+    check_burst()
+    check_scalability()
     if '--render' in sys.argv:
         render_previews()
 
