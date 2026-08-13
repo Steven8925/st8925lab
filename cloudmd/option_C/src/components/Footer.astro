@@ -1,0 +1,31 @@
+---
+import { getLangFromUrl, useTranslations } from '../i18n/index';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang as any);
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-blue/10 py-12 bg-bg">
+  <div class="container mx-auto px-4 max-w-6xl">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <!-- Nav Links -->
+      <div class="flex flex-col sm:flex-row flex-wrap gap-4 text-sm font-medium">
+        <a href={`/${lang}/work`} class="text-text hover:text-blue transition-colors">{t('nav.work') || 'Work'}</a>
+        <a href={`/${lang}/reference`} class="text-text hover:text-blue transition-colors">{t('nav.reference') || 'Reference'}</a>
+        <a href={`/${lang}/tools`} class="text-text hover:text-blue transition-colors">{t('nav.tools') || 'Tools'}</a>
+        <a href={`/${lang}/capabilities`} class="text-text hover:text-blue transition-colors">{t('nav.capabilities') || 'Capabilities'}</a>
+        <a href={`/${lang}/about`} class="text-text hover:text-blue transition-colors">{t('nav.about') || 'About'}</a>
+      </div>
+      
+      <!-- Built with -->
+      <div class="md:text-right text-sm text-text-dim">
+        Built with Astro &middot; Hosted on Cloudflare Pages
+      </div>
+    </div>
+    
+    <div class="text-sm text-text-dim border-t border-blue/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p>&copy; {year} ST8925 LAB. All rights reserved.</p>
+    </div>
+  </div>
+</footer>

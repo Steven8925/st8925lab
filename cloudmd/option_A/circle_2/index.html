@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ST8925lab - 科幻 3D 電子軌道球體 (Sci-Fi Orbiting Sphere)</title>
+    <style>
+        :root {
+            --bg-color: #030712;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --border-color: rgba(0, 240, 255, 0.25);
+            --primary-cyan: #00f0ff;
+            --accent-gold: #ffb428;
+            --text-main: #f3f4f6;
+            --text-dim: #9ca3af;
+            --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(255, 180, 40, 0.05) 0%, transparent 50%);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .header p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.1);
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 860px) {
+            .main-container {
+                grid-template-columns: 500px 1fr;
+            }
+        }
+
+        .viewer-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 240, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas, img.render-display {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            font-size: 0.75rem;
+            font-family: monospace;
+            color: var(--primary-cyan);
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.8);
+        }
+
+        .hud-badge {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-cyan);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mode-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary-cyan);
+            color: #000;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.75rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            font-family: monospace;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary-cyan);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            height: 6px;
+        }
+
+        .footer-info {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            background: rgba(0, 240, 255, 0.03);
+            border-left: 3px solid var(--primary-cyan);
+            padding: 0.75rem;
+            border-radius: 0 6px 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>ST8925lab SCI-FI SPHERE</h1>
+        <p>3D 地球夜景與 120 軌道電子粒子動態渲染系統</p>
+    </div>
+
+    <div class="main-container">
+        <!-- 畫布與 GIF 顯示區域 -->
+        <div class="viewer-box">
+            <div class="hud-overlay">
+                <div class="hud-badge">STATUS: ONLINE</div>
+                <div class="hud-badge" id="fps-counter">60.0 FPS</div>
+            </div>
+            <!-- Live Canvas 3D Renderer -->
+            <canvas id="sciFiCanvas" width="720" height="720"></canvas>
+            <!-- GIF Fallback Display (Hidden by default) -->
+            <img id="gifDisplay" class="render-display" src="sci_fi_128_electron_sphere.gif" alt="Sci-Fi Sphere GIF" style="display: none;">
+        </div>
+
+        <!-- 右側控制與數據面板 -->
+        <div class="control-panel">
+            <div>
+                <div class="section-title">
+                    <span>⚡</span> 顯示模式切換
+                </div>
+                <div class="mode-toggle">
+                    <button class="toggle-btn active" id="btnLiveCanvas" onclick="switchMode('canvas')">即時 3D Canvas</button>
+                    <button class="toggle-btn" id="btnGif" onclick="switchMode('gif')">GIF 動畫模式</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">
+                    <span>📊</span> 系統運作數據
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">軌道電子總數</div>
+                        <div class="stat-value">120 PARTICLES</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">傾斜軌道組數</div>
+                        <div class="stat-value">6 ORBITS (65°)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">呼吸燈脈衝週期</div>
+                        <div class="stat-value">10.0 SECONDS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">渲染解析度</div>
+                        <div class="stat-value">720 x 720 px</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">
+                    <span>🎛️</span> 實時參數調整
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>自轉速度 (Rotation Speed)</span>
+                        <span id="speedVal">1.0x</span>
+                    </div>
+                    <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1" oninput="updateSpeed(this.value)">
+                </div>
+            </div>
+
+            <div class="footer-info">
+                <strong>系統備註：</strong> 本頁面完美還原 <code>generate_perfect_sci_fi_gif.py</code> 之 3D 透視演算法，包含 120 顆帶有 7 階拖尾光暈的電子粒子、核心 ST8925lab 文字脈衝與對稱軌道。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // HTML5 Canvas Live 3D Renderer Logic
+        const canvas = document.getElementById('sciFiCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = 720;
+        const height = 720;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const sphereRadius = 122.5 * 1.5;
+        const cameraZ = 1100.0 * 1.5;
+        const tilt = 65 * Math.PI / 180;
+        const rOrbit = sphereRadius * 1.68;
+
+        let speedMultiplier = 1.0;
+        let frameCount = 0;
+        let animationFrameId = null;
+
+        // Orbit definition: 6 symmetric angles
+        const numOrbits = 6;
+        const orbitAngles = [];
+        for (let i = 0; i < numOrbits; i++) {
+            orbitAngles.push((i / numOrbits) * Math.PI);
+        }
+
+        const orbitColors = [
+            'rgb(0, 240, 255)', 'rgb(0, 210, 255)', 'rgb(255, 190, 40)',
+            'rgb(0, 255, 210)', 'rgb(0, 225, 255)', 'rgb(255, 205, 50)'
+        ];
+
+        // Generate 120 Electron Particles
+        const particlesPerOrbit = 20;
+        const particleSpecs = [];
+        let pCounter = 0;
+
+        for (let i = 0; i < numOrbits; i++) {
+            const baseCol = orbitColors[i % orbitColors.length];
+            for (let j = 0; j < particlesPerOrbit; j++) {
+                const phase = (j / particlesPerOrbit) * 2.0 * Math.PI + (i * Math.PI / 3.0);
+                let cGlow = baseCol;
+                if (pCounter % 7 === 0) cGlow = 'rgb(255, 200, 40)';
+                else if (pCounter % 4 === 0) cGlow = 'rgb(255, 255, 255)';
+
+                particleSpecs.push({
+                    id: pCounter,
+                    orbitIndex: i,
+                    angle: orbitAngles[i],
+                    phase: phase,
+                    colorGlow: cGlow,
+                    size: (pCounter % 2 === 0) ? 4.5 : 3.2,
+                    twinkleFreq: 3.0 + (pCounter % 5) * 0.8
+                });
+                pCounter++;
+            }
+        }
+
+        function project(x, y, z) {
+            const sz = cameraZ / (cameraZ - z);
+            const px = centerX + x * sz;
+            const py = centerY + y * sz;
+            return { px, py, z, sz };
+        }
+
+        function drawFrame() {
+            frameCount += speedMultiplier;
+            const numFrames = 240;
+            const tLoop = (frameCount % numFrames) / numFrames;
+            const rotation360 = tLoop * 2.0 * Math.PI;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Atmosphere Rim
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, sphereRadius * 1.015, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(0, 168, 255, 0.75)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 2. 3D Spherical Wireframe Lines
+            ctx.strokeStyle = 'rgba(0, 140, 220, 0.35)';
+            ctx.lineWidth = 1.2;
+            for (let lat = -60; lat <= 60; lat += 30) {
+                const rLat = sphereRadius * Math.cos(lat * Math.PI / 180);
+                const yLat = sphereRadius * Math.sin(lat * Math.PI / 180);
+                ctx.beginPath();
+                for (let lon = 0; lon <= 360; lon += 10) {
+                    const radLon = lon * Math.PI / 180 + rotation360;
+                    const x = rLat * Math.sin(radLon);
+                    const z = rLat * Math.cos(radLon);
+                    const proj = project(x, yLat, z);
+                    if (lon === 0) ctx.moveTo(proj.px, proj.py);
+                    else ctx.lineTo(proj.px, proj.py);
+                }
+                ctx.stroke();
+            }
+
+            // 3. Orbit Line Tracks
+            for (let aIdx = 0; aIdx < numOrbits; aIdx++) {
+                const angle = orbitAngles[aIdx];
+                ctx.strokeStyle = orbitColors[aIdx % orbitColors.length];
+                ctx.globalAlpha = 0.4;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for (let i = 0; i <= 120; i++) {
+                    const ang = (i / 120) * 2.0 * Math.PI;
+                    const x0 = rOrbit * Math.cos(ang);
+                    const y0 = rOrbit * Math.sin(ang);
+                    const x = x0 * Math.cos(angle) - (y0 * Math.cos(tilt)) * Math.sin(angle);
+                    const y = x0 * Math.sin(angle) + (y0 * Math.cos(tilt)) * Math.cos(angle);
+                    const z = y0 * Math.sin(tilt);
+                    const proj = project(x, y, z);
+                    if (i === 0) ctx.moveTo(proj.px, proj.py);
+                    else ctx.lineTo(proj.px, proj.py);
+                }
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+
+            // 4. Center ST8925lab Text Pulsing
+            const bText = 0.5 * (1.0 + Math.cos(tLoop * 2.0 * Math.PI * 3.33));
+            ctx.font = 'bold 26px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = `rgba(180, 180, 180, ${0.35 * bText})`;
+            ctx.fillText("ST8925lab", centerX, centerY);
+
+            // 5. 120 Electron Particles Rendering
+            const elements = [];
+            const trailSteps = 7;
+
+            particleSpecs.forEach(p => {
+                const angle = p.angle;
+                const basePhase = p.phase;
+                const cGlow = p.colorGlow;
+                const baseSize = p.size;
+                const twinkle = 0.20 + 0.80 * ((Math.sin(basePhase * p.twinkleFreq + rotation360 * 4.0) + 1.0) / 2.0);
+
+                for (let step = 0; step < trailSteps; step++) {
+                    const dtAngle = step * 0.035;
+                    const curRot = rotation360 - dtAngle;
+                    const tElec = basePhase + curRot;
+
+                    const x0 = rOrbit * Math.cos(tElec);
+                    const y0 = rOrbit * Math.sin(tElec);
+                    const x = x0 * Math.cos(angle) - (y0 * Math.cos(tilt)) * Math.sin(angle);
+                    const y = x0 * Math.sin(angle) + (y0 * Math.cos(tilt)) * Math.cos(angle);
+                    const z = y0 * Math.sin(tilt);
+
+                    const proj = project(x, y, z);
+                    const decay = Math.pow(1.0 - (step / trailSteps), 1.5);
+
+                    elements.push({
+                        px: proj.px,
+                        py: proj.py,
+                        z: proj.z,
+                        sz: proj.sz,
+                        isHead: (step === 0),
+                        decay: decay,
+                        cGlow: cGlow,
+                        baseSize: baseSize,
+                        twinkle: twinkle
+                    });
+                }
+            });
+
+            elements.sort((a, b) => a.z - b.z);
+
+            elements.forEach(elem => {
+                const distToCenter = Math.hypot(elem.px - centerX, elem.py - centerY);
+                let occlusion = 1.0;
+                if (elem.z < -sphereRadius * 0.2 && distToCenter < sphereRadius) {
+                    occlusion = 0.30 + 0.70 * (distToCenter / sphereRadius);
+                }
+
+                const alpha = elem.decay * occlusion * (elem.isHead ? elem.twinkle : 0.85);
+                const radius = elem.baseSize * elem.sz * (elem.isHead ? 1.0 : (0.35 + 0.65 * elem.decay));
+
+                if (alpha > 0.05) {
+                    ctx.beginPath();
+                    ctx.arc(elem.px, elem.py, Math.max(0.5, radius), 0, 2 * Math.PI);
+                    ctx.fillStyle = elem.cGlow.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
+                    ctx.fill();
+
+                    if (elem.isHead) {
+                        ctx.beginPath();
+                        ctx.arc(elem.px, elem.py, Math.max(0.3, radius * 0.5), 0, 2 * Math.PI);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                        ctx.fill();
+                    }
+                }
+            });
+
+            animationFrameId = requestAnimationFrame(drawFrame);
+        }
+
+        // Mode Switching
+        function switchMode(mode) {
+            const canvasEl = document.getElementById('sciFiCanvas');
+            const gifEl = document.getElementById('gifDisplay');
+            const btnCanvas = document.getElementById('btnLiveCanvas');
+            const btnGif = document.getElementById('btnGif');
+
+            if (mode === 'canvas') {
+                canvasEl.style.display = 'block';
+                gifEl.style.display = 'none';
+                btnCanvas.classList.add('active');
+                btnGif.classList.remove('active');
+                if (!animationFrameId) drawFrame();
+            } else {
+                canvasEl.style.display = 'none';
+                gifEl.style.display = 'block';
+                btnCanvas.classList.remove('active');
+                btnGif.classList.add('active');
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+            }
+        }
+
+        function updateSpeed(val) {
+            speedMultiplier = parseFloat(val);
+            document.getElementById('speedVal').innerText = `${speedMultiplier.toFixed(1)}x`;
+        }
+
+        // Start animation on load
+        drawFrame();
+    </script>
+</body>
+</html>

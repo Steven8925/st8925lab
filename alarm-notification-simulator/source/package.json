@@ -1,0 +1,30 @@
+{
+  "name": "alarm-notification-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mobile alarm notification system - simulation platform (Phase A)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,ops,web -c cyan,magenta,green \"npm:dev:api\" \"npm:dev:ops\" \"npm:dev:web\"",
+    "dev:api": "npm run dev -w @alarm/api",
+    "dev:ops": "npm run dev -w @alarm/ops-server",
+    "dev:web": "npm run dev -w @alarm/web",
+    "test": "npm run test -w @alarm/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run db:migrate -w @alarm/api",
+    "db:seed": "npm run db:seed -w @alarm/api",
+    "db:reset": "npm run db:reset -w @alarm/api"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}

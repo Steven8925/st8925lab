@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('work', ({ data }) => data.lang === 'zh' && !data.draft);
+  return entries.map(entry => ({
+    params: { slug: entry.slug.replace('zh/', '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<BaseLayout 
+  title={`${entry.data.title} | ST8925 LAB`}
+  description={entry.data.summary}
+  lang="zh"
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": entry.data.title,
+    "description": entry.data.summary
+  }}
+>
+  <article class="max-w-4xl mx-auto py-12 px-4">
+    <h1 class="text-4xl font-bold mb-6">{entry.data.title}</h1>
+    
+    <div class="flex flex-wrap gap-4 mb-8 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
+      <div><strong>產業:</strong> {entry.data.sector}</div>
+      <div><strong>角色:</strong> {entry.data.role}</div>
+      <div><strong>時長:</strong> {entry.data.duration}</div>
+    </div>
+    
+    <div class="mb-8">
+      <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">技術棧</h3>
+      <div class="flex flex-wrap gap-2">
+        {entry.data.stack.map(tech => (
+          <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{tech}</span>
+        ))}
+      </div>
+    </div>
+
+    <div class="mb-10 grid grid-cols-2 md:grid-cols-4 gap-4">
+      {entry.data.results.map(result => (
+        <div class="bg-gray-100 p-4 rounded-lg text-center">
+          <div class="text-2xl font-bold text-gray-900 mb-1">{result.value}</div>
+          <div class="text-xs text-gray-500 uppercase">{result.metric}</div>
+        </div>
+      ))}
+    </div>
+
+    <div class="prose prose-dark max-w-none">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

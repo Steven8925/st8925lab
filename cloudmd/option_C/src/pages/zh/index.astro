@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CaseStudyCard from '../../components/CaseStudyCard.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/index';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout 
+  title="首頁 | ST8925 LAB" 
+  description="將傳統設備連接到現代監控系統" 
+  lang={lang}
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "ST8925 LAB",
+    "url": "https://st8925lab.com",
+    "sameAs": ["https://github.com/st8925lab"]
+  }}
+>
+  <section class="hero bg-gradient-to-b from-blue-900 to-gray-900 text-white py-20 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-5xl font-bold mb-6">將傳統設備連接到現代監控系統</h1>
+      <p class="text-xl mb-10 text-gray-300">透過客製化的 OT/IT 整合方案，實現工業資產現代化。</p>
+      <div class="flex justify-center gap-4">
+        <a href="/zh/work" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition">查看作品</a>
+        <a href="/zh/capabilities" class="px-6 py-3 border border-white hover:bg-white hover:text-gray-900 rounded-lg font-medium transition">探索能力</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured-work py-20 px-4 max-w-6xl mx-auto">
+    <h2 class="text-3xl font-bold mb-10">精選案例</h2>
+    <CaseStudyCard 
+      title="在既有冰水主機上加裝即時監控系統"
+      summary="為五星級飯店的冰水主機打造客製化的 ESP32 Modbus RTU 監控系統，在不更動現有 BMS 的情況下，實現了約 80% 的故障偵測速度提升。"
+      sector="飯店業" 
+      role="端到端獨立交付" 
+      duration="14+ 個月穩定運作"
+      stack={['ESP32','RS-485','Modbus RTU','Siemens Climatix','Arduino','OTA']}
+      results={[{metric:'故障偵測',value:'快約80%'},{metric:'巡視工時',value:'減少約50%'},{metric:'系統運行',value:'14+ 個月'}]}
+      slug="chiller-ot-monitoring" 
+      lang="zh"
+    />
+  </section>
+
+  <section class="capabilities py-20 px-4 bg-gray-50">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl font-bold mb-10 text-gray-900">核心能力</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">🔌</div>
+          <h3 class="text-xl font-bold mb-2">OT/IT 網路整合</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">📡</div>
+          <h3 class="text-xl font-bold mb-2">傳統協定整合</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">📊</div>
+          <h3 class="text-xl font-bold mb-2">監控平台部署</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">🔍</div>
+          <h3 class="text-xl font-bold mb-2">設備選型與合規</h3>
+        </div>
+        <div class="p-6 bg-white rounded-lg shadow-sm">
+          <div class="text-4xl mb-4">📋</div>
+          <h3 class="text-xl font-bold mb-2">專案交付文件 (FAT/SAT/UAT)</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,19 @@
+---
+import { getLangFromUrl } from '../i18n/index';
+
+const url = Astro.url;
+const currentLang = getLangFromUrl(url);
+const alternateLang = currentLang === 'en' ? 'zh' : 'en';
+const alternateLabel = currentLang === 'en' ? '中文' : 'EN';
+
+let alternateUrl = url.pathname;
+if (alternateUrl.startsWith(`/${currentLang}`)) {
+  alternateUrl = alternateUrl.replace(`/${currentLang}`, `/${alternateLang}`);
+} else {
+  alternateUrl = `/${alternateLang}${alternateUrl}`;
+}
+---
+
+<a href={alternateUrl} class="text-sm text-text-dim hover:text-text border border-blue/20 rounded px-2 py-1">
+  {alternateLabel}
+</a>

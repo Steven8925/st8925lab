@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CaseStudyCard from '../../../components/CaseStudyCard.astro';
+---
+
+<BaseLayout title="作品案例 | ST8925 LAB" description="我們的作品與專案" lang="zh">
+  <div class="max-w-6xl mx-auto py-12 px-4">
+    <h1 class="text-4xl font-bold mb-8">作品案例</h1>
+    <div class="grid gap-8">
+      <CaseStudyCard 
+        title="在既有冰水主機上加裝即時監控系統"
+        summary="為五星級飯店的冰水主機打造客製化的 ESP32 Modbus RTU 監控系統，在不更動現有 BMS 的情況下，實現了約 80% 的故障偵測速度提升。"
+        sector="飯店業" 
+        role="端到端獨立交付" 
+        duration="14+ 個月穩定運作"
+        stack={['ESP32','RS-485','Modbus RTU','Siemens Climatix','Arduino','OTA']}
+        results={[{metric:'故障偵測',value:'快約80%'},{metric:'巡視工時',value:'減少約50%'},{metric:'系統運行',value:'14+ 個月'}]}
+        slug="chiller-ot-monitoring" 
+        lang="zh"
+      />
+    </div>
+  </div>
+</BaseLayout>

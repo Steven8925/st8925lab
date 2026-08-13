@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Homepage -->
+  <url>
+    <loc>https://st8925lab.com/en/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Work -->
+  <url>
+    <loc>https://st8925lab.com/en/work/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/work/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/work/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/work/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/work/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/work/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Chiller Case Study -->
+  <url>
+    <loc>https://st8925lab.com/en/work/chiller-ot-monitoring/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/work/chiller-ot-monitoring/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/work/chiller-ot-monitoring/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/work/chiller-ot-monitoring/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/work/chiller-ot-monitoring/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/work/chiller-ot-monitoring/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Reference -->
+  <url>
+    <loc>https://st8925lab.com/en/reference/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/reference/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/reference/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/reference/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/reference/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/reference/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/en/reference/modbus-pdu-offset/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/reference/modbus-pdu-offset/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/reference/modbus-pdu-offset/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/reference/modbus-pdu-offset/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/reference/modbus-pdu-offset/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/reference/modbus-pdu-offset/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/en/reference/modbus-float-assembly/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/reference/modbus-float-assembly/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/reference/modbus-float-assembly/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/reference/modbus-float-assembly/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/reference/modbus-float-assembly/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/reference/modbus-float-assembly/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Tools -->
+  <url>
+    <loc>https://st8925lab.com/en/tools/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/tools/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/tools/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/tools/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/tools/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/tools/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/en/tools/modbus-address-converter/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/tools/modbus-address-converter/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/tools/modbus-address-converter/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/tools/modbus-address-converter/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/tools/modbus-address-converter/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/tools/modbus-address-converter/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/en/tools/modbus-float-decoder/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/tools/modbus-float-decoder/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/tools/modbus-float-decoder/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/tools/modbus-float-decoder/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/tools/modbus-float-decoder/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/tools/modbus-float-decoder/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Capabilities -->
+  <url>
+    <loc>https://st8925lab.com/en/capabilities/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/capabilities/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/capabilities/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/capabilities/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/capabilities/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/capabilities/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- About -->
+  <url>
+    <loc>https://st8925lab.com/en/about/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/about/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/about/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://st8925lab.com/zh/about/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://st8925lab.com/en/about/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://st8925lab.com/zh/about/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>

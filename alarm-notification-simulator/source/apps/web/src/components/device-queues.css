@@ -1,0 +1,184 @@
+.queues {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.queues__error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--sev-critical);
+}
+
+/* The distinction between "queued" and "unread" is the whole reason this panel
+   exists, so it is stated permanently rather than hidden in a tooltip. */
+.queues__legend {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-inset);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
+.queues__legend strong {
+  display: block;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.queues__legend em {
+  font-style: normal;
+  color: var(--text-faint);
+  line-height: 1.45;
+}
+
+.queues__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.qdev {
+  background: var(--surface-inset);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.qdev[data-queued] {
+  border-left: 2px solid var(--sev-warning);
+}
+
+.qdev__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 6px 9px;
+  text-align: left;
+}
+
+.qdev__row:hover {
+  background: var(--surface-hover);
+}
+
+.qdev__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.qdev__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.qdev__email {
+  font-size: 0.65rem;
+  color: var(--text-faint);
+}
+
+.qdev__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.qdev__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.qdev__link i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sev-critical);
+}
+
+.qdev__link[data-connected] {
+  color: var(--state-acked);
+}
+
+.qdev__link[data-connected] i {
+  background: var(--state-acked);
+}
+
+.qdev__state {
+  font-size: 0.6rem;
+  color: var(--text-faint);
+}
+
+/* --- Expanded queue ------------------------------------------------------ */
+
+.qdev__queue {
+  padding: var(--space-2) 9px;
+  border-top: 1px solid var(--border-hairline);
+  background: var(--surface-base);
+}
+
+.qdev__empty {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.qitems {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.qitems li::marker {
+  color: var(--sev-warning);
+  font-size: var(--text-xs);
+}
+
+.qitems__title {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.qitems__times {
+  margin: 1px 0 0;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.qitems__ids {
+  margin: 1px 0 0;
+  font-size: 0.6rem;
+  color: var(--text-faint);
+}
+
+.queues__total {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: color-mix(in oklch, var(--sev-warning) 10%, transparent);
+  border: 1px solid color-mix(in oklch, var(--sev-warning) 35%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--sev-warning);
+}
+
+.queues__total em {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--text-muted);
+}

@@ -1,0 +1,109 @@
+# Render Blueprint — Alarm Notification Simulator backend
+# 告警通知模擬台後端部署藍圖
+#
+# Deploys the two Node.js services that Project 01 (alarm-notification-simulator)
+# needs. The frontend (apps/web) is NOT deployed here — it is built as a static
+# bundle and served by Cloudflare Pages alongside the rest of st8925lab.com.
+#
+# 部署 Project 01（alarm-notification-simulator）所需的兩個 Node.js 服務。
+# 前端（apps/web）不在這裡部署 —— 它被打包成靜態檔案，隨 st8925lab.com
+# 其餘部分一起由 Cloudflare Pages 提供。
+#
+# How to use / 使用方式:
+#   1. Render dashboard -> New -> Blueprint -> connect the st8925lab GitHub repo.
+#   2. Render auto-detects this file at the repo root.
+#   3. After the first deploy, open EACH service's Environment tab and fill in
+#      the variables marked `sync: false` below (Render leaves these blank on
+#      purpose so no secret ever sits in the public git history).
+#   4. INTERNAL_WEBHOOK_SECRET MUST be the exact same value on BOTH services —
+#      it is how the ops-server proves its webhooks to the api. Generate one
+#      value and paste it into both. A quick way to generate one:
+#        node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+#
+# Known caveat / 已知限制: both services are on Render's free tier, which
+# sleeps after 15 minutes idle (first request after that takes ~30-60s to wake)
+# and has an EPHEMERAL filesystem — the SQLite database resets to freshly-seeded
+# demo data on every restart. This is an accepted trade-off for a public demo
+# with fake data, not a bug. See alarm-notification-simulator/README.md.
+
+services:
+  - type: web
+    name: st8925lab-alarm-api
+    runtime: node
+    plan: free
+    rootDir: alarm-notification-simulator/source
+    buildCommand: >
+      npm install &&
+      mkdir -p data &&
+      npm run db:generate -w @alarm/api &&
+      npm exec -w @alarm/api -- prisma migrate deploy &&
+      npm run db:seed -w @alarm/api
+    startCommand: npm run start -w @alarm/api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: API_PORT
+        value: 3000
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        value: "file:./data/dev.db"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL
+        value: 15m
+      - key: JWT_REFRESH_TTL
+        value: 30d
+      - key: INTERNAL_WEBHOOK_SECRET
+        sync: false
+      - key: PUSH_PROVIDER
+        value: simulator
+      - key: SIMULATOR_RECEIPT_DELAY_MS
+        value: 3000
+      - key: SOURCE_POLL_ENABLED
+        value: "true"
+      - key: SOURCE_POLL_INTERVAL_MS
+        value: 5000
+      - key: SOURCE_POLL_URL
+        value: https://st8925lab-alarm-ops.onrender.com/v1/source-events/claim
+      - key: ALARM_REFERENCE_TIMEZONE
+        value: Asia/Taipei
+      - key: TEST_DATA_RETENTION_DAYS
+        value: 3
+      - key: TEST_DATA_RETENTION_SWEEP_MS
+        value: 3600000
+      - key: CORS_ORIGIN
+        value: https://st8925lab.com
+      - key: SEED_MANAGER_EMAIL
+        value: manager@demo.local
+      - key: SEED_ADMIN_EMAIL
+        value: admin@demo.local
+      - key: SEED_PASSWORD
+        value: Demo-Alarm-2026
+
+  - type: web
+    name: st8925lab-alarm-ops
+    runtime: node
+    plan: free
+    rootDir: alarm-notification-simulator/source
+    buildCommand: npm install
+    startCommand: npm run start -w @alarm/ops-server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: OPS_PORT
+        value: 4000
+      - key: PORT
+        value: 4000
+      - key: NOTIFICATION_API_BASE_URL
+        value: https://st8925lab-alarm-api.onrender.com
+      - key: INTERNAL_WEBHOOK_SECRET
+        sync: false
+      - key: OPS_CORS_ORIGIN
+        value: https://st8925lab.com

@@ -1,0 +1,73 @@
+{
+  "site": {
+    "title": "ST8925 LAB",
+    "tagline": "OT/IT 整合專家",
+    "description": "專業作品集，展示 OT/IT 整合、工業監控改造與協議橋接解決方案。"
+  },
+  "nav": {
+    "work": "專案",
+    "reference": "技術參考",
+    "tools": "工具",
+    "capabilities": "服務能力",
+    "about": "關於",
+    "contact": "聯絡",
+    "lab": "實驗室",
+    "langSwitch": "EN"
+  },
+  "home": {
+    "heroTitle": "連接既有設備與現代監控系統",
+    "heroSubtitle": "OT/IT 整合專家 — 在不中斷營運的前提下，為工業設備加裝監控系統",
+    "featuredWork": "精選專案",
+    "viewAllWork": "查看所有案例研究",
+    "capabilities": "服務內容",
+    "references": "技術參考文件",
+    "tools": "工業工具"
+  },
+  "work": {
+    "title": "專案",
+    "subtitle": "具備量化成果的真實 OT/IT 整合案例研究",
+    "sector": "產業",
+    "role": "角色",
+    "duration": "期程",
+    "stack": "技術棧",
+    "readMore": "閱讀完整案例"
+  },
+  "reference": {
+    "title": "技術參考",
+    "subtitle": "工業協議、網路與系統整合的技術參考文章",
+    "lastReviewed": "最後審閱",
+    "relatedCaseStudy": "查看實際生產環境的應用"
+  },
+  "tools": {
+    "title": "工具",
+    "subtitle": "免費的工業工具，用於協議除錯與系統整合",
+    "tryIt": "立即使用",
+    "examples": "使用範例",
+    "howItWorks": "工作原理"
+  },
+  "capabilities": {
+    "title": "服務能力",
+    "subtitle": "工業系統整合與監控平台部署的專業服務"
+  },
+  "about": {
+    "title": "關於",
+    "subtitle": "背景經歷、專業資歷與聯絡方式",
+    "contactMe": "與我聯繫"
+  },
+  "footer": {
+    "copyright": "© 2025 ST8925 LAB. 版權所有。",
+    "builtWith": "以 Astro 建構 · 託管於 Cloudflare Pages",
+    "privacy": "隱私政策",
+    "sitemap": "網站地圖"
+  },
+  "caseStudy": {
+    "context": "背景與限制條件",
+    "problem": "問題描述",
+    "options": "方案比較與評估",
+    "solution": "建構與交付",
+    "hardPart": "技術難點",
+    "outcome": "成果",
+    "reflection": "如果重新來過",
+    "myRole": "我的角色"
+  }
+}

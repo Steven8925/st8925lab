@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分子動力學模擬器 (Molecular Dynamics Simulation)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(18, 26, 43, 0.75);
+            --bg-card-border: rgba(255, 255, 255, 0.08);
+            --bg-input: rgba(10, 15, 26, 0.8);
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-purple: #7f53ac;
+            --accent-pink: #ff3366;
+            --accent-green: #00e676;
+            --accent-orange: #ff9100;
+            --text-main: #f0f4f8;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-title: 'Outfit', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(127, 83, 172, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--bg-card-border);
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+            color: #000;
+            font-size: 1.2rem;
+        }
+
+        .brand-text h1 {
+            font-family: var(--font-title);
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .top-nav-stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--bg-card-border);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-badge .label {
+            color: var(--text-muted);
+        }
+
+        .stat-badge .value {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* App Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            gap: 1rem;
+            padding: 1rem;
+            flex: 1;
+            max-width: 1920px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (max-width: 1400px) {
+            .app-container {
+                grid-template-columns: 300px 1fr;
+            }
+            .right-panel {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards & Panels */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 14px;
+            backdrop-filter: blur(16px);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-family: var(--font-title);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.6rem;
+        }
+
+        .panel-title i {
+            color: var(--accent-cyan);
+            margin-right: 0.5rem;
+        }
+
+        /* Control Groups */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-label .val-disp {
+            color: var(--accent-cyan);
+            font-family: var(--font-code);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .btn-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.4rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--bg-card-border);
+            color: var(--text-main);
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.825rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn:hover {
+            background: rgba(0, 242, 254, 0.15);
+            border-color: rgba(0, 242, 254, 0.4);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #050b14;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #33f5ff, #6bb8fe);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
+            color: #000;
+        }
+
+        .btn-danger {
+            background: rgba(255, 51, 102, 0.15);
+            border-color: rgba(255, 51, 102, 0.3);
+            color: var(--accent-pink);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 51, 102, 0.3);
+            border-color: var(--accent-pink);
+            color: #fff;
+        }
+
+        .btn-active {
+            background: rgba(0, 242, 254, 0.2) !important;
+            border-color: var(--accent-cyan) !important;
+            color: var(--accent-cyan) !important;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-cyan);
+        }
+
+        select {
+            background: var(--bg-input);
+            border: 1px solid var(--bg-card-border);
+            color: var(--text-main);
+            padding: 0.55rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        /* Center Canvas Viewport */
+        .simulation-viewport {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #04070d;
+            border-radius: 16px;
+            border: 1px solid var(--bg-card-border);
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+            min-height: 520px;
+        }
+
+        #simCanvas {
+            background: transparent;
+            cursor: crosshair;
+            display: block;
+        }
+
+        .canvas-overlay-controls {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(9, 13, 22, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 0.4rem;
+            border-radius: 10px;
+            border: 1px solid var(--bg-card-border);
+            z-index: 10;
+        }
+
+        .canvas-phase-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(9, 13, 22, 0.75);
+            backdrop-filter: blur(8px);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid var(--bg-card-border);
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .phase-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        /* Charts */
+        .chart-container {
+            width: 100%;
+            height: 140px;
+            position: relative;
+        }
+
+        canvas.sub-chart {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Tabs for analytics */
+        .tab-buttons {
+            display: flex;
+            gap: 0.25rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent-cyan);
+        }
+
+        /* Theory Guide Section */
+        .theory-section {
+            grid-column: 1 / -1;
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .theory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .theory-card {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .theory-card h3 {
+            font-size: 0.95rem;
+            color: var(--accent-cyan);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .theory-card p, .theory-card ul {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .theory-card ul {
+            padding-left: 1.2rem;
+        }
+
+        .formula-box {
+            background: rgba(0, 242, 254, 0.05);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 0.5rem 0.8rem;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: var(--text-main);
+            margin: 0.5rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-logo"><i class="fa-solid fa-atom"></i></div>
+            <div class="brand-text">
+                <h1>分子動力學模擬器 (Molecular Dynamics)</h1>
+                <p>Lennard-Jones 勢能 · Velocity Verlet 積分算法 · 模擬相變與能守恆</p>
+            </div>
+        </div>
+
+        <div class="top-nav-stats">
+            <div class="stat-badge">
+                <span class="label">FPS:</span>
+                <span class="value" id="dispFPS">60</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">原子數 N:</span>
+                <span class="value" id="dispN">256</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">溫度 T*:</span>
+                <span class="value" id="dispT">0.50</span>
+            </div>
+            <div class="stat-badge">
+                <span class="label">總能量 E*:</span>
+                <span class="value" id="dispE">-1.24</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="app-container">
+        
+        <!-- Left Panel: Controls -->
+        <div class="panel left-panel">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-sliders"></i> 控制與預設</span>
+            </div>
+
+            <!-- Presets -->
+            <div class="control-group">
+                <div class="control-label">系統預設場景 (Presets)</div>
+                <select id="selectPreset">
+                    <option value="solid">固體晶格 (Solid Crystal Grid, T* = 0.15)</option>
+                    <option value="melting">晶格熔化 (Melting Transition, T* = 0.70)</option>
+                    <option value="liquid" selected>液體狀態 (Liquid Argon, T* = 0.85)</option>
+                    <option value="gas">氣體擴散 (Ideal Gas Expansion, T* = 2.50)</option>
+                    <option value="shock">熱衝擊 / 局部雷射加熱 (Thermal Shock)</option>
+                    <option value="binary">雙組分相分離 (Binary Mixture)</option>
+                    <option value="collision">原子團簇高速碰撞 (Cluster Collision)</option>
+                </select>
+            </div>
+
+            <!-- Simulation Action Buttons -->
+            <div class="btn-grid">
+                <button class="btn btn-primary" id="btnPlayPause">
+                    <i class="fa-solid fa-pause"></i> <span id="lblPlayPause">暫停</span>
+                </button>
+                <button class="btn" id="btnStep">
+                    <i class="fa-solid fa-forward-step"></i> 單步執行
+                </button>
+                <button class="btn btn-danger" id="btnReset">
+                    <i class="fa-solid fa-rotate-left"></i> 重置系統
+                </button>
+
+                <button class="btn" id="btnHeat">
+                    <i class="fa-solid fa-fire"></i> 加熱 (+20%)
+                </button>
+                <button class="btn" id="btnCool">
+                    <i class="fa-solid fa-snowflake"></i> 冷卻 (-20%)
+                </button>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.06);">
+
+            <!-- Physics Controls -->
+            <div class="control-group">
+                <div class="control-label">
+                    <span>目標溫度 (Target Temp T*)</span>
+                    <span class="val-disp" id="valTargetTemp">0.85</span>
+                </div>
+                <input type="range" id="sliderTemp" min="0.01" max="4.0" step="0.02" value="0.85">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>熱力學系綜 (Ensemble Control)</span>
+                </div>
+                <select id="selectEnsemble">
+                    <option value="nve">NVE (微正則系綜 · 能量守恆)</option>
+                    <option value="berendsen" selected>NVT (Berendsen 控溫儀)</option>
+                    <option value="andersen">NVT (Andersen 隨機碰撞控溫)</option>
+                    <option value="rescale">NVT (直接速度縮放 Thermostat)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>時間步長 (Integration dt)</span>
+                    <span class="val-disp" id="valDt">0.003</span>
+                </div>
+                <input type="range" id="sliderDt" min="0.0005" max="0.006" step="0.0005" value="0.003">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>原子總數 N</span>
+                    <span class="val-disp" id="valNumAtoms">256</span>
+                </div>
+                <input type="range" id="sliderNumAtoms" min="36" max="625" step="1" value="256">
+            </div>
+
+            <!-- Interactive Mouse Tool -->
+            <div class="control-group">
+                <div class="control-label">滑鼠互動模式 (Mouse Action)</div>
+                <div class="btn-grid">
+                    <button class="btn btn-active" id="toolDrag"><i class="fa-solid fa-hand"></i> 拖拽原子</button>
+                    <button class="btn" id="toolHeat"><i class="fa-solid fa-bolt"></i> 局部加熱</button>
+                    <button class="btn" id="toolPush"><i class="fa-solid fa-magnet"></i> 斥力推開</button>
+                    <button class="btn" id="toolAdd"><i class="fa-solid fa-plus"></i> 新增原子</button>
+                </div>
+            </div>
+
+            <!-- Visualization Options -->
+            <div class="control-group">
+                <div class="control-label">顯示視覺效果</div>
+                <div class="btn-grid-3">
+                    <button class="btn btn-active" id="toggleVelColor"><i class="fa-solid fa-palette"></i> 速度色彩</button>
+                    <button class="btn" id="toggleVectors"><i class="fa-solid fa-arrows-up-down-left-right"></i> 速度向量</button>
+                    <button class="btn" id="toggleTrails"><i class="fa-solid fa-wave-square"></i> 運動軌跡</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Viewport: MD Simulation Canvas -->
+        <div class="simulation-viewport">
+            <div class="canvas-overlay-controls">
+                <button class="btn" id="btnZoomReset" title="重置視角"><i class="fa-solid fa-compress"></i></button>
+                <button class="btn" id="btnSpeedUp" title="加速模擬"><i class="fa-solid fa-gauge-high"></i> <span id="lblSpeed">1x</span></button>
+            </div>
+
+            <div class="canvas-phase-indicator">
+                <div class="phase-dot" id="phaseDot"></div>
+                <span id="phaseText">相態：液相 (Liquid)</span>
+            </div>
+
+            <canvas id="simCanvas" width="620" height="620"></canvas>
+        </div>
+
+        <!-- Right Panel: Analytics & Real-Time Diagnostics -->
+        <div class="panel right-panel">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-chart-line"></i> 即時診斷與數據分析</span>
+            </div>
+
+            <!-- Tab Switching for Charts -->
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="tabEnergy">能量守恆 (Energy)</button>
+                <button class="tab-btn" data-tab="tabMB">麥克斯韋速度分佈</button>
+                <button class="tab-btn" data-tab="tabRDF">徑向分佈函數 g(r)</button>
+                <button class="tab-btn" data-tab="tabLJ">LJ 勢能曲線</button>
+            </div>
+
+            <!-- Tab 1: Energy Chart -->
+            <div class="tab-content" id="tabEnergy">
+                <div class="control-label">
+                    <span>能量隨時間演化 (Energy vs Time)</span>
+                    <span style="font-size:0.75rem; color:var(--text-dim);">■ 動能 K  ■ 勢能 U  ■ 總能 E</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartEnergy" class="sub-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tab 2: Maxwell-Boltzmann Speed Distribution -->
+            <div class="tab-content" id="tabMB" style="display: none;">
+                <div class="control-label">
+                    <span>麥克斯韋-玻爾茲曼速率分佈 f(v)</span>
+                    <span style="font-size:0.75rem; color:var(--accent-orange);">— 理論曲線  ■ 實測直方圖</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartMB" class="sub-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tab 3: Radial Distribution Function g(r) -->
+            <div class="tab-content" id="tabRDF" style="display: none;">
+                <div class="control-label">
+                    <span>徑向分佈函數 g(r) (與結構有序度)</span>
+                    <span style="font-size:0.75rem; color:var(--accent-green);">峰值反映近鄰配位殼層</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartRDF" class="sub-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tab 4: LJ Potential Curve -->
+            <div class="tab-content" id="tabLJ" style="display: none;">
+                <div class="control-label">
+                    <span>Lennard-Jones 6-12 勢能 V(r) 示意圖</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartLJ" class="sub-chart"></canvas>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.06);">
+
+            <!-- Quantitative Diagnostics Summary -->
+            <div class="control-group">
+                <div class="control-label">熱力學診斷數據 (Thermodynamic Stats)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.8rem; font-family: var(--font-code);">
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px;">
+                        <div style="color: var(--text-dim);">平均動能 &lt;K*&gt;:</div>
+                        <div id="statK" style="color: var(--accent-cyan); font-weight: 600;">0.50</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px;">
+                        <div style="color: var(--text-dim);">平均勢能 &lt;U*&gt;:</div>
+                        <div id="statU" style="color: var(--accent-pink); font-weight: 600;">-1.74</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px;">
+                        <div style="color: var(--text-dim);">壓強估計 P*:</div>
+                        <div id="statP" style="color: var(--accent-orange); font-weight: 600;">1.12</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px;">
+                        <div style="color: var(--text-dim);">均方位移 MSD:</div>
+                        <div id="statMSD" style="color: var(--accent-green); font-weight: 600;">0.04</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom: Scientific & Theory Documentation -->
+        <div class="theory-section">
+            <div class="panel-title">
+                <span><i class="fa-solid fa-book-bookmark"></i> 分子動力學 (Molecular Dynamics) 原理說明</span>
+            </div>
+
+            <div class="theory-grid">
+                <div class="theory-card">
+                    <h3><i class="fa-solid fa-magnet"></i> 1. Lennard-Jones (12-6) 勢能模型</h3>
+                    <p>描述中性原子或分子間相互作用力的經典模型，包含短程Pauli斥力($r^{-12}$)與長程Van der Waals引力($r^{-6}$):</p>
+                    <div class="formula-box">
+                        V(r) = 4ε [ (σ/r)¹² - (σ/r)⁶ ]
+                    </div>
+                    <p>本模擬採用<b>無量綱歸一化單位 (Reduced Units)</b>: $\sigma=1, \epsilon=1, m=1, k_B=1$。截斷半徑取 $r_c = 2.5\sigma$ 並進行平移補償。</p>
+                </div>
+
+                <div class="theory-card">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> 2. Velocity Verlet 數值積分算法</h3>
+                    <p>二階辛算法 (Symplectic Integrator)，具有高數值穩定性與時間反演對稱性，能量長期守恆:</p>
+                    <div class="formula-box">
+                        r(t+Δt) = r(t) + v(t)Δt + ½a(t)Δt²<br>
+                        v(t+Δt) = v(t) + ½[a(t) + a(t+Δt)]Δt
+                    </div>
+                    <p>配合<b>週期性邊界條件 (PBC)</b> 與<b>最小鏡像法 (Minimum Image Convention)</b> 消除邊界效應。</p>
+                </div>
+
+                <div class="theory-card">
+                    <h3><i class="fa-solid fa-temperature-arrow-up"></i> 3. 控溫儀與相變 (Thermostats & Phase)</h3>
+                    <p>通過調整粒子速率模擬正則系綜 (NVT):</p>
+                    <ul>
+                        <li><b>Berendsen 控溫:</b> 鬆弛速率趨近目標溫度 $T^*$</li>
+                        <li><b>Andersen 控溫:</b> 模擬原子與熱浴隨機碰撞</li>
+                        <li><b>固相 → 液相 → 氣相:</b> 低溫下呈現正方形/三角形晶格；升高溫度時晶格熔化；高溫下均勻擴散。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Physics & Application Script -->
+    <script>
+        /**
+         * Molecular Dynamics Engine in JS
+         * Reduced Units: sigma = 1, epsilon = 1, mass = 1, kB = 1
+         */
+        class MDSimulation {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                
+                // Box parameters
+                this.boxSize = 20.0; // box size L in reduced units sigma
+                this.N = 256;        // Number of particles
+                this.dt = 0.003;     // Time step
+                this.targetT = 0.85; // Target temperature
+                this.ensemble = 'berendsen'; // 'nve', 'berendsen', 'andersen', 'rescale'
+
+                // Interaction potential parameters
+                this.rc = 2.5;       // Force cutoff distance
+                this.rcSq = this.rc * this.rc;
+                // Shift potential at cutoff V_shift = V(rc)
+                this.vShift = 4.0 * (Math.pow(1/this.rc, 12) - Math.pow(1/this.rc, 6));
+
+                // Particle arrays
+                this.x = new Float64Array(0);
+                this.y = new Float64Array(0);
+                this.vx = new Float64Array(0);
+                this.vy = new Float64Array(0);
+                this.fx = new Float64Array(0);
+                this.fy = new Float64Array(0);
+                this.type = new Uint8Array(0); // Particle species (0 or 1)
+                
+                // Trail history
+                this.trails = [];
+                
+                // Unfolded coordinates for MSD calculation
+                this.xUnfolded = new Float64Array(0);
+                this.yUnfolded = new Float64Array(0);
+                this.xInitial = new Float64Array(0);
+                this.yInitial = new Float64Array(0);
+
+                // Simulation state & metrics
+                this.stepCount = 0;
+                this.time = 0;
+                this.kineticE = 0;
+                this.potentialE = 0;
+                this.totalE = 0;
+                this.temperature = 0;
+                this.pressure = 0;
+                this.msd = 0;
+                this.viralSum = 0;
+
+                // History buffers for real-time charts
+                this.maxHistory = 100;
+                this.historyTime = [];
+                this.historyK = [];
+                this.historyU = [];
+                this.historyE = [];
+
+                // Visualization toggles
+                this.showVelColor = true;
+                this.showVectors = false;
+                this.showTrails = false;
+
+                // Interactive Mouse
+                this.mouseMode = 'drag'; // 'drag', 'heat', 'push', 'add'
+                this.draggedAtom = -1;
+                this.mousePos = { x: 0, y: 0 };
+                this.isMouseDown = false;
+
+                // RDF buffer
+                this.rdfBins = new Array(50).fill(0);
+                this.rdfMaxR = this.boxSize / 2.0;
+
+                this.initPreset('liquid');
+            }
+
+            initPreset(presetName) {
+                if (presetName === 'solid') {
+                    this.targetT = 0.15;
+                    this.N = 256;
+                    this.boxSize = 18.0;
+                    this.initGridPositions(0.15);
+                } else if (presetName === 'melting') {
+                    this.targetT = 0.70;
+                    this.N = 256;
+                    this.boxSize = 18.0;
+                    this.initGridPositions(0.15);
+                } else if (presetName === 'liquid') {
+                    this.targetT = 0.85;
+                    this.N = 256;
+                    this.boxSize = 20.0;
+                    this.initGridPositions(0.85);
+                } else if (presetName === 'gas') {
+                    this.targetT = 2.50;
+                    this.N = 144;
+                    this.boxSize = 26.0;
+                    this.initRandomPositions(2.50);
+                } else if (presetName === 'shock') {
+                    this.targetT = 0.20;
+                    this.N = 256;
+                    this.boxSize = 18.0;
+                    this.initGridPositions(0.20);
+                    // Local laser heating at center
+                    const centerR = 3.0;
+                    const halfL = this.boxSize / 2.0;
+                    for (let i = 0; i < this.N; i++) {
+                        let dx = this.x[i] - halfL;
+                        let dy = this.y[i] - halfL;
+                        if (dx*dx + dy*dy < centerR*centerR) {
+                            this.vx[i] *= 6.0;
+                            this.vy[i] *= 6.0;
+                        }
+                    }
+                } else if (presetName === 'binary') {
+                    this.targetT = 0.80;
+                    this.N = 256;
+                    this.boxSize = 20.0;
+                    this.initGridPositions(0.80);
+                    for (let i = 0; i < this.N; i++) {
+                        this.type[i] = (i % 2 === 0) ? 0 : 1;
+                    }
+                } else if (presetName === 'collision') {
+                    this.targetT = 0.20;
+                    this.N = 200;
+                    this.boxSize = 24.0;
+                    this.initTwoClusters();
+                }
+
+                this.rcMaxR = this.boxSize / 2.0;
+                this.resetHistory();
+                this.computeForces();
+            }
+
+            resetHistory() {
+                this.historyTime = [];
+                this.historyK = [];
+                this.historyU = [];
+                this.historyE = [];
+                this.stepCount = 0;
+                this.time = 0;
+                this.trails = Array.from({ length: this.N }, () => []);
+            }
+
+            initGridPositions(initT) {
+                const cols = Math.ceil(Math.sqrt(this.N));
+                const rows = cols;
+                this.N = cols * rows;
+
+                this.x = new Float64Array(this.N);
+                this.y = new Float64Array(this.N);
+                this.vx = new Float64Array(this.N);
+                this.vy = new Float64Array(this.N);
+                this.fx = new Float64Array(this.N);
+                this.fy = new Float64Array(this.N);
+                this.type = new Uint8Array(this.N);
+                this.xUnfolded = new Float64Array(this.N);
+                this.yUnfolded = new Float64Array(this.N);
+                this.xInitial = new Float64Array(this.N);
+                this.yInitial = new Float64Array(this.N);
+
+                const spacing = this.boxSize / cols;
+                let idx = 0;
+                for (let i = 0; i < cols; i++) {
+                    for (let j = 0; j < rows; j++) {
+                        this.x[idx] = (i + 0.5) * spacing;
+                        this.y[idx] = (j + 0.5) * spacing;
+                        this.xUnfolded[idx] = this.x[idx];
+                        this.yUnfolded[idx] = this.y[idx];
+                        this.xInitial[idx] = this.x[idx];
+                        this.yInitial[idx] = this.y[idx];
+                        this.type[idx] = 0;
+                        idx++;
+                    }
+                }
+
+                this.assignThermalVelocities(initT);
+            }
+
+            initRandomPositions(initT) {
+                this.x = new Float64Array(this.N);
+                this.y = new Float64Array(this.N);
+                this.vx = new Float64Array(this.N);
+                this.vy = new Float64Array(this.N);
+                this.fx = new Float64Array(this.N);
+                this.fy = new Float64Array(this.N);
+                this.type = new Uint8Array(this.N);
+                this.xUnfolded = new Float64Array(this.N);
+                this.yUnfolded = new Float64Array(this.N);
+                this.xInitial = new Float64Array(this.N);
+                this.yInitial = new Float64Array(this.N);
+
+                const minDist = 1.0;
+                for (let i = 0; i < this.N; i++) {
+                    let placed = false;
+                    let attempts = 0;
+                    while (!placed && attempts < 1000) {
+                        let rx = Math.random() * (this.boxSize - 2) + 1.0;
+                        let ry = Math.random() * (this.boxSize - 2) + 1.0;
+                        let valid = true;
+                        for (let j = 0; j < i; j++) {
+                            let dx = rx - this.x[j];
+                            let dy = ry - this.y[j];
+                            if (dx*dx + dy*dy < minDist*minDist) {
+                                valid = false;
+                                break;
+                            }
+                        }
+                        if (valid) {
+                            this.x[i] = rx;
+                            this.y[i] = ry;
+                            this.xUnfolded[i] = rx;
+                            this.yUnfolded[i] = ry;
+                            this.xInitial[i] = rx;
+                            this.yInitial[i] = ry;
+                            placed = true;
+                        }
+                        attempts++;
+                    }
+                }
+                this.assignThermalVelocities(initT);
+            }
+
+            initTwoClusters() {
+                this.N = 200;
+                this.x = new Float64Array(this.N);
+                this.y = new Float64Array(this.N);
+                this.vx = new Float64Array(this.N);
+                this.vy = new Float64Array(this.N);
+                this.fx = new Float64Array(this.N);
+                this.fy = new Float64Array(this.N);
+                this.type = new Uint8Array(this.N);
+                this.xUnfolded = new Float64Array(this.N);
+                this.yUnfolded = new Float64Array(this.N);
+                this.xInitial = new Float64Array(this.N);
+                this.yInitial = new Float64Array(this.N);
+
+                let half = 100;
+                let grid = 10;
+                let spacing = 1.2;
+                let idx = 0;
+
+                // Cluster 1 moving right
+                for (let i = 0; i < grid; i++) {
+                    for (let j = 0; j < grid; j++) {
+                        this.x[idx] = 4.0 + i * spacing;
+                        this.y[idx] = 6.0 + j * spacing;
+                        this.vx[idx] = 3.0 + (Math.random() - 0.5) * 0.2;
+                        this.vy[idx] = (Math.random() - 0.5) * 0.2;
+                        this.type[idx] = 0;
+                        idx++;
+                    }
+                }
+                // Cluster 2 moving left
+                for (let i = 0; i < grid; i++) {
+                    for (let j = 0; j < grid; j++) {
+                        this.x[idx] = 16.0 + i * spacing;
+                        this.y[idx] = 6.0 + j * spacing;
+                        this.vx[idx] = -3.0 + (Math.random() - 0.5) * 0.2;
+                        this.vy[idx] = (Math.random() - 0.5) * 0.2;
+                        this.type[idx] = 1;
+                        idx++;
+                    }
+                }
+                for (let i = 0; i < this.N; i++) {
+                    this.xUnfolded[i] = this.x[i];
+                    this.yUnfolded[i] = this.y[i];
+                    this.xInitial[i] = this.x[i];
+                    this.yInitial[i] = this.y[i];
+                }
+            }
+
+            assignThermalVelocities(T) {
+                let sumVx = 0, sumVy = 0;
+                for (let i = 0; i < this.N; i++) {
+                    // Box-Muller transformation for Gaussian velocity
+                    let u1 = Math.random(), u2 = Math.random();
+                    let randStd1 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                    let randStd2 = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+                    
+                    let vScale = Math.sqrt(T);
+                    this.vx[i] = randStd1 * vScale;
+                    this.vy[i] = randStd2 * vScale;
+
+                    sumVx += this.vx[i];
+                    sumVy += this.vy[i];
+                }
+                // Remove total linear momentum to avoid center-of-mass drift
+                let avgVx = sumVx / this.N;
+                let avgVy = sumVy / this.N;
+                for (let i = 0; i < this.N; i++) {
+                    this.vx[i] -= avgVx;
+                    this.vy[i] -= avgVy;
+                }
+            }
+
+            /**
+             * Force calculation with Lennard-Jones Potential & Periodic Boundary Conditions
+             */
+            computeForces() {
+                this.fx.fill(0);
+                this.fy.fill(0);
+                this.potentialE = 0;
+                this.viralSum = 0;
+
+                const L = this.boxSize;
+                const halfL = L / 2.0;
+
+                for (let i = 0; i < this.N; i++) {
+                    for (let j = i + 1; j < this.N; j++) {
+                        let dx = this.x[i] - this.x[j];
+                        let dy = this.y[i] - this.y[j];
+
+                        // Minimum Image Convention for PBC
+                        if (dx > halfL) dx -= L;
+                        else if (dx < -halfL) dx += L;
+                        if (dy > halfL) dy -= L;
+                        else if (dy < -halfL) dy += L;
+
+                        let r2 = dx * dx + dy * dy;
+
+                        if (r2 < this.rcSq && r2 > 0.05) {
+                            let invR2 = 1.0 / r2;
+                            let invR6 = invR2 * invR2 * invR2;
+                            let invR12 = invR6 * invR6;
+
+                            // Force magnitude scalar: F(r)/r = 24*(2*r^-12 - r^-6)/r^2
+                            let fPair = 24.0 * (2.0 * invR12 - invR6) * invR2;
+
+                            this.fx[i] += fPair * dx;
+                            this.fy[i] += fPair * dy;
+                            this.fx[j] -= fPair * dx;
+                            this.fy[j] -= fPair * dy;
+
+                            // Potential Energy shifted
+                            this.potentialE += 4.0 * (invR12 - invR6) - this.vShift;
+                            this.viralSum += fPair * r2;
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Velocity Verlet Integrator Step
+             */
+            step() {
+                const dt = this.dt;
+                const halfDt = 0.5 * dt;
+
+                // 1. Position update: r(t + dt) = r(t) + v(t)*dt + 0.5*a(t)*dt^2
+                for (let i = 0; i < this.N; i++) {
+                    let dx = this.vx[i] * dt + halfDt * this.fx[i] * dt;
+                    let dy = this.vy[i] * dt + halfDt * this.fy[i] * dt;
+
+                    this.x[i] += dx;
+                    this.y[i] += dy;
+
+                    this.xUnfolded[i] += dx;
+                    this.yUnfolded[i] += dy;
+
+                    // Periodic Boundary Conditions
+                    if (this.x[i] < 0) this.x[i] += this.boxSize;
+                    else if (this.x[i] >= this.boxSize) this.x[i] -= this.boxSize;
+
+                    if (this.y[i] < 0) this.y[i] += this.boxSize;
+                    else if (this.y[i] >= this.boxSize) this.y[i] -= this.boxSize;
+
+                    // Half-update velocities
+                    this.vx[i] += halfDt * this.fx[i];
+                    this.vy[i] += halfDt * this.fy[i];
+
+                    // Store trails
+                    if (this.showTrails && this.stepCount % 5 === 0) {
+                        if (!this.trails[i]) this.trails[i] = [];
+                        this.trails[i].push({ x: this.x[i], y: this.y[i] });
+                        if (this.trails[i].length > 15) this.trails[i].shift();
+                    }
+                }
+
+                // 2. Re-compute forces at new positions: F(t + dt)
+                this.computeForces();
+
+                // 3. Complete velocity update: v(t + dt) = v(t + dt/2) + 0.5*a(t + dt)*dt
+                for (let i = 0; i < this.N; i++) {
+                    this.vx[i] += halfDt * this.fx[i];
+                    this.vy[i] += halfDt * this.fy[i];
+                }
+
+                // 4. Calculate Kinetic Energy & Temperature
+                let sumV2 = 0;
+                for (let i = 0; i < this.N; i++) {
+                    sumV2 += this.vx[i] * this.vx[i] + this.vy[i] * this.vy[i];
+                }
+                this.kineticE = 0.5 * sumV2;
+                // In 2D, T = KineticE / N
+                this.temperature = this.kineticE / this.N;
+                this.totalE = this.kineticE + this.potentialE;
+
+                // Calculate Pressure (Virial theorem in 2D)
+                const density = this.N / (this.boxSize * this.boxSize);
+                this.pressure = density * this.temperature + (this.viralSum / (2.0 * this.boxSize * this.boxSize));
+
+                // Calculate MSD (Mean Squared Displacement)
+                let sumMSD = 0;
+                for (let i = 0; i < this.N; i++) {
+                    let dx = this.xUnfolded[i] - this.xInitial[i];
+                    let dy = this.yUnfolded[i] - this.yInitial[i];
+                    sumMSD += dx * dx + dy * dy;
+                }
+                this.msd = sumMSD / this.N;
+
+                // 5. Thermostat / Ensemble Control
+                this.applyThermostat();
+
+                // Mouse interaction physics
+                this.applyMouseForces();
+
+                this.stepCount++;
+                this.time += dt;
+
+                // History recording
+                if (this.stepCount % 3 === 0) {
+                    this.historyTime.push(this.time.toFixed(1));
+                    this.historyK.push(this.kineticE / this.N);
+                    this.historyU.push(this.potentialE / this.N);
+                    this.historyE.push(this.totalE / this.N);
+
+                    if (this.historyTime.length > this.maxHistory) {
+                        this.historyTime.shift();
+                        this.historyK.shift();
+                        this.historyU.shift();
+                        this.historyE.shift();
+                    }
+                }
+            }
+
+            applyThermostat() {
+                if (this.ensemble === 'nve') return;
+
+                if (this.ensemble === 'berendsen') {
+                    // Berendsen Thermostat rescaling factor
+                    const tau = 0.1; // Relaxation time
+                    const factor = Math.sqrt(1.0 + (this.dt / tau) * (this.targetT / Math.max(0.001, this.temperature) - 1.0));
+                    // Limit max scaling to avoid instability
+                    const clampedFactor = Math.min(Math.max(factor, 0.8), 1.2);
+                    for (let i = 0; i < this.N; i++) {
+                        this.vx[i] *= clampedFactor;
+                        this.vy[i] *= clampedFactor;
+                    }
+                } else if (this.ensemble === 'rescale') {
+                    // Direct Velocity Rescaling
+                    const factor = Math.sqrt(this.targetT / Math.max(0.001, this.temperature));
+                    for (let i = 0; i < this.N; i++) {
+                        this.vx[i] *= factor;
+                        this.vy[i] *= factor;
+                    }
+                } else if (this.ensemble === 'andersen') {
+                    // Andersen Thermostat stochastic collision
+                    const nu = 0.05; // Collision frequency
+                    for (let i = 0; i < this.N; i++) {
+                        if (Math.random() < nu) {
+                            let u1 = Math.random(), u2 = Math.random();
+                            let r1 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                            let r2 = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+                            let vScale = Math.sqrt(this.targetT);
+                            this.vx[i] = r1 * vScale;
+                            this.vy[i] = r2 * vScale;
+                        }
+                    }
+                }
+            }
+
+            applyMouseForces() {
+                if (!this.isMouseDown) return;
+                const m = this.mousePos; // in reduced units
+                const radius = 3.5;
+
+                for (let i = 0; i < this.N; i++) {
+                    let dx = this.x[i] - m.x;
+                    let dy = this.y[i] - m.y;
+                    let distSq = dx * dx + dy * dy;
+
+                    if (distSq < radius * radius && distSq > 0.01) {
+                        let dist = Math.sqrt(distSq);
+                        if (this.mouseMode === 'heat') {
+                            this.vx[i] *= 1.15;
+                            this.vy[i] *= 1.15;
+                        } else if (this.mouseMode === 'push') {
+                            let force = (radius - dist) * 15.0;
+                            this.vx[i] += (dx / dist) * force * this.dt;
+                            this.vy[i] += (dy / dist) * force * this.dt;
+                        } else if (this.mouseMode === 'drag') {
+                            if (this.draggedAtom === -1 || this.draggedAtom === i) {
+                                this.draggedAtom = i;
+                                this.vx[i] = (m.x - this.x[i]) * 10.0;
+                                this.vy[i] = (m.y - this.y[i]) * 10.0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Calculate Radial Distribution Function g(r)
+             */
+            computeRDF() {
+                const numBins = 50;
+                const dr = (this.boxSize / 2.0) / numBins;
+                const bins = new Float64Array(numBins);
+                const L = this.boxSize;
+                const halfL = L / 2.0;
+
+                let pairCount = 0;
+                for (let i = 0; i < this.N; i++) {
+                    for (let j = i + 1; j < this.N; j++) {
+                        let dx = this.x[i] - this.x[j];
+                        let dy = this.y[i] - this.y[j];
+                        if (dx > halfL) dx -= L;
+                        else if (dx < -halfL) dx += L;
+                        if (dy > halfL) dy -= L;
+                        else if (dy < -halfL) dy += L;
+
+                        let r = Math.sqrt(dx * dx + dy * dy);
+                        if (r < halfL) {
+                            let binIdx = Math.floor(r / dr);
+                            if (binIdx < numBins) {
+                                bins[binIdx] += 2; // Count both i-j and j-i
+                                pairCount++;
+                            }
+                        }
+                    }
+                }
+
+                // Normalize g(r) = bin_count / (2 * pi * r * dr * density * N)
+                const density = this.N / (L * L);
+                const gr = new Float64Array(numBins);
+                for (let b = 0; b < numBins; b++) {
+                    let rInner = b * dr;
+                    let rOuter = (b + 1) * dr;
+                    let area = Math.PI * (rOuter * rOuter - rInner * rInner);
+                    let expectedAtoms = density * area * this.N;
+                    gr[b] = bins[b] / Math.max(0.0001, expectedAtoms);
+                }
+                return { dr, gr };
+            }
+
+            /**
+             * Render Scene on Canvas
+             */
+            draw() {
+                const ctx = this.ctx;
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                const scale = w / this.boxSize;
+
+                // Clear background
+                ctx.fillStyle = '#04070d';
+                ctx.fillRect(0, 0, w, h);
+
+                // Draw background grid lines
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+                ctx.lineWidth = 1;
+                const gridSpacing = 2.0 * scale;
+                for (let x = 0; x < w; x += gridSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, h);
+                    ctx.stroke();
+                }
+                for (let y = 0; y < h; y += gridSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(w, y);
+                    ctx.stroke();
+                }
+
+                // Render Motion Trails
+                if (this.showTrails) {
+                    ctx.lineWidth = 1.5;
+                    for (let i = 0; i < this.N; i++) {
+                        let path = this.trails[i];
+                        if (path && path.length > 1) {
+                            ctx.beginPath();
+                            ctx.moveTo(path[0].x * scale, path[0].y * scale);
+                            for (let p = 1; p < path.length; p++) {
+                                ctx.lineTo(path[p].x * scale, path[p].y * scale);
+                            }
+                            ctx.strokeStyle = `rgba(0, 242, 254, 0.25)`;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Render Atoms
+                const atomRadius = 0.45 * scale; // ~0.45 sigma radius
+                for (let i = 0; i < this.N; i++) {
+                    let cx = this.x[i] * scale;
+                    let cy = this.y[i] * scale;
+                    let speed = Math.sqrt(this.vx[i] * this.vx[i] + this.vy[i] * this.vy[i]);
+
+                    // Determine color based on speed or particle type
+                    let fillStyle = '#00f2fe';
+                    if (this.type[i] === 1) {
+                        fillStyle = '#ff3366'; // Pink for second species in binary
+                    } else if (this.showVelColor) {
+                        // Cold (blue) -> Med (green/cyan) -> Hot (red/amber)
+                        let normSpeed = Math.min(speed / 2.5, 1.0);
+                        let hue = (1.0 - normSpeed) * 210; // 210 = blue, 0 = red
+                        fillStyle = `hsl(${hue}, 95%, 55%)`;
+                    }
+
+                    // Outer Glow
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, atomRadius + 2, 0, Math.PI * 2);
+                    ctx.fillStyle = fillStyle;
+                    ctx.globalAlpha = 0.25;
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+
+                    // Main Atom Sphere
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, atomRadius, 0, Math.PI * 2);
+                    let grad = ctx.createRadialGradient(
+                        cx - atomRadius*0.3, cy - atomRadius*0.3, atomRadius*0.1,
+                        cx, cy, atomRadius
+                    );
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.5, fillStyle);
+                    grad.addColorStop(1, '#050b14');
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // Velocity Vector Lines
+                    if (this.showVectors) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx + this.vx[i] * 3.0 * scale * this.dt, cy + this.vy[i] * 3.0 * scale * this.dt);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                        ctx.lineWidth = 1.2;
+                        ctx.stroke();
+                    }
+                }
+
+                // Render Interactive Mouse Effect Ring
+                if (this.isMouseDown) {
+                    ctx.beginPath();
+                    ctx.arc(this.mousePos.x * scale, this.mousePos.y * scale, 3.5 * scale, 0, Math.PI * 2);
+                    ctx.strokeStyle = this.mouseMode === 'heat' ? '#ff9100' : '#00f2fe';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+        }
+
+        // Initialize UI Controls & Charting
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('simCanvas');
+            const sim = new MDSimulation(canvas);
+
+            let isRunning = true;
+            let speedMultiplier = 1;
+
+            // UI Elements
+            const dispFPS = document.getElementById('dispFPS');
+            const dispN = document.getElementById('dispN');
+            const dispT = document.getElementById('dispT');
+            const dispE = document.getElementById('dispE');
+
+            const btnPlayPause = document.getElementById('btnPlayPause');
+            const lblPlayPause = document.getElementById('lblPlayPause');
+            const btnStep = document.getElementById('btnStep');
+            const btnReset = document.getElementById('btnReset');
+            const btnHeat = document.getElementById('btnHeat');
+            const btnCool = document.getElementById('btnCool');
+
+            const selectPreset = document.getElementById('selectPreset');
+            const selectEnsemble = document.getElementById('selectEnsemble');
+            const sliderTemp = document.getElementById('sliderTemp');
+            const valTargetTemp = document.getElementById('valTargetTemp');
+            const sliderDt = document.getElementById('sliderDt');
+            const valDt = document.getElementById('valDt');
+            const sliderNumAtoms = document.getElementById('sliderNumAtoms');
+            const valNumAtoms = document.getElementById('valNumAtoms');
+
+            const phaseText = document.getElementById('phaseText');
+            const phaseDot = document.getElementById('phaseDot');
+
+            // Mouse Tool buttons
+            const toolDrag = document.getElementById('toolDrag');
+            const toolHeat = document.getElementById('toolHeat');
+            const toolPush = document.getElementById('toolPush');
+            const toolAdd = document.getElementById('toolAdd');
+            const mouseTools = [toolDrag, toolHeat, toolPush, toolAdd];
+
+            function setMouseTool(mode, activeBtn) {
+                sim.mouseMode = mode;
+                mouseTools.forEach(b => b.classList.remove('btn-active'));
+                activeBtn.classList.add('btn-active');
+            }
+
+            toolDrag.addEventListener('click', () => setMouseTool('drag', toolDrag));
+            toolHeat.addEventListener('click', () => setMouseTool('heat', toolHeat));
+            toolPush.addEventListener('click', () => setMouseTool('push', toolPush));
+            toolAdd.addEventListener('click', () => setMouseTool('add', toolAdd));
+
+            // Visual Toggles
+            document.getElementById('toggleVelColor').addEventListener('click', (e) => {
+                sim.showVelColor = !sim.showVelColor;
+                e.currentTarget.classList.toggle('btn-active', sim.showVelColor);
+            });
+            document.getElementById('toggleVectors').addEventListener('click', (e) => {
+                sim.showVectors = !sim.showVectors;
+                e.currentTarget.classList.toggle('btn-active', sim.showVectors);
+            });
+            document.getElementById('toggleTrails').addEventListener('click', (e) => {
+                sim.showTrails = !sim.showTrails;
+                e.currentTarget.classList.toggle('btn-active', sim.showTrails);
+            });
+
+            // Play / Pause
+            btnPlayPause.addEventListener('click', () => {
+                isRunning = !isRunning;
+                lblPlayPause.textContent = isRunning ? '暫停' : '繼續';
+                btnPlayPause.querySelector('i').className = isRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+            });
+
+            btnStep.addEventListener('click', () => {
+                isRunning = false;
+                lblPlayPause.textContent = '繼續';
+                btnPlayPause.querySelector('i').className = 'fa-solid fa-play';
+                sim.step();
+                sim.draw();
+                updateDiagnosticsUI();
+            });
+
+            btnReset.addEventListener('click', () => {
+                sim.initPreset(selectPreset.value);
+            });
+
+            btnHeat.addEventListener('click', () => {
+                sim.targetT *= 1.2;
+                sliderTemp.value = sim.targetT.toFixed(2);
+                valTargetTemp.textContent = sim.targetT.toFixed(2);
+            });
+
+            btnCool.addEventListener('click', () => {
+                sim.targetT *= 0.8;
+                sliderTemp.value = sim.targetT.toFixed(2);
+                valTargetTemp.textContent = sim.targetT.toFixed(2);
+            });
+
+            selectPreset.addEventListener('change', (e) => {
+                sim.initPreset(e.target.value);
+                sliderTemp.value = sim.targetT.toFixed(2);
+                valTargetTemp.textContent = sim.targetT.toFixed(2);
+                sliderNumAtoms.value = sim.N;
+                valNumAtoms.textContent = sim.N;
+            });
+
+            selectEnsemble.addEventListener('change', (e) => {
+                sim.ensemble = e.target.value;
+            });
+
+            sliderTemp.addEventListener('input', (e) => {
+                sim.targetT = parseFloat(e.target.value);
+                valTargetTemp.textContent = sim.targetT.toFixed(2);
+            });
+
+            sliderDt.addEventListener('input', (e) => {
+                sim.dt = parseFloat(e.target.value);
+                valDt.textContent = sim.dt.toFixed(4);
+            });
+
+            sliderNumAtoms.addEventListener('change', (e) => {
+                sim.N = parseInt(e.target.value);
+                valNumAtoms.textContent = sim.N;
+                sim.initGridPositions(sim.targetT);
+            });
+
+            document.getElementById('btnSpeedUp').addEventListener('click', () => {
+                speedMultiplier = (speedMultiplier % 3) + 1;
+                document.getElementById('lblSpeed').textContent = `${speedMultiplier}x`;
+            });
+
+            // Canvas Mouse Events
+            canvas.addEventListener('mousedown', (e) => {
+                sim.isMouseDown = true;
+                const rect = canvas.getBoundingClientRect();
+                sim.mousePos = {
+                    x: ((e.clientX - rect.left) / canvas.width) * sim.boxSize,
+                    y: ((e.clientY - rect.top) / canvas.height) * sim.boxSize
+                };
+
+                if (sim.mouseMode === 'add' && sim.N < 600) {
+                    let newX = sim.mousePos.x;
+                    let newY = sim.mousePos.y;
+                    let oldX = Array.from(sim.x);
+                    let oldY = Array.from(sim.y);
+                    let oldVx = Array.from(sim.vx);
+                    let oldVy = Array.from(sim.vy);
+
+                    sim.N += 1;
+                    sim.x = new Float64Array(sim.N);
+                    sim.y = new Float64Array(sim.N);
+                    sim.vx = new Float64Array(sim.N);
+                    sim.vy = new Float64Array(sim.N);
+                    sim.fx = new Float64Array(sim.N);
+                    sim.fy = new Float64Array(sim.N);
+
+                    for (let i = 0; i < sim.N - 1; i++) {
+                        sim.x[i] = oldX[i];
+                        sim.y[i] = oldY[i];
+                        sim.vx[i] = oldVx[i];
+                        sim.vy[i] = oldVy[i];
+                    }
+                    sim.x[sim.N - 1] = newX;
+                    sim.y[sim.N - 1] = newY;
+                    sim.vx[sim.N - 1] = (Math.random() - 0.5) * Math.sqrt(sim.targetT);
+                    sim.vy[sim.N - 1] = (Math.random() - 0.5) * Math.sqrt(sim.targetT);
+                    sliderNumAtoms.value = sim.N;
+                    valNumAtoms.textContent = sim.N;
+                }
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                sim.mousePos = {
+                    x: ((e.clientX - rect.left) / canvas.width) * sim.boxSize,
+                    y: ((e.clientY - rect.top) / canvas.height) * sim.boxSize
+                };
+            });
+
+            window.addEventListener('mouseup', () => {
+                sim.isMouseDown = false;
+                sim.draggedAtom = -1;
+            });
+
+            // Tabs for Sub-Charts
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.style.display = 'none');
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).style.display = 'block';
+                    renderActiveChart(btn.dataset.tab);
+                });
+            });
+
+            // Render Sub-Charts (Energy, Maxwell-Boltzmann, RDF, LJ)
+            function renderActiveChart(activeTab) {
+                if (activeTab === 'tabEnergy') drawEnergyChart();
+                else if (activeTab === 'tabMB') drawMBChart();
+                else if (activeTab === 'tabRDF') drawRDFChart();
+                else if (activeTab === 'tabLJ') drawLJChart();
+            }
+
+            function drawEnergyChart() {
+                const c = document.getElementById('chartEnergy');
+                const ctx = c.getContext('2d');
+                c.width = c.clientWidth;
+                c.height = c.clientHeight;
+
+                ctx.clearRect(0, 0, c.width, c.height);
+
+                if (sim.historyK.length < 2) return;
+
+                const minVal = -3.0;
+                const maxVal = 3.0;
+                const range = maxVal - minVal;
+
+                function getY(val) {
+                    return c.height - ((val - minVal) / range) * c.height;
+                }
+
+                // Grid line zero
+                let zeroY = getY(0);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.beginPath();
+                ctx.moveTo(0, zeroY);
+                ctx.lineTo(c.width, zeroY);
+                ctx.stroke();
+
+                // Draw Potential Energy U (pink)
+                ctx.strokeStyle = '#ff3366';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for (let i = 0; i < sim.historyU.length; i++) {
+                    let x = (i / (sim.maxHistory - 1)) * c.width;
+                    let y = getY(sim.historyU[i]);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Draw Kinetic Energy K (cyan)
+                ctx.strokeStyle = '#00f2fe';
+                ctx.beginPath();
+                for (let i = 0; i < sim.historyK.length; i++) {
+                    let x = (i / (sim.maxHistory - 1)) * c.width;
+                    let y = getY(sim.historyK[i]);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Draw Total Energy E (purple)
+                ctx.strokeStyle = '#a855f7';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < sim.historyE.length; i++) {
+                    let x = (i / (sim.maxHistory - 1)) * c.width;
+                    let y = getY(sim.historyE[i]);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            function drawMBChart() {
+                const c = document.getElementById('chartMB');
+                const ctx = c.getContext('2d');
+                c.width = c.clientWidth;
+                c.height = c.clientHeight;
+                ctx.clearRect(0, 0, c.width, c.height);
+
+                // Speed histogram
+                const numBins = 20;
+                const maxV = 4.0;
+                const binWidth = maxV / numBins;
+                const counts = new Array(numBins).fill(0);
+
+                for (let i = 0; i < sim.N; i++) {
+                    let speed = Math.sqrt(sim.vx[i] * sim.vx[i] + sim.vy[i] * sim.vy[i]);
+                    let b = Math.floor(speed / binWidth);
+                    if (b < numBins) counts[b]++;
+                }
+
+                // Render Histogram Bars
+                const barW = c.width / numBins;
+                const maxCount = Math.max(...counts, 15);
+
+                for (let b = 0; b < numBins; b++) {
+                    let barH = (counts[b] / maxCount) * (c.height - 20);
+                    ctx.fillStyle = 'rgba(0, 242, 254, 0.4)';
+                    ctx.border = '1px solid #00f2fe';
+                    ctx.fillRect(b * barW + 1, c.height - barH, barW - 2, barH);
+                }
+
+                // Theoretical Maxwell-Boltzmann 2D Speed Distribution Curve:
+                // f(v) = (m / k_B T) * v * exp(- m v^2 / (2 k_B T))
+                const T = Math.max(0.05, sim.temperature);
+                ctx.strokeStyle = '#ff9100';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                for (let px = 0; px < c.width; px += 2) {
+                    let v = (px / c.width) * maxV;
+                    let fv = (v / T) * Math.exp(-(v * v) / (2.0 * T));
+                    // Scale fv to height
+                    let y = c.height - (fv * 0.85) * (c.height - 20);
+                    if (px === 0) ctx.moveTo(px, y);
+                    else ctx.lineTo(px, y);
+                }
+                ctx.stroke();
+            }
+
+            function drawRDFChart() {
+                const c = document.getElementById('chartRDF');
+                const ctx = c.getContext('2d');
+                c.width = c.clientWidth;
+                c.height = c.clientHeight;
+                ctx.clearRect(0, 0, c.width, c.height);
+
+                const { dr, gr } = sim.computeRDF();
+                const maxGr = 3.5;
+
+                // g(r) = 1 baseline
+                let y1 = c.height - (1.0 / maxGr) * c.height;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(0, y1);
+                ctx.lineTo(c.width, y1);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw g(r) curve
+                ctx.strokeStyle = '#00e676';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let b = 0; b < gr.length; b++) {
+                    let x = (b / gr.length) * c.width;
+                    let y = c.height - (Math.min(gr[b], maxGr) / maxGr) * (c.height - 10);
+                    if (b === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            function drawLJChart() {
+                const c = document.getElementById('chartLJ');
+                const ctx = c.getContext('2d');
+                c.width = c.clientWidth;
+                c.height = c.clientHeight;
+                ctx.clearRect(0, 0, c.width, c.height);
+
+                // Draw Lennard-Jones V(r) = 4*[(1/r)^12 - (1/r)^6]
+                ctx.strokeStyle = '#00f2fe';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                const maxR = 3.0;
+                for (let px = 0; px < c.width; px++) {
+                    let r = 0.8 + (px / c.width) * (maxR - 0.8);
+                    let invR6 = Math.pow(1/r, 6);
+                    let v = 4.0 * (invR6 * invR6 - invR6);
+                    let clampedV = Math.max(-1.5, Math.min(v, 2.5));
+                    let y = c.height - ((clampedV - (-1.5)) / 4.0) * c.height;
+
+                    if (px === 0) ctx.moveTo(px, y);
+                    else ctx.lineTo(px, y);
+                }
+                ctx.stroke();
+
+                // Zero energy line
+                let yZero = c.height - ((0 - (-1.5)) / 4.0) * c.height;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.beginPath();
+                ctx.moveTo(0, yZero);
+                ctx.lineTo(c.width, yZero);
+                ctx.stroke();
+            }
+
+            function updateDiagnosticsUI() {
+                dispN.textContent = sim.N;
+                dispT.textContent = sim.temperature.toFixed(2);
+                dispE.textContent = (sim.totalE / sim.N).toFixed(2);
+
+                document.getElementById('statK').textContent = (sim.kineticE / sim.N).toFixed(2);
+                document.getElementById('statU').textContent = (sim.potentialE / sim.N).toFixed(2);
+                document.getElementById('statP').textContent = sim.pressure.toFixed(2);
+                document.getElementById('statMSD').textContent = sim.msd.toFixed(2);
+
+                // Update Phase Indicator based on Temperature & RDF peak
+                if (sim.temperature < 0.35) {
+                    phaseText.textContent = "相態：固相晶格 (Solid Crystal)";
+                    phaseDot.style.background = "#00f2fe";
+                    phaseDot.style.boxShadow = "0 0 10px #00f2fe";
+                } else if (sim.temperature < 1.2) {
+                    phaseText.textContent = "相態：液相 (Liquid State)";
+                    phaseDot.style.background = "#00e676";
+                    phaseDot.style.boxShadow = "0 0 10px #00e676";
+                } else {
+                    phaseText.textContent = "相態：氣相 (Gas Expansion)";
+                    phaseDot.style.background = "#ff9100";
+                    phaseDot.style.boxShadow = "0 0 10px #ff9100";
+                }
+
+                // Render active sub-chart
+                const activeTabBtn = document.querySelector('.tab-btn.active');
+                if (activeTabBtn) renderActiveChart(activeTabBtn.dataset.tab);
+            }
+
+            // Main Animation Loop
+            let lastTime = performance.now();
+            let frameCount = 0;
+
+            function animate(now) {
+                frameCount++;
+                if (now - lastTime >= 1000) {
+                    dispFPS.textContent = frameCount;
+                    frameCount = 0;
+                    lastTime = now;
+                }
+
+                if (isRunning) {
+                    for (let s = 0; s < speedMultiplier; s++) {
+                        sim.step();
+                    }
+                    updateDiagnosticsUI();
+                }
+
+                sim.draw();
+                requestAnimationFrame(animate);
+            }
+
+            requestAnimationFrame(animate);
+        });
+    </script>
+</body>
+</html>

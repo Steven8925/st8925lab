@@ -1,0 +1,196 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+const lang = 'zh';
+const title = 'Modbus 位址轉換器';
+const description = '將 Modbus 表格位址轉換為 PDU 線路位址。識別功能碼並立即修正差一錯誤。';
+
+const pageJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": title,
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "description": description
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "為什麼 40001 會變成 PDU 位址 0x0000？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Modbus 表格位址使用以 1 為基礎的編號方案，前綴數字表示暫存器類型。'4' 前綴表示保持暫存器，編號從 1 開始。在線路上（PDU），位址是以 0 為基礎且沒有前綴的。所以 40001 減去基數 40001 等於 0，這在十六進制中是 0x0000。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "FC03 和 FC04 有什麼差別？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "FC03（讀取保持暫存器）從 4xxxx 位址空間讀取 - 通常是可讀寫的暫存器。FC04（讀取輸入暫存器）從 3xxxx 空間讀取 - 只讀暫存器，通常用於測量值，如溫度和壓力。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "我的 Modbus 讀取回傳全是零。我該檢查什麼？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "常見原因：（1）波特率或奇偶校驗設定錯誤，（2）功能碼錯誤（FC03 vs FC04），（3）直接發送表格位址而不是轉換為 PDU 偏移，（4）從站 ID 錯誤。使用協定分析器驗證線路上的原始位元組。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "所有供應商都使用相同的尋址慣例嗎？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "不是。有些供應商使用以 0 為基礎的尋址（40000 = 第一個暫存器），有些使用以 1 為基礎的（40001 = 第一個暫存器）。有些完全省略前綴。請務必查閱設備的暫存器映射文件並使用 Modbus 掃描器進行測試。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "如何轉換像 400123 這樣的暫存器位址？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "對於擴展的 6 位數位址：減去基數（400001）以獲得 PDU 偏移。400123 - 400001 = 122 = 0x007A。功能碼是 FC03（保持暫存器）。有些 PLC 支援每種類型最多 65536 個暫存器。"
+          }
+        }
+      ]
+    }
+  ]
+};
+---
+<BaseLayout title={title} description={description} lang={lang} jsonLd={pageJsonLd}>
+  <!-- STATIC SEO CONTENT -->
+  <section class="section-container py-16">
+    <h1 class="section-title text-3xl font-bold mb-2">Modbus 位址轉換器</h1>
+    <p class="text-text-dim text-lg mb-8 max-w-3xl">在 Modbus 表格位址（如 40001）、PDU 線路位址（0x0000）之間進行轉換，並識別正確的功能碼。此工具幫助您避免導致數天除錯的差一尋址陷阱。</p>
+
+    <!-- INTERACTIVE CALCULATOR -->
+    <div class="card bg-surface rounded-xl border border-blue/10 p-8 mb-12" id="calculator">
+      <h2 class="text-xl font-bold mb-4">位址計算機</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm text-text-dim mb-2" for="addr-input">表格位址（例如：40001）</label>
+          <input type="text" id="addr-input" maxlength="10" placeholder="40001" autocomplete="off"
+            class="w-full px-4 py-3 bg-bg border border-blue/20 rounded-lg text-text font-mono focus:border-blue focus:outline-none focus:ring-1 focus:ring-blue/50" />
+        </div>
+        <div id="result-panel" class="space-y-3 p-4 bg-bg rounded-lg border border-blue/5">
+          <div class="flex justify-between"><span class="text-text-dim">暫存器類型：</span><span id="r-type" class="font-mono text-text">—</span></div>
+          <div class="flex justify-between"><span class="text-text-dim">功能碼：</span><span id="r-fc" class="font-mono text-text">—</span></div>
+          <div class="flex justify-between"><span class="text-text-dim">PDU 位址（十六進制）：</span><span id="r-pdu" class="font-mono text-blue-light">—</span></div>
+          <div class="flex justify-between"><span class="text-text-dim">PDU 位址（十進制）：</span><span id="r-dec" class="font-mono text-text">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 STATIC PRE-RENDERED EXAMPLES -->
+    <h2 class="text-2xl font-bold mb-6">範例</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <caption class="text-left text-text-dim mb-3">常見 Modbus 位址轉換</caption>
+        <thead>
+          <tr class="border-b border-blue/15">
+            <th scope="col" class="text-left p-3 font-semibold">表格位址</th>
+            <th scope="col" class="text-left p-3 font-semibold">暫存器類型</th>
+            <th scope="col" class="text-left p-3 font-semibold">功能碼</th>
+            <th scope="col" class="text-left p-3 font-semibold">PDU 位址</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">00001</td><td class="p-3">線圈 (Coil)</td><td class="p-3 font-mono">FC01</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover bg-surface/50"><td class="p-3 font-mono">10001</td><td class="p-3">離散輸入 (Discrete Input)</td><td class="p-3 font-mono">FC02</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">30001</td><td class="p-3">輸入暫存器 (Input Register)</td><td class="p-3 font-mono">FC04</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover bg-surface/50"><td class="p-3 font-mono">40001</td><td class="p-3">保持暫存器 (Holding Register)</td><td class="p-3 font-mono">FC03</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 hover:bg-surface-hover"><td class="p-3 font-mono">40100</td><td class="p-3">保持暫存器 (Holding Register)</td><td class="p-3 font-mono">FC03</td><td class="p-3 font-mono">0x0063</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ADDRESS RANGE REFERENCE -->
+    <h2 class="text-2xl font-bold mb-6">Modbus 位址範圍</h2>
+    <div class="overflow-x-auto mb-12">
+      <table class="w-full text-sm border-collapse">
+        <thead><tr class="border-b border-blue/15">
+          <th scope="col" class="text-left p-3 font-semibold">範圍</th>
+          <th scope="col" class="text-left p-3 font-semibold">類型</th>
+          <th scope="col" class="text-left p-3 font-semibold">存取</th>
+          <th scope="col" class="text-left p-3 font-semibold">功能碼</th>
+          <th scope="col" class="text-left p-3 font-semibold">PDU 基準</th>
+        </tr></thead>
+        <tbody>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">00001–09999</td><td class="p-3">線圈</td><td class="p-3">讀/寫</td><td class="p-3 font-mono">FC01/FC05/FC15</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">10001–19999</td><td class="p-3">離散輸入</td><td class="p-3">唯讀</td><td class="p-3 font-mono">FC02</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5"><td class="p-3 font-mono">30001–39999</td><td class="p-3">輸入暫存器</td><td class="p-3">唯讀</td><td class="p-3 font-mono">FC04</td><td class="p-3 font-mono">0x0000</td></tr>
+          <tr class="border-b border-blue/5 bg-surface/50"><td class="p-3 font-mono">40001–49999</td><td class="p-3">保持暫存器</td><td class="p-3">讀/寫</td><td class="p-3 font-mono">FC03/FC06/FC16</td><td class="p-3 font-mono">0x0000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ -->
+    <h2 class="text-2xl font-bold mb-6">常見問題</h2>
+    <div class="space-y-4 mb-12">
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">為什麼 40001 會變成 PDU 位址 0x0000？</summary><p class="mt-3 text-text-dim">Modbus 表格位址使用以 1 為基礎的編號方案，前綴數字表示暫存器類型。'4' 前綴表示保持暫存器，編號從 1 開始。在線路上（PDU），位址是以 0 為基礎且沒有前綴的。所以 40001 減去基數 40001 等於 0，這在十六進制中是 0x0000。</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">FC03 和 FC04 有什麼差別？</summary><p class="mt-3 text-text-dim">FC03（讀取保持暫存器）從 4xxxx 位址空間讀取 - 通常是可讀寫的暫存器。FC04（讀取輸入暫存器）從 3xxxx 空間讀取 - 只讀暫存器，通常用於測量值，如溫度和壓力。</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">我的 Modbus 讀取回傳全是零。我該檢查什麼？</summary><p class="mt-3 text-text-dim">常見原因：（1）波特率或奇偶校驗設定錯誤，（2）功能碼錯誤（FC03 vs FC04），（3）直接發送表格位址而不是轉換為 PDU 偏移，（4）從站 ID 錯誤。使用協定分析器驗證線路上的原始位元組。</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">所有供應商都使用相同的尋址慣例嗎？</summary><p class="mt-3 text-text-dim">不是。有些供應商使用以 0 為基礎的尋址（40000 = 第一個暫存器），有些使用以 1 為基礎的（40001 = 第一個暫存器）。有些完全省略前綴。請務必查閱設備的暫存器映射文件並使用 Modbus 掃描器進行測試。</p></details>
+      <details class="bg-surface rounded-xl border border-blue/10 p-4 cursor-pointer"><summary class="font-semibold outline-none">如何轉換像 400123 這樣的暫存器位址？</summary><p class="mt-3 text-text-dim">對於擴展的 6 位數位址：減去基數（400001）以獲得 PDU 偏移。400123 - 400001 = 122 = 0x007A。功能碼是 FC03（保持暫存器）。有些 PLC 支援每種類型最多 65536 個暫存器。</p></details>
+    </div>
+
+    <!-- RELATED CASE STUDY LINK -->
+    <div class="card border border-blue/20 bg-blue/5 rounded-xl p-6">
+      <p class="text-text-dim mb-4">這個確切的尋址錯誤在真實的冰水主機監控專案中導致了 3 天的除錯。韌體在線路上發送了原始的表格位址，而不是減去基數偏移。</p>
+      <a href="/zh/work/chiller-ot-monitoring" class="text-blue-light font-semibold hover:underline inline-block">閱讀完整案例研究 →</a>
+    </div>
+  </section>
+
+  <!-- CALCULATOR SCRIPT -->
+  <script is:inline>
+    (function() {
+      const input = document.getElementById('addr-input');
+      const rType = document.getElementById('r-type');
+      const rFc = document.getElementById('r-fc');
+      const rPdu = document.getElementById('r-pdu');
+      const rDec = document.getElementById('r-dec');
+      if (!input || !rType || !rFc || !rPdu || !rDec) return;
+
+      function convert(raw) {
+        // Security: strict numeric validation
+        const cleaned = raw.replace(/[^0-9]/g, '');
+        if (!cleaned || cleaned.length > 10) return null;
+        const addr = parseInt(cleaned, 10);
+        if (isNaN(addr) || addr < 0) return null;
+
+        let type, fc, base;
+        if (addr >= 400001) { type = '保持暫存器 (Holding Register)'; fc = 'FC03 (讀取保持)'; base = 400001; }
+        else if (addr >= 300001) { type = '輸入暫存器 (Input Register)'; fc = 'FC04 (讀取輸入)'; base = 300001; }
+        else if (addr >= 100001) { type = '離散輸入 (Discrete Input)'; fc = 'FC02 (讀取離散)'; base = 100001; }
+        else if (addr >= 40001 && addr <= 49999) { type = '保持暫存器 (Holding Register)'; fc = 'FC03 (讀取保持)'; base = 40001; }
+        else if (addr >= 30001 && addr <= 39999) { type = '輸入暫存器 (Input Register)'; fc = 'FC04 (讀取輸入)'; base = 30001; }
+        else if (addr >= 10001 && addr <= 19999) { type = '離散輸入 (Discrete Input)'; fc = 'FC02 (讀取離散)'; base = 10001; }
+        else if (addr >= 1 && addr <= 9999) { type = '線圈 (Coil)'; fc = 'FC01 (讀取線圈)'; base = 1; }
+        else { return null; }
+
+        const pdu = addr - base;
+        return { type, fc, pduHex: '0x' + pdu.toString(16).toUpperCase().padStart(4, '0'), pduDec: pdu.toString() };
+      }
+
+      input.addEventListener('input', function() {
+        const result = convert(this.value);
+        if (result) {
+          rType.textContent = result.type;
+          rFc.textContent = result.fc;
+          rPdu.textContent = result.pduHex;
+          rDec.textContent = result.pduDec;
+        } else {
+          rType.textContent = '—';
+          rFc.textContent = '—';
+          rPdu.textContent = '—';
+          rDec.textContent = '—';
+        }
+      });
+    })();
+  </script>
+</BaseLayout>

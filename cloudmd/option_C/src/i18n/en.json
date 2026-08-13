@@ -1,0 +1,73 @@
+{
+  "site": {
+    "title": "ST8925 LAB",
+    "tagline": "OT/IT Integration Specialist",
+    "description": "Professional portfolio showcasing OT/IT integration, industrial monitoring retrofits, and protocol bridging solutions."
+  },
+  "nav": {
+    "work": "Work",
+    "reference": "Reference",
+    "tools": "Tools",
+    "capabilities": "Capabilities",
+    "about": "About",
+    "contact": "Contact",
+    "lab": "Lab",
+    "langSwitch": "中文"
+  },
+  "home": {
+    "heroTitle": "Bridging Legacy Equipment to Modern Monitoring",
+    "heroSubtitle": "OT/IT Integration Specialist — Retrofitting industrial monitoring systems without disrupting operations",
+    "featuredWork": "Featured Work",
+    "viewAllWork": "View all case studies",
+    "capabilities": "What I Do",
+    "references": "Technical References",
+    "tools": "Industrial Tools"
+  },
+  "work": {
+    "title": "Work",
+    "subtitle": "Real-world OT/IT integration case studies with quantified outcomes",
+    "sector": "Sector",
+    "role": "Role",
+    "duration": "Duration",
+    "stack": "Stack",
+    "readMore": "Read full case study"
+  },
+  "reference": {
+    "title": "Reference",
+    "subtitle": "Technical reference articles on industrial protocols, networking, and integration",
+    "lastReviewed": "Last reviewed",
+    "relatedCaseStudy": "See this applied in production"
+  },
+  "tools": {
+    "title": "Tools",
+    "subtitle": "Free industrial tools for protocol debugging and integration",
+    "tryIt": "Try it",
+    "examples": "Examples",
+    "howItWorks": "How it works"
+  },
+  "capabilities": {
+    "title": "Capabilities",
+    "subtitle": "Professional services for industrial system integration and monitoring deployment"
+  },
+  "about": {
+    "title": "About",
+    "subtitle": "Background, credentials, and how to get in touch",
+    "contactMe": "Get in touch"
+  },
+  "footer": {
+    "copyright": "© 2025 ST8925 LAB. All rights reserved.",
+    "builtWith": "Built with Astro · Hosted on Cloudflare Pages",
+    "privacy": "Privacy",
+    "sitemap": "Sitemap"
+  },
+  "caseStudy": {
+    "context": "Context & Constraints",
+    "problem": "The Problem",
+    "options": "Options Considered",
+    "solution": "What I Built",
+    "hardPart": "The Hard Part",
+    "outcome": "Outcome",
+    "reflection": "What I'd Do Differently",
+    "myRole": "My Role"
+  }
+}

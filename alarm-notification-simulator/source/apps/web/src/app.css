@@ -1,0 +1,229 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* --- Header --------------------------------------------------------------
+   Asymmetric on purpose: the title anchors left at a scale nothing else uses,
+   the technical metadata sits right in mono. Not a centred hero. */
+
+.app__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  border-bottom: 1px solid var(--border-hairline);
+  background: linear-gradient(to bottom, var(--surface-base), var(--surface-void));
+}
+
+.app__brand h1 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/**
+ * The retention notice, inline after the title.
+ *
+ * Deliberately quiet but not hidden: it is a statement of fact about the data
+ * on screen, not a warning. Rendered only when the server reports a retention
+ * window greater than zero.
+ */
+.app__brand h1 .app__retention {
+  margin-left: var(--space-2);
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.app__brand h1 span {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.app__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.app__endpoint {
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.app__endpoint b {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.app__phase {
+  padding: 2px 9px;
+  border-radius: 99px;
+  border: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.app__boot-error {
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  background: color-mix(in oklch, var(--sev-critical) 14%, transparent);
+  border-bottom: 1px solid color-mix(in oklch, var(--sev-critical) 40%, transparent);
+  font-size: var(--text-sm);
+  color: var(--sev-critical);
+}
+
+.app__boot-error em {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* --- Three-column grid ---------------------------------------------------
+   Deliberately unequal: the trigger console is a fixed control strip, the
+   evidence column takes the space, the handsets keep a phone-shaped width. */
+
+.app__grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr) 390px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+}
+
+.app__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The event stream should take the free space; the ledger sizes to content
+   but never collapses below a readable height. */
+.app__col--mid > :first-child {
+  flex: 1 1 55%;
+  min-height: 220px;
+}
+
+.app__col--mid > :last-child {
+  flex: 1 1 45%;
+  min-height: 220px;
+}
+
+.app__col--left > *,
+.app__col--right > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.app__phones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* --- Footer --------------------------------------------------------------
+   Carries the honesty statement. It is deliberately part of the permanent
+   layout, not a dismissible banner: the ceiling on what a simulator can prove
+   is the single easiest thing to forget when demonstrating one. */
+
+.app__footer {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--border-hairline);
+  background: var(--surface-base);
+}
+
+.app__footer p {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--text-muted);
+  max-width: 110ch;
+}
+
+.app__footer strong {
+  color: var(--text-secondary);
+}
+
+.app__footer em {
+  font-style: normal;
+  color: var(--sev-warning);
+}
+
+/* --- Responsive ----------------------------------------------------------
+   Below 1400px the handsets drop under the evidence column; below 1000px the
+   whole thing stacks. Nothing scrolls horizontally at any width. */
+
+@media (max-width: 1400px) {
+  .app__grid {
+    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .app__col--right {
+    grid-column: 1 / -1;
+    overflow: visible;
+  }
+
+  .app__phones {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .app__phones > * {
+    flex: 1;
+    min-width: 260px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .app {
+    height: auto;
+  }
+
+  .app__grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-3);
+  }
+
+  .app__col {
+    overflow: visible;
+  }
+
+  .app__phones {
+    flex-direction: column;
+  }
+
+  .app__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-3) var(--space-3);
+  }
+
+  .app__meta {
+    justify-content: flex-start;
+  }
+}

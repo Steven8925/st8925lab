@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST8925 LAB — Project</title>
+<meta name="description" content="ST8925 LAB 專案子頁。Individual project page for ST8925 LAB.">
+<link rel="stylesheet" href="../shared/wordmark.css">
+<style>
+    :root {
+        --bg: #04070e;
+        --text: #e8eef7;
+        --muted: #64748b;
+        --bar-h: 64px;
+        --c: #ffffff;          /* overwritten by JS from ?hue= or fallback */
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; min-height: 100%; }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+        min-height: 100vh;
+    }
+
+    /* Same frosted top bar as the homepage, wordmark only — no project
+       nav here, since this page IS one of the projects.
+       與首頁相同的毛玻璃導覽列，僅放站名——本頁已身在專案之中，故無需
+       專案導覽。 */
+    #topbar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: var(--bar-h);
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        padding: 0 clamp(1rem, 3vw, 2.25rem);
+        background: rgba(4, 7, 14, 0.55);
+        backdrop-filter: blur(14px) saturate(120%);
+        -webkit-backdrop-filter: blur(14px) saturate(120%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    main {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        padding: calc(var(--bar-h) + 40px) 24px 40px;
+        text-align: center;
+    }
+
+    /* Halo echoing the light point that was clicked to get here.
+       呼應點擊而來的光點顏色。 */
+    #halo {
+        width: 86px; height: 86px;
+        border-radius: 50%;
+        background: radial-gradient(circle,
+                    #fff 0%, var(--c) 38%, transparent 72%);
+        box-shadow: 0 0 44px 10px color-mix(in srgb, var(--c) 55%, transparent);
+        animation: pulse 2.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1);    opacity: .92; }
+        50%      { transform: scale(1.14); opacity: 1;   }
+    }
+
+    #lead {
+        color: var(--muted);
+        font-size: clamp(13px, 2vw, 15px);
+        letter-spacing: .04em;
+    }
+    h1 {
+        font-size: clamp(22px, 5vw, 40px);
+        font-weight: 600;
+        letter-spacing: .04em;
+        color: var(--c);
+    }
+
+    #back {
+        margin-top: 8px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+        letter-spacing: .1em;
+        border-bottom: 1px solid transparent;
+        padding-bottom: 2px;
+        transition: color .2s, border-color .2s;
+    }
+    #back:hover, #back:focus-visible { color: var(--c); border-color: var(--c); }
+
+    @media (prefers-reduced-motion: reduce) {
+        #halo { animation: none; }
+        #back { transition: none; }
+    }
+</style>
+</head>
+<body>
+
+<header id="topbar">
+    <a id="wordmark" href="../index.html" aria-label="ST8925 LAB"></a>
+</header>
+
+<main>
+    <div id="halo"></div>
+    <p id="lead"></p>
+    <h1 id="title"></h1>
+    <a id="back" href="../index.html">&larr; BACK TO ORBIT</a>
+</main>
+
+<script src="../config.js"></script>
+<script src="../shared/wordmark.js"></script>
+<script>
+// This file IS project id '03' — a real, individually-editable page (not a
+// template rendered by query string). Only this one line changes between
+// the six project-XX/index.html files; everything else is identical.
+// 本檔即為 id '03' 的專案本體——一個真實、可個別編輯的頁面（非以查詢字串
+// 渲染的樣板）。六份 project-XX/index.html 之間唯一的差異就是這一行。
+const MY_ID = '03';
+
+const idx  = PROJECTS.findIndex(p => p.id === MY_ID);
+const proj = PROJECTS[idx];
+
+// Colour: prefer the hue handed over by the orbit page in ?hue= — that is
+// the colour the user actually clicked, since the homepage reshuffles the
+// palette on every load (see config.js). Fall back to the palette index
+// only when this page is opened directly (bookmark, typed URL).
+// 顏色：優先採用首頁以 ?hue= 傳來的色相（使用者實際點到的顏色，因首頁
+// 每次載入洗牌，見 config.js）；僅在直接開啟本頁時才退回索引配色。
+const hue = new URLSearchParams(location.search).get('hue');
+const col = RAINBOW.find(c => c.name === hue) || RAINBOW[idx % RAINBOW.length];
+document.documentElement.style.setProperty('--c', col.hex);
+
+document.title = `ST8925 LAB — ${proj.label}`;
+document.getElementById('lead').textContent  = `this is "${proj.label}" home page.`;
+document.getElementById('title').textContent = `Welcome to "${proj.label}"`;
+
+initWordmark('wordmark', SITE_NAME);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,518 @@
+.phone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* --- Handset chrome ------------------------------------------------------
+   A deliberate physical frame: the point of this panel is that the audience
+   instantly reads it as "a phone", not as another dashboard card. */
+
+.phone__chrome {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 340px;
+  padding: var(--space-2);
+  background: var(--surface-void);
+  border: 1px solid var(--border-strong);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 0 0 3px var(--surface-base),
+    0 8px 24px -8px rgb(0 0 0 / 0.6);
+}
+
+.phone__notch {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--surface-raised);
+}
+
+.phone__statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-2) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.phone__signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.phone__signal i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.phone__signal[data-status="online"] i {
+  background: var(--state-acked);
+}
+.phone__signal[data-status="connecting"] i {
+  background: var(--sev-warning);
+}
+.phone__signal[data-status="offline"] i,
+.phone__signal[data-status="uninstalled"] i {
+  background: var(--sev-critical);
+}
+
+/* --- Screen ------------------------------------------------------------- */
+
+.phone__screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-base);
+  border-radius: 14px;
+  overflow-y: auto;
+  max-height: 420px;
+  transition: filter var(--duration-normal) ease, opacity var(--duration-normal) ease;
+}
+
+/* The locked and terminated states are dimmed rather than hidden: the
+   notification still arrived, and that distinction is the entire point. */
+.phone__screen[data-state="LOCKED"] {
+  filter: brightness(0.62) saturate(0.7);
+}
+
+.phone__screen[data-state="TERMINATED"] {
+  filter: grayscale(0.75) brightness(0.5);
+}
+
+/* --- Login -------------------------------------------------------------- */
+
+.phone__login {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: auto 0;
+}
+
+.phone__login-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.phone__login select,
+.phone__login input {
+  padding: 7px 9px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.phone__error {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--sev-critical);
+  line-height: 1.4;
+}
+
+/* --- App bar ------------------------------------------------------------ */
+
+.phone__appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-hairline);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.phone__appbar-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.phone__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-faint);
+  transition: background var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+
+.phone__tab:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.phone__tab[data-active] {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.phone__badge {
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 99px;
+  background: var(--sev-critical);
+  color: oklch(98% 0 0);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone__empty {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}
+
+.phone__empty p {
+  margin: 0;
+}
+
+/* Surfaces the disagreement between an empty tray and a non-zero badge, which
+   is the whole point of holding the list separately from the socket. */
+.phone__empty-cta {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in oklch, var(--accent) 45%, transparent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.phone__empty-cta:hover {
+  background: color-mix(in oklch, var(--accent) 24%, transparent);
+}
+
+/* --- Inbox: the app's own list, fetched from the API --------------------- */
+
+.inbox {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.inbox__item {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.inbox__item[data-unread] {
+  border-left: 2px solid var(--accent);
+}
+
+.inbox__row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 9px;
+  text-align: left;
+}
+
+.inbox__row:hover {
+  background: var(--surface-hover);
+}
+
+.inbox__head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+}
+
+.inbox__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.inbox__title {
+  max-width: 100%;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/**
+ * The alarm code. Set quieter than the title but wide open - never truncated.
+ *
+ * A code with its tail cut off (`TANK01-202608…`) is worse than no code: it
+ * looks quotable and is not. The title truncates instead, because a shortened
+ * sentence still reads.
+ */
+.inbox__ref {
+  max-width: 100%;
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+}
+
+.inbox__detail {
+  padding: var(--space-2) 9px 0;
+  border-top: 1px solid var(--border-hairline);
+  background: var(--surface-inset);
+}
+
+.inbox__detail p {
+  margin: 0 0 4px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.inbox__source {
+  color: var(--text-faint) !important;
+  font-size: 0.65rem !important;
+}
+
+/* Six timestamps in a two-column grid: dense enough to scan, labelled enough
+   that "已讀" and "伺服器收到 ack" cannot be confused for each other. */
+.inbox__times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-base);
+  border-radius: var(--radius-sm);
+}
+
+.inbox__times > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.inbox__times dt {
+  font-size: 0.6rem;
+  color: var(--text-faint);
+}
+
+.inbox__times dd {
+  margin: 0;
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+}
+
+/* --- Notification tray -------------------------------------------------- */
+
+.phone__tray {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.notif {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  animation: notif-in var(--duration-normal) var(--ease-out-expo);
+}
+
+@keyframes notif-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.notif[data-opened] {
+  opacity: 0.75;
+}
+
+.notif[data-suppressed] {
+  background: transparent;
+  border-style: dashed;
+  border-color: color-mix(in oklch, var(--state-suppressed) 50%, transparent);
+}
+
+.notif__body {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.notif__body:hover {
+  background: var(--surface-hover);
+}
+
+.notif__title {
+  margin: 0 0 2px;
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.notif__text {
+  margin: 0 0 4px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.notif__meta {
+  margin: 0;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+}
+
+.notif__hint {
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-2);
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.notif__suppressed {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--state-suppressed);
+}
+
+.notif__suppressed em {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+.notif__actions {
+  display: flex;
+  gap: 1px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.notif__actions button {
+  flex: 1;
+  padding: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--surface-inset);
+  transition: background var(--duration-fast) ease;
+}
+
+.notif__actions button:hover {
+  background: var(--accent-dim);
+}
+
+/* --- Controls below the handset ----------------------------------------- */
+
+.phone__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface-inset);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+}
+
+.phone__states {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-base);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+}
+
+.phone__states button {
+  padding: 4px 2px;
+  border-radius: 2px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.phone__states button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.phone__states button[data-active] {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.phone__danger {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.btn--ghost {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: var(--text-xs);
+  background: transparent;
+  border-color: var(--border-hairline);
+  color: var(--text-muted);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  color: var(--sev-critical);
+  border-color: var(--sev-critical);
+  background: color-mix(in oklch, var(--sev-critical) 10%, transparent);
+}
+
+.phone__note {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--sev-warning);
+  line-height: 1.4;
+}
+
+.phone__token {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+}

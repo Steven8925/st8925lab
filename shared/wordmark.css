@@ -1,0 +1,38 @@
+/* ===============================================================
+   WORDMARK — shared component / 共用元件
+   Used by the homepage (index.html) AND every project-XX/index.html
+   page, so the "ST8925 LAB" mark always looks and behaves identically
+   site-wide. Loaded together with wordmark.js.
+   首頁與每個 project-XX/index.html 共用本檔，確保站名效果全站一致。
+   一定要與 wordmark.js 成對載入。
+
+   Host page contract / 使用方需求：
+   - One <a id="wordmark"> element (href = link target, e.g. "./" on the
+     homepage or "../" on a project page).
+   - wordmark.js populates it with one <span class="glyph"> per character.
+   =============================================================== */
+
+#wordmark {
+    display: inline-flex;
+    align-items: baseline;
+    font-size: clamp(1rem, 2.2vw, 1.45rem);
+    font-weight: 700;
+    letter-spacing: .16em;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    /* 放大時不撐開版面 / magnified glyphs must not reflow the layout */
+    padding: .35rem 0;
+    flex: none;
+    text-decoration: none;
+}
+#wordmark .glyph {
+    display: inline-block;
+    /* 由 JS 每幀寫入 transform，故不設 transition，
+       否則會與阻尼插值疊加成雙重延遲。
+       JS writes transform every frame, so no transition here —
+       it would compound with the damping into a double lag. */
+    transform-origin: 50% 100%;
+    will-change: transform;
+}
+#wordmark .glyph.space { width: .5em; }

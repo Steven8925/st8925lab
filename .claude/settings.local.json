@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -NoProfile -Command \"Compare-Object \\(Get-Content 'C:\\\\Claude Projects\\\\11_st8925lab\\\\README.md'\\) \\(Get-Content 'C:\\\\Claude Projects\\\\11_st8925lab\\\\V4_prompt.md'\\) | Measure-Object | Select-Object -ExpandProperty Count\")",
+      "Bash(find \"/c/Claude Projects/12_App_notification/apps\" \"/c/Claude Projects/12_App_notification/packages\" \"/c/Claude Projects/12_App_notification/docs\" \"/c/Claude Projects/12_App_notification/requirement\" -type f | wc -l)",
+      "Read(//c/Claude Projects/11_st8925lab/alarm-notification-simulator/source/**)",
+      "Bash(rm -rf \"/c/Claude Projects/11_st8925lab/alarm-notification-simulator/source/apps/api/node_modules\")",
+      "Bash(rm -rf \"/c/Claude Projects/11_st8925lab/alarm-notification-simulator/source/apps/web/node_modules\")"
+    ]
+  }
+}

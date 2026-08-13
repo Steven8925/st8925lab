@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CaseStudyCard from '../../../components/CaseStudyCard.astro';
+---
+
+<BaseLayout title="Work | ST8925 LAB" description="Our case studies" lang="en">
+  <div class="max-w-6xl mx-auto py-12 px-4">
+    <h1 class="text-4xl font-bold mb-8">Work</h1>
+    <div class="grid gap-8">
+      <CaseStudyCard 
+        title="Retrofitting Real-Time Monitoring onto a Legacy Chiller"
+        summary="Built a custom ESP32 Modbus RTU monitoring system for a five-star hotel chiller, achieving ~80% faster fault detection without touching the existing BMS."
+        sector="Hospitality" 
+        role="End-to-end Delivery" 
+        duration="14+ months operation"
+        stack={['ESP32','RS-485','Modbus RTU','Siemens Climatix','Arduino','OTA']}
+        results={[{metric:'Fault Detection',value:'~80% faster'},{metric:'Inspection Hours',value:'~50% reduced'},{metric:'Uptime',value:'14+ months'}]}
+        slug="chiller-ot-monitoring" 
+        lang="en"
+      />
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,259 @@
+// Alarm notification system - database schema
+//
+// PORTABILITY NOTE / 可攜性說明
+// This schema targets SQLite for the Phase A simulation but is written so that
+// switching to PostgreSQL is a datasource change plus a fresh migration, with
+// no application code changes:
+//   * No `enum` blocks     -> String columns, validated by Zod unions in
+//                             packages/contracts/src/enums.ts
+//   * No `Json` columns    -> `details` is TEXT holding JSON, accessed through
+//                             the typed helpers in src/db/json.ts
+//   * No `@db.Uuid`        -> plain String @default(uuid())
+// Every UNIQUE constraint and index below is identical to the PostgreSQL design
+// in README.md §4.2 - those are what make the pipeline correct and none were
+// dropped for SQLite's convenience.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// An authenticated manager or administrator.
+model User {
+  id            String           @id @default(uuid())
+  email         String           @unique
+  passwordHash  String           @map("password_hash")
+  /// UserRole: MANAGER | ADMIN
+  role          String           @default("MANAGER")
+  displayName   String?          @map("display_name")
+  active        Boolean          @default(true)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  devices       Device[]
+  recipients    AlarmRecipient[]
+  reads         AlarmRead[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+/// Hashed refresh tokens. Raw tokens are never stored.
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// One mobile installation and its push token.
+///
+/// Named `pushToken` rather than `expoToken` (README.md §4.2) because the
+/// transport is swappable: SimulatorPushToken[...] in Phase A,
+/// ExponentPushToken[...] in Phase B. The column is provider-neutral so the
+/// migration path stays open.
+model Device {
+  id         String         @id @default(uuid())
+  userId     String         @map("user_id")
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// UNIQUE because a token can move between accounts after a reinstall or an
+  /// account switch. Without this, user A receives user B's alarms.
+  pushToken  String         @unique @map("push_token")
+  /// Platform: IOS | ANDROID | SIMULATOR
+  platform   String
+  label      String?
+  appVersion String?        @map("app_version")
+  osVersion  String?        @map("os_version")
+  locale     String?
+  timezone   String?
+  active     Boolean        @default(true)
+  lastSeenAt DateTime       @default(now()) @map("last_seen_at")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+  deliveries PushDelivery[]
+
+  @@index([userId, active])
+  @@map("devices")
+}
+
+/// A durable alarm. This table, not the push notification, is the source of truth.
+model Alarm {
+  id            String           @id @default(uuid())
+  source        String
+  sourceEventId String?          @map("source_event_id")
+  /// UNIQUE so a flapping sensor cannot produce forty notifications at 3am.
+  dedupKey      String?          @unique @map("dedup_key")
+  /// AlarmSeverity: INFO | WARNING | CRITICAL
+  severity      String
+  title         String
+  /// Human-quotable code: `TANK01-20260813-01` (packages/contracts/reference.ts).
+  ///
+  /// UNIQUE because it is what a person quotes on a phone call - two alarms
+  /// answering to one code would make a handover ambiguous.
+  ///
+  /// Nullable so that (a) alarms stored before codes existed keep an honest
+  /// empty value instead of a fabricated number, and (b) a future failure to
+  /// allocate can never be a reason to drop an alarm.
+  reference     String?          @unique
+  body          String
+  /// JSON object serialised as TEXT. Read/write via src/db/json.ts.
+  details       String           @default("{}")
+  occurredAt    DateTime         @map("occurred_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  recipients    AlarmRecipient[]
+  unresolved    AlarmUnresolvedRecipient[]
+  reads         AlarmRead[]
+  deliveries    PushDelivery[]
+
+  @@index([createdAt])
+  @@index([severity, createdAt])
+  @@map("alarms")
+}
+
+/// Which users are entitled to see an alarm, and how far each one got.
+///
+/// This is the LEDGER layer: one row per intended human recipient, tracked
+/// independently. The closure POLICY (all-must-acknowledge vs any-one-closes vs
+/// escalation) is a separate concern layered on top - it reads this table, it
+/// does not replace it. Collapsing a group of managers into a single row would
+/// make "did B's phone actually get it?" permanently unanswerable, and that
+/// question cannot be reconstructed after the fact.
+model AlarmRecipient {
+  alarmId String @map("alarm_id")
+  userId  String @map("user_id")
+  alarm   Alarm  @relation(fields: [alarmId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// AlarmRecipientState: PENDING | DELIVERED | ACKED | RESOLVED | UNDELIVERABLE
+  state               String    @default("PENDING")
+  /// At least one of this user's devices confirmed receipt.
+  deliveredAt         DateTime? @map("delivered_at")
+  /// The user deliberately pressed "acknowledge" - I have seen this.
+  ackedAt             DateTime? @map("acked_at")
+  /// The user pressed "resolve" - this has been dealt with.
+  ///
+  /// Deliberately separate from ackedAt: a half-asleep tap at 3am acknowledges
+  /// an alarm, it does not fix the server room.
+  resolvedAt          DateTime? @map("resolved_at")
+  /// Why no device could be reached, e.g. no_active_device, all_tokens_invalid.
+  undeliverableReason String?   @map("undeliverable_reason")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  @@id([alarmId, userId])
+  @@index([userId])
+  @@index([state])
+  @@map("alarm_recipients")
+}
+
+/// Recipients the source system asked for that could not be mapped to a user.
+///
+/// A stale email in the customer's configuration must not silently vanish, and
+/// it cannot live in alarm_recipients because there is no user row to point at.
+/// Recording it here is what makes "accept the alarm, deliver to the two we can
+/// reach" safe rather than a silent partial failure.
+model AlarmUnresolvedRecipient {
+  id         String   @id @default(uuid())
+  alarmId    String   @map("alarm_id")
+  alarm      Alarm    @relation(fields: [alarmId], references: [id], onDelete: Cascade)
+  /// The raw identifier the source supplied: an email or a user id.
+  identifier String
+  /// UnresolvedReason: UNKNOWN_USER | INACTIVE_USER
+  reason     String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([alarmId, identifier])
+  @@index([alarmId])
+  @@map("alarm_unresolved_recipients")
+}
+
+/// Read state is per user, not per alarm.
+model AlarmRead {
+  alarmId String   @map("alarm_id")
+  userId  String   @map("user_id")
+  readAt  DateTime @default(now()) @map("read_at")
+  alarm   Alarm    @relation(fields: [alarmId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([alarmId, userId])
+  @@index([userId])
+  @@map("alarm_reads")
+}
+
+/// One delivery attempt to one device. Provider acceptance (ticket) and actual
+/// delivery (receipt) are tracked separately - a ticket is NOT a delivery.
+model PushDelivery {
+  id           String    @id @default(uuid())
+  alarmId      String    @map("alarm_id")
+  deviceId     String    @map("device_id")
+  alarm        Alarm     @relation(fields: [alarmId], references: [id], onDelete: Cascade)
+  device       Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  /// PushDeliveryStatus:
+  ///   PENDING | ACCEPTED | DELIVERED | DEVICE_CONFIRMED | FAILED | INVALID_TOKEN
+  status       String    @default("PENDING")
+  ticketId     String?   @map("ticket_id")
+  receiptId    String?   @map("receipt_id")
+  errorCode    String?   @map("error_code")
+  errorMessage String?   @map("error_message")
+  sentAt       DateTime? @map("sent_at")
+  settledAt    DateTime? @map("settled_at")
+  /// When the handset itself confirmed receipt.
+  ///
+  /// SIMULATOR-ONLY GUARANTEE. The WebSocket transport gives a real per-message
+  /// device confirmation; FCM and APNs do NOT offer an equivalent per-message
+  /// callback to your server. Do not build production logic that assumes this
+  /// column will be populated after the Phase B transport swap.
+  deviceConfirmedAt DateTime? @map("device_confirmed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  /// UNIQUE prevents a webhook retry from double-notifying the same device.
+  @@unique([alarmId, deviceId])
+  @@index([status, createdAt])
+  @@map("push_deliveries")
+}
+
+/// The per-device, per-day counter behind alarm reference codes.
+///
+/// THE COMPOSITE KEY IS THE DAILY RESET. A new calendar date is a new row, so
+/// the first alarm after midnight finds nothing and starts at 1. Nothing is
+/// scheduled, nothing runs at 00:00, and there is no job that can fail
+/// overnight on the one night it matters.
+///
+/// `dateKey` is YYYYMMDD in ONE system-wide timezone (ALARM_REFERENCE_TIMEZONE),
+/// never a device's own zone: a code that means a different day to its sender
+/// and its reader is worse than no code.
+model AlarmSequence {
+  /// Normalised device id, hyphens removed: `TANK-01` -> `TANK01`.
+  deviceKey String   @map("device_key")
+  /// YYYYMMDD in the reference timezone.
+  dateKey   String   @map("date_key")
+  /// Highest sequence issued for this device on this date.
+  lastSeq   Int      @default(0) @map("last_seq")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@id([deviceKey, dateKey])
+  @@map("alarm_sequences")
+}
+
+/// Idempotency record for incoming source events.
+model WebhookEvent {
+  id          String    @id @default(uuid())
+  source      String
+  eventId     String    @map("event_id")
+  payloadHash String    @map("payload_hash")
+  alarmId     String?   @map("alarm_id")
+  receivedAt  DateTime  @default(now()) @map("received_at")
+  processedAt DateTime? @map("processed_at")
+
+  @@unique([source, eventId])
+  @@map("webhook_events")
+}

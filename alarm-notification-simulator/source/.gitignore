@@ -1,0 +1,38 @@
+node_modules/
+dist/
+build/
+.next/
+.cache/
+.vite/
+coverage/
+
+# Secrets - never commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.p8
+*.p12
+google-services.json
+GoogleService-Info.plist
+
+# Local database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/dev.db*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test tooling output
+.vitest-report.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local SQLite database (repo-root anchored)
+data/

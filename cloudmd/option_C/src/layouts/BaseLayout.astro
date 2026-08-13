@@ -1,0 +1,65 @@
+---
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+
+export interface Props {
+  title: string;
+  description: string;
+  lang?: string;
+  jsonLd?: object;
+}
+
+const { title, description, lang = 'en', jsonLd } = Astro.props;
+const siteUrl = Astro.site ? Astro.site.toString() : Astro.url.origin;
+const canonicalURL = new URL(Astro.url.pathname, siteUrl).toString();
+
+const generateAltUrl = (targetLang: string) => {
+  const pathWithoutLang = Astro.url.pathname.replace(/^\/(en|zh)/, '');
+  return new URL(`/${targetLang}${pathWithoutLang}`, siteUrl).toString();
+};
+
+const enUrl = generateAltUrl('en');
+const zhUrl = generateAltUrl('zh');
+---
+
+<!DOCTYPE html>
+<html lang={lang} class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:locale" content={lang === 'en' ? 'en_US' : 'zh_CN'} />
+
+    <!-- Hreflang Alternates -->
+    <link rel="alternate" href={enUrl} hreflang="en" />
+    <link rel="alternate" href={zhUrl} hreflang="zh" />
+    <link rel="alternate" href={enUrl} hreflang="x-default" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- JSON-LD -->
+    {jsonLd && (
+      <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+    )}
+  </head>
+  <body class="min-h-screen bg-bg text-text font-inter flex flex-col">
+    <Navbar />
+    <main class="flex-grow w-full">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
