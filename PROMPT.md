@@ -2,15 +2,39 @@
 
 **讀完本檔即可重建整個 st8925lab.com 網站**：首頁的呼吸夜間地球、六個
 專案軌道、星雲爆炸與雙向連動、六個獨立的專案子頁，以及全站命名同步規則。
-本檔取代舊有的 `V4_prompt.md`（已確認與 `README.md` 逐位元組相同，屬廢棄
-重複檔，2026-08-09 已刪除）。
+本檔取代舊有的 `V4_prompt.md`（曾確認與當時的 `README.md` 逐位元組相同，
+屬廢棄重複檔）。
+
+> ℹ️ **註記（2026-08-14）**：本檔一度聲稱 `V4_prompt.md` 與 `project.html`
+> 已於 2026-08-09 刪除，但 2026-08-13 覆核磁碟時發現兩者**都還在**（另有
+> 一個 `V4/` 資料夾，內含整份舊版網站副本）——推測是某次還原動作把它們帶
+> 了回來，原因無法查證，故不臆測。**2026-08-14 山姆哥指示後已實際刪除
+> `V4/`、`project.html`、`V4_prompt.md`**，磁碟現況與本敘述一致。
+> 刪除前已確認 `V4/` 內的 `SPEC-v4.md`、`geodata.js`、
+> `st8925lab-deploy-guide.html` 與根目錄副本逐位元組相同（無獨有內容遺失）；
+> 其餘 `app.js`／`config.js`／`index.html`／`verify.py` 為改版前的舊版本。
+> **這些舊版本可從 git 首次提交 `9f05c8c` 還原**
+> （`git checkout 9f05c8c -- V4/ project.html V4_prompt.md`）。
+> **Note (2026-08-14)**: this file once claimed `V4_prompt.md` and
+> `project.html` were deleted on 2026-08-09; a 2026-08-13 disk check found
+> both still present, along with a `V4/` folder holding a full copy of the
+> old site (apparently restored by something earlier; cause not
+> verifiable, so not guessed at). **On 2026-08-14 Sam had `V4/`,
+> `project.html` and `V4_prompt.md` actually deleted**, so this text and
+> the disk now agree. Before deleting, `V4/`'s `SPEC-v4.md`, `geodata.js`
+> and `st8925lab-deploy-guide.html` were confirmed byte-identical to their
+> root copies (nothing unique lost); its older `app.js`/`config.js`/
+> `index.html`/`verify.py` were pre-migration versions, and **all of it is
+> recoverable from the initial git commit `9f05c8c`**
+> (`git checkout 9f05c8c -- V4/ project.html V4_prompt.md`).
 
 **Reading this file alone reproduces the entire st8925lab.com site**: the
 breathing night-Earth homepage, six orbit rings mapped to six projects,
 the nebula burst with bidirectional linking, six independently-editable
 project pages, and the site-wide folder-naming-sync rule. This file
-replaces the old `V4_prompt.md` (confirmed byte-identical to `README.md` —
-a stale duplicate, deleted 2026-08-09).
+replaces the old `V4_prompt.md` (once confirmed byte-identical to the
+`README.md` of the time — a stale duplicate; see the correction note
+above for its actual on-disk status).
 
 深入的「為什麼」（每個決策背後被推翻的假設、實測數字、抓到的 bug）記錄在
 [`README.md`](README.md)（開發史）與 [`SPEC-v4.md`](SPEC-v4.md)（v1–v4 詳細

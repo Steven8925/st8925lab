@@ -32,8 +32,18 @@ services:
     runtime: node
     plan: free
     rootDir: alarm-notification-simulator/source
+    # `--include=dev` is REQUIRED, not defensive: npm omits devDependencies
+    # whenever NODE_ENV=production (set below), and this service needs two of
+    # them — `prisma` (the CLI, for generate + migrate deploy, build time) and
+    # `tsx` (which startCommand runs the server with, RUN time). Without the
+    # flag the build dies at `db:generate` with "prisma: not found", and even
+    # if it survived, startCommand would fail the same way on `tsx`.
+    # `--include=dev` 是必要而非保險：NODE_ENV=production 時 npm 會略過
+    # devDependencies，而本服務需要其中兩個——`prisma`（CLI，建置期用於
+    # generate 與 migrate deploy）與 `tsx`（startCommand 用它啟動伺服器，
+    # 執行期）。少了這個旗標，建置會在 db:generate 直接失敗。
     buildCommand: >
-      npm install &&
+      npm install --include=dev &&
       mkdir -p data &&
       npm run db:generate -w @alarm/api &&
       npm exec -w @alarm/api -- prisma migrate deploy &&
@@ -75,8 +85,15 @@ services:
         value: 3
       - key: TEST_DATA_RETENTION_SWEEP_MS
         value: 3600000
+      # Comma-separated exact-match origins (apps/api/src/config.ts splits on
+      # ",", trims, and hands the list to @fastify/cors — there is no wildcard
+      # or suffix matching, so every origin the console is actually served
+      # from must be listed literally, scheme included).
+      # If you preview the site from a *.workers.dev / *.pages.dev URL, that
+      # origin must be added here too or the console will load but every
+      # request will fail CORS. Same applies to OPS_CORS_ORIGIN below.
       - key: CORS_ORIGIN
-        value: https://st8925lab.com
+        value: https://st8925lab.com,https://www.st8925lab.com
       - key: SEED_MANAGER_EMAIL
         value: manager@demo.local
       - key: SEED_ADMIN_EMAIL
@@ -89,7 +106,11 @@ services:
     runtime: node
     plan: free
     rootDir: alarm-notification-simulator/source
-    buildCommand: npm install
+    # Same reason as the api service above: startCommand runs the server with
+    # `tsx`, which is a devDependency, and NODE_ENV=production would otherwise
+    # make npm skip it.
+    # 與上方 api 服務同理：startCommand 以 `tsx` 啟動，而它是 devDependency。
+    buildCommand: npm install --include=dev
     startCommand: npm run start -w @alarm/ops-server
     healthCheckPath: /health
     envVars:
@@ -106,4 +127,4 @@ services:
       - key: INTERNAL_WEBHOOK_SECRET
         sync: false
       - key: OPS_CORS_ORIGIN
-        value: https://st8925lab.com
+        value: https://st8925lab.com,https://www.st8925lab.com

@@ -1183,23 +1183,121 @@ Full trade-offs in [`PROMPT.md`](PROMPT.md) §7.1 and
 | `render.yaml`（新增，根目錄） | Render Blueprint，定義 `st8925lab-alarm-api`、`st8925lab-alarm-ops` 兩個服務；秘密值一律 `sync: false`（山姆哥手動填，不進 git）或 `generateValue: true`（Render 自動產生） |
 | `tools/build_alarm_frontend.py`（新增） | 一鍵重建前端：`vite build --base=/alarm-notification-simulator/` → 注入共用頂列／站名／色相邏輯 → 複製到上線位置 |
 | `.assetsignore` | 新增排除 `alarm-notification-simulator/source/`（原始碼進 git，但不隨靜態站部署） |
-| `verify.py` | `project labels` 檢查改寫：原本寫死全部專案皆為 `PROJECT NN` 樣板文字，本專案改名後會使其誤報失敗；改為檢查「每個專案都有非空 label、數量與環數一致」這個真正該成立的不變量。檢查總數 174 → **175**。 |
+| `verify.py` | `project labels` 檢查改寫：原本寫死全部專案皆為 `PROJECT NN` 樣板文字，本專案改名後會使其誤報失敗；改為檢查「每個專案都有非空 label、數量與環數一致」這個真正該成立的不變量。另新增導覽列溢位防護檢查（見 §13.6）。檢查總數 174 → **176**。 |
 | `config.js` | `id: '01'` 的 `label` 改為 `ALARM NOTIFICATION SIMULATOR`，`slug` 改為 `alarm-notification-simulator` |
 
 ### 13.5 驗證 / Verification
 
-`python verify.py`：**175/175 全數通過**。瀏覽器實測（本機 HTTP server，
-非 `file://`，模擬正式部署行為）：頂列／站名／回首頁連結正常、主控台
-正確顯示打包時內建的 Render 後端網址、CORS 錯誤符合預期（撰寫本節時
-Render 後端尚未部署，山姆哥將自行部署並驗證完整互動流程）。
+`python verify.py`：**176/176 全數通過**（含 §13.6 新增的防護檢查）。
+瀏覽器實測（本機 HTTP server，非 `file://`，模擬正式部署行為）：頂列／
+站名／回首頁連結正常、主控台正確顯示打包時內建的 Render 後端網址、
+CORS 錯誤符合預期（撰寫本節時 Render 後端尚未部署，山姆哥將自行部署並
+驗證完整互動流程）。
 
-`python verify.py`: **175/175 passing**. Browser-tested (local HTTP
-server, not `file://`, to match real deployment behaviour): top bar /
-wordmark / back-link correct, console correctly displays the Render
-backend URLs baked in at build time, CORS errors are expected (the Render
-backend was not yet deployed at the time of writing — Sam will deploy and
-verify the full interactive flow himself).
+`python verify.py`: **176/176 passing** (including the guard added in
+§13.6). Browser-tested (local HTTP server, not `file://`, to match real
+deployment behaviour): top bar / wordmark / back-link correct, console
+correctly displays the Render backend URLs baked in at build time, CORS
+errors are expected (the Render backend was not yet deployed at the time
+of writing — Sam will deploy and verify the full interactive flow).
 
 `12_App_notification` 全程僅被讀取／複製，未被修改。
 
 `12_App_notification` was only read from / copied — never modified.
+
+### 13.6 覆核發現的錯誤 / Errors found in review
+
+山姆哥在本次交付後要求「再整體覆核一次，看有沒有遺漏或需要修正的錯誤」。
+覆核抓到 **4 個問題，其中 2 個是我自己在 §13.1–13.5 這批工作中引入的**：
+
+Sam asked for a full re-review after delivery. It found **four problems,
+two of them introduced by my own work above**:
+
+| # | 問題 Problem | 嚴重度 | 修正 Fix |
+|---|---|---|---|
+| 1 | **導覽列溢位，Project 01 被裁切且點不到**（我引入）。`#projects` 用 `justify-content: center` + `overflow-x: auto`：置中的 flex 容器溢位時會往**兩側**溢出，而左側溢出**永遠捲不到**（`scrollLeft` 不能為負）。實測 757px 視窗下，Project 01 渲染在 x=7 而容器從 x=153 開始 —— 146px 被裁掉且無法觸及。改名前 6 個短標籤放得下所以從未顯現；`ALARM NOTIFICATION SIMULATOR` 把內容撐寬約 116px，使溢位在約 1100px 以下的視窗就發生，而**第一個被犧牲的正好是這次要主打的 Project 01**。 | **高**：功能失效，使用者點不到目標專案 | `index.html` 改用 `justify-content: safe center`（放得下時外觀完全不變，溢位時才退回靠左並可捲動）。已實測：修正後第一項起點 = 容器起點，其餘 294px 可捲動。 |
+| 2 | **`render.yaml` 會直接讓 Render 建置失敗**（我引入）。`tsx`（`startCommand` 用來啟動伺服器）與 `prisma`（建置期 generate／migrate）**都在 `devDependencies`**，而我設了 `NODE_ENV=production` —— npm 在此情況下會略過 devDependencies。建置會在 `db:generate` 直接死於 `prisma: not found`。 | **高**：部署必定失敗 | 兩個服務的 `buildCommand` 改為 `npm install --include=dev`，並在檔案內註明原因（避免日後有人「清理」掉這個旗標）。 |
+| 3 | **CORS 只允許單一來源**。`CORS_ORIGIN`／`OPS_CORS_ORIGIN` 只填 `https://st8925lab.com`，而 `apps/api/src/config.ts` 是以逗號切分後**完全比對**（無萬用字元、無子網域比對）。若站台實際由 `www.` 或預覽網址提供，主控台會載入成功但**每一個請求都被 CORS 擋掉**。 | 中 | 加入 `https://www.st8925lab.com`，並在 `render.yaml` 註明：若使用 `*.workers.dev`／`*.pages.dev` 預覽網址，必須自行加入。 |
+| 4 | **`PROMPT.md` 陳述與磁碟現況不符**。`PROMPT.md` 開頭聲稱 `V4_prompt.md` 與 `project.html` 已於 2026-08-09 刪除，但兩者**都存在**於磁碟上；另有 `V4/` 資料夾內含整份舊版網站副本（自己的 `index.html`／`app.js`／`config.js`），若照原樣部署會在 `st8925lab.com/V4/` 對外提供**第二份過時且不完整的網站**。 | 中 | 先改 `PROMPT.md` 為陳述現況（中英雙語皆改）並以 `.assetsignore` 擋下發佈；**2026-08-14 山姆哥指示後實際刪除**（見 §13.7）。 |
+
+**新增的防護 / New guard**：`verify.py` 加入
+`project nav survives overflow (safe centring)` 檢查，防止問題 1 被無聲
+改回。**該檢查已實測會失敗**（暫時把 CSS 改回 `center`，確認報 FAIL 後
+還原）—— 本專案 §6.6 有過「寫了一個永遠不會失敗的檢查」的前例，故新增
+檢查一律實際驗證其可失敗性，不只是寫出來。
+
+`verify.py` gained a `project nav survives overflow (safe centring)`
+check. **It was proven to actually fail** by temporarily reverting the CSS
+and confirming a FAIL, then restoring — this project has previously
+shipped a check that could never fail (§6.6), so new checks are tested for
+falsifiability rather than assumed.
+
+**未能在本機驗證的部分 / What could NOT be verified locally**：
+`render.yaml` 建置鏈的第 1、2 步（`prisma generate`、`prisma migrate
+deploy`）已實際執行通過；**第 3 步 `db:seed` 無法在本機驗證** —— 它需要
+`better-sqlite3` 的原生二進位檔，而本工作站沒有 C++ 工具鏈（MSVC），該
+Node/Windows 組合也沒有預編譯檔可下載。在 Render 的 Linux 建置環境中
+這是標準路徑，預期可正常編譯，但**這是推論而非實測**，第一次部署時請留意
+建置日誌。
+
+Build-chain steps 1–2 (`prisma generate`, `prisma migrate deploy`) were
+actually executed and passed. **Step 3 (`db:seed`) could not be verified
+locally** — it needs `better-sqlite3`'s native binary, and this
+workstation has no C++ toolchain (no MSVC) with no prebuilt binary
+available for this Node/Windows combination. On Render's Linux build image
+this is the standard path and is expected to compile, but **that is
+inference, not a measurement** — watch the first deploy's build log.
+
+### 13.7 刪除已被取代的產物 / Deleting superseded artifacts
+
+**2026-08-14，山姆哥指示刪除 `V4/`、`project.html`、`V4_prompt.md`**
+（§13.6 問題 4 留給他的決定）。已刪除。
+
+**On 2026-08-14 Sam instructed the deletion of `V4/`, `project.html` and
+`V4_prompt.md`** (the decision left open in §13.6 item 4). Done.
+
+刪除前的查證 / Checked before deleting:
+
+| V4/ 內的檔案 | 與根目錄副本比對 | 結果 |
+|---|---|---|
+| `SPEC-v4.md`、`geodata.js`、`st8925lab-deploy-guide.html` | 逐位元組相同 byte-identical | 無獨有內容遺失 nothing unique lost |
+| `app.js`、`config.js`、`index.html`、`verify.py`、`PROMPT.md`、`README.md` | 為改版前的舊版本，根目錄無相同副本 older pre-migration versions, no identical copy at root | **可從 git 還原**（見下方更正）<br>**recoverable from git** — see correction below |
+
+> ✅ **更正（同日稍後查證）：這些檔案並未永久消失，可以還原。**
+> 我在執行刪除當下說「本專案尚無 git repo，刪除無法透過版本控制還原」——
+> 這在我查證的那個時間點是依據實際觀察（`git status` 當時回報
+> `not a git repository`），但**現已不成立**：根目錄存在 git repo，且
+> `V4/`、`project.html`、`V4_prompt.md` 三者都被納入首次提交 `9f05c8c`
+> （`feat: 首次提交本機專案檔案`）。要取回任一項：
+> ```bash
+> git checkout 9f05c8c -- V4/ project.html V4_prompt.md
+> ```
+> **Correction (verified later the same day): these are NOT permanently
+> gone — they can be restored.** At the moment of deletion I stated no git
+> repo existed (`git status` did report `not a git repository` when I
+> checked), but that no longer holds: the repo is present and all three
+> paths are in the initial commit `9f05c8c`, recoverable with the command
+> above.
+>
+> ⚠️ 附帶觀察：`.git` 目錄本身在本 session 中曾經「消失後又出現」，與
+> `V4/`、`st8925lab-deploy-guide.html` 先前被刪除後又回來是同一種現象。
+> 這強烈暗示**有某個外部同步／還原機制正在動這個資料夾**（雲端同步、備份
+> 還原之類）。原因未查證，此處只記錄可觀察到的事實，不臆測。這也是為什麼
+> 本檔案多處出現「文件與磁碟現況不符」——建議山姆哥確認一下這個資料夾是否
+> 位於某個會自動還原的同步目錄下。
+> Side observation: the `.git` directory itself disappeared and reappeared
+> during this session, the same pattern as `V4/` and
+> `st8925lab-deploy-guide.html` earlier. That strongly suggests **an
+> external sync or restore process is touching this folder**. Cause not
+> investigated — recorded as an observation, not a guess. It is also the
+> likely root of the repeated doc-vs-disk mismatches noted above; worth
+> checking whether this folder sits inside an auto-restoring synced
+> location.
+
+`.assetsignore` 隨之簡化：已刪除的三項不再需要排除，其餘已被取代但仍保留
+的檔案（`prompt_init.md`、`SPEC-v4.md`、`ST8925-LAB-standalone.html`、
+`st8925lab-deploy-guide.html`）繼續排除，留在 repo 作為歷史但不對外發佈。
+
+`.assetsignore` was simplified accordingly: the three deleted entries are
+no longer needed, while the remaining superseded-but-kept files stay
+excluded — in the repo as history, never published.

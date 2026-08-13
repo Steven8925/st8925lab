@@ -405,6 +405,21 @@ def check_markup():
     m = re.search(r'--bar-h:\s*([^;]+);', html)
     check('top bar height', m.group(1).strip() if m else None, '64px')
     check('top bar is frosted', 'backdrop-filter: blur(' in html, True)
+    # A centred flex container that overflows spills past BOTH edges, and the
+    # left overflow can never be scrolled to because scrollLeft cannot go
+    # negative — the FIRST project silently becomes clipped and unclickable.
+    # Measured 2026-08-13 at a 757px viewport: with plain `center`, project 01
+    # rendered at x=7 inside a nav starting at x=153, i.e. 146px of it cut off
+    # with no way to reach it. `safe` costs nothing when everything fits.
+    # This is a source-string check, not a layout measurement — the harness
+    # runs no browser (see the closing note in main()) — so it guards the
+    # decision, not the pixels.
+    # 置中的 flex 容器一旦溢位會往兩側溢出，左側溢出永遠捲不到
+    # （scrollLeft 不能為負），第一個專案會被無聲裁切且點不到。本檢查驗的是
+    # 這個決策本身，不是實際版面（本腳本不跑瀏覽器）。
+    check('project nav survives overflow (safe centring)',
+          'justify-content: safe center;' in html, True,
+          'plain `center` makes the first project unreachable when it overflows')
     check('wordmark present', 'id="wordmark"' in html, True)
     check('wordmark styling is the shared component, not inlined',
           '<link rel="stylesheet" href="shared/wordmark.css">' in html, True)

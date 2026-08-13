@@ -1,2 +1,11 @@
 cloudmd/
 alarm-notification-simulator/source/
+
+# Superseded artifacts: kept in the repo as history, but never published.
+# (V4/, project.html and V4_prompt.md used to be listed here too; Sam had
+# them deleted outright on 2026-08-14, so they no longer need excluding.)
+# 已被取代的產物：保留在 repo 內作為歷史，但不對外發佈。
+prompt_init.md
+SPEC-v4.md
+ST8925-LAB-standalone.html
+st8925lab-deploy-guide.html
