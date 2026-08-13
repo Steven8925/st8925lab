@@ -1,6 +1,15 @@
 cloudmd/
 alarm-notification-simulator/source/
 
+# 部署筆記檔：內含正式環境密鑰／示範帳密，絕不可發佈成網頁。
+# 這裡與根目錄 .gitignore 是兩道獨立的防線：.gitignore 擋「進不進 git」，
+# 這份擋「有沒有被當成網站資產發佈」。兩者都要有。
+# Deployment scratch notes holding live secrets / demo credentials. This and
+# the root .gitignore are two independent barriers: .gitignore controls what
+# enters git, this controls what gets served as a site asset. Keep both.
+alarm-notification-simulator/render installation guide.txt
+alarm-notification-simulator/手機密碼.txt
+
 # Superseded artifacts: kept in the repo as history, but never published.
 # (V4/, project.html and V4_prompt.md used to be listed here too; Sam had
 # them deleted outright on 2026-08-14, so they no longer need excluding.)

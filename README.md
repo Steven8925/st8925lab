@@ -1301,3 +1301,158 @@ inference, not a measurement** — watch the first deploy's build log.
 `.assetsignore` was simplified accordingly: the three deleted entries are
 no longer needed, while the remaining superseded-but-kept files stay
 excluded — in the repo as history, never published.
+
+### 13.8 Render 實際部署與驗收 / Live deployment and sign-off
+
+**2026-08-14，山姆哥完成 Render 部署，端到端驗證通過。** §13.5 寫下時
+Render 後端還沒部署，CORS 錯誤是預期中的；這裡記錄之後實際發生的事。
+
+**On 2026-08-14, Sam completed the Render deployment and end-to-end
+verification passed.** §13.5 was written before the backend existed; this
+records what actually happened afterward.
+
+**部署過程**：透過 Render Blueprint（Dashboard → New → Blueprint，讀取
+根目錄 `render.yaml`），Blueprint 命名 `st8925lab-alarm-simulator`，兩個
+服務一次建立完成，網址與 `render.yaml` 假設**完全吻合**（未撞名，不需
+重新 build 前端）：
+- `https://st8925lab-alarm-api.onrender.com`
+- `https://st8925lab-alarm-ops.onrender.com`
+
+`INTERNAL_WEBHOOK_SECRET` 由山姆哥在兩個服務的 Environment 分頁手動填入
+同一組值（我事先用 `node crypto` 產生），事後在兩邊分頁各自核對過**完全
+一致**。
+
+**驗證項目與結果 / Checks and results**：
+
+| 項目 | 結果 |
+|---|---|
+| api 服務建置（`npm install --include=dev` → `prisma generate` → `migrate deploy` → `db:seed`）| ✅ 成功。**`db:seed` 這步先前在本機因缺 C++ 工具鏈無法驗證，此為首次證實 Render 的 Linux 環境能正確編譯 `better-sqlite3` 原生模組。** |
+| ops-server 建置 | ✅ 成功 |
+| api 啟動時的環境變數驗證（`JWT_SECRET !== INTERNAL_WEBHOOK_SECRET`、時區格式等）| ✅ 通過——若 `INTERNAL_WEBHOOK_SECRET` 沒填或格式錯誤，服務會直接拋錯崩潰，不會顯示 "Deploy live" |
+| 前端主控台載入（`st8925lab.com` → ALARM NOTIFICATION SIMULATOR）| ✅ 正確顯示感測器資料、情境觸發面板、收件人清單、手機模擬器登入表單 |
+| 展示帳號登入（`manager@demo.local` / `Demo-Alarm-2026`）| ✅ 成功 |
+| `POST /v1/source-events/claim`（api 輪詢 ops-server 的拉取端點）| ⚠️ 初次載入時看到多筆 `source_poll_failed`（HTTP 404），直接對正式網址發送同樣請求（`curl -X POST`）**回應 200**，判定為服務剛啟動時的暫時性狀態，非持續性問題 |
+
+> **關於那個 404**：ops-server 的 `POST /v1/source-events/claim` 路由確實
+> 存在（`apps/ops-server/src/sensor-routes.ts`），api 端的
+> `HttpSourceEventReader` 也確實用 POST 呼叫同一路徑
+> （`apps/api/src/ingest/source-reader.ts`）——程式碼比對不出問題。事後
+> 直接對正式網址送同樣的 POST 請求得到 200，且山姆哥重新整理後事件流未
+> 再出現該錯誤。**判定為 Render 免費方案首次喚醒期間的暫時性狀態，不是
+> 程式錯誤**，但這是推論，不是在暫時性狀態發生的當下捕捉到根因——若之後
+> 重複出現，需要重新調查。
+>
+> **On that 404**: the ops-server's `POST /v1/source-events/claim` route
+> does exist, and the api's `HttpSourceEventReader` does call it with
+> POST — code comparison found no mismatch. A direct POST to the live URL
+> afterward returned 200, and Sam saw no recurrence after a refresh.
+> **Judged to be a transient state during the free tier's first wake, not
+> a code bug** — but that is an inference, not a root cause caught in the
+> act. If it recurs, it needs real investigation.
+
+**結論**：Project 01 從「靜態展示頁的構想」到「使用者能實際登入、看到真實
+模擬資料的可互動系統」，全鏈路確認可運作。山姆哥已測試通過（「測試 >>>
+ok」）。
+
+**Conclusion**: Project 01 went from "static showcase idea" to a system a
+real visitor can log into and see live simulated data in, confirmed
+working end to end. Sam tested it and confirmed ("測試 >>> ok").
+
+---
+
+### 13.9 收尾覆核：一個差點外洩的正式密鑰 / Final review: a live secret that nearly leaked
+
+**2026-08-14，山姆哥要求「overall final review，若無問題再寫總結」。
+覆核找到一個高風險問題，所以總結延後到修補之後才寫。**
+
+**On 2026-08-14 Sam asked for an overall final review, gating the summary
+on it being clean. The review found a HIGH-severity issue, so the summary
+was held until after remediation.**
+
+#### 問題 / The finding
+
+`alarm-notification-simulator/render installation guide.txt`（我在上一輪給
+山姆哥的 Render 部署指引，他存成檔案放進專案）**明文包含正式的
+`INTERNAL_WEBHOOK_SECRET`**。單獨看只是一個本機筆記檔，但三個條件疊在
+一起就構成真實風險：
+
+| 條件 | 覆核當下的實測結果 |
+|---|---|
+| repo 是否公開 | `"visibility": "public"`（GitHub API 查證，非假設） |
+| 該檔是否位於 Cloudflare 發佈樹內 | 是。`.assetsignore` 當時只排除 `cloudmd/` 與 `alarm-notification-simulator/source/`，未涵蓋它 |
+| 根目錄是否有 `.gitignore` | **完全沒有這個檔案**——repo 自建立以來從未有過 |
+
+三者相乘的後果：**一次 `git add .` 會讓那串密鑰同時進入公開 GitHub 的
+commit 歷史（事後刪檔也移除不掉）與 `st8925lab.com` 的一個可直接下載的
+公開網址。**
+
+`render.yaml` 把這個值標記為 `sync: false`（刻意留白、不進 git）本來是
+正確的設計——但那道防線只管住了 `render.yaml` 自己，管不住一個放在旁邊
+的純文字檔。**設計上的謹慎不會自動延伸到流程的其他部分。**
+
+#### 未外洩的查證 / Verification that it had NOT leaked
+
+這點特別重要，不能用推測帶過。三項獨立查證：
+
+| 查證方式 | 結果 |
+|---|---|
+| `git log --all -S "<該密鑰字串>"` | 無任何 commit 命中——從未進入版控歷史 |
+| `git ls-files` | 該檔未被追蹤 |
+| `curl` 線上該路徑 | `404`——從未被發佈 |
+
+**結論是「已被阻止」而非「已經發生」**，因此技術上沒有輪替密鑰的必要。
+這個區別必須講清楚：把未發生的事講成已發生，跟把已發生的事講成未發生，
+都是失實。
+
+#### 修補：兩道獨立防線 / Remediation: two independent barriers
+
+| 檔案 | 職責 |
+|---|---|
+| **新建** `.gitignore`（根目錄） | 擋「進不進 git」 |
+| **更新** `.assetsignore` | 擋「會不會被當成網站資產發佈」 |
+
+兩者刻意重複涵蓋同一批檔案。理由寫在兩個檔案的註解裡：**它們防的是不同
+的東西**——一個檔案可以不進 git 卻仍被發佈（若採直接上傳部署），也可以
+進了 git 卻不被發佈。只設一道就有一半的破口。修補後以
+`git check-ignore -v` 實測兩個檔案確實被攔下，非僅憑規則推斷。
+
+#### 山姆哥的處置 / Sam's decision
+
+我把兩個決定交給山姆哥而非代為執行：(1) 筆記檔留在原地還是刪除／搬走；
+(2) 要不要輪替密鑰。**他選擇直接移除全部四個筆記檔**——除了上述兩個，
+還有覆核期間出現在根目錄的 `github_commit.txt` 與
+`Add Project01to Main_st8925lab.txt`（這兩個經檢查不含密鑰，是工作筆記，
+但同樣會被發佈成公開網頁）。
+
+移除後複驗：密鑰在磁碟上、在 git 歷史中皆已完全不存在。`.gitignore` 與
+`.assetsignore` 的規則**予以保留**——它們現在防的不是這四個已刪除的檔案，
+而是下一次同樣的疏忽。
+
+#### 完整覆核結果 / Full review results
+
+以下每一項都是覆核當下實際執行取得，非引用先前輪次的結果：
+
+| 項目 | 結果 |
+|---|---|
+| `verify.py` | 176 PASS / 0 FAIL |
+| Render api `/health` | `200` |
+| Render ops-server `/health` | `200` |
+| `st8925lab.com/alarm-notification-simulator/` | `200` |
+| 建置產物與磁碟一致性 | `index-JacvbDMI.css`／`index-cbxPEGos.js`，`index.html` 引用與 `assets/` 實檔完全相符 |
+| git 與 `origin/main` | 已同步，無未推送 commit |
+| `source/.env` | 被 `source/.gitignore` 第 10 行正確攔下 |
+
+#### 這一輪學到的 / What this round is a record of
+
+**一個「只給使用者看」的暫存檔，放進了會被發佈的目錄，就不再是暫存檔。**
+這次的密鑰是我產生後貼給山姆哥的——我把它寫成訊息時是安全的，他存成檔案
+放進 repo 後就不安全了。中間沒有任何一步是錯的決定，風險是從兩個各自
+合理的動作組合中長出來的。**這正是收尾覆核存在的理由：它檢查的不是任何
+單一步驟做得對不對，而是所有步驟疊起來之後的最終狀態。**
+
+**A scratch file meant only for the user stops being a scratch file the
+moment it lands in a directory that gets published.** The secret was safe
+when I wrote it into a message and unsafe once it was saved into the repo.
+Neither step was individually wrong — the risk emerged from the
+combination. That is precisely why a final review exists: it checks the
+end state, not the correctness of any single step.

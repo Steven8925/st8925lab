@@ -70,6 +70,8 @@ site-root/
 ├── render.yaml                 alarm-notification-simulator 後端的 Render 部署藍圖
 ├── verify.py                  驗證腳本（常數直接從原始碼解析）
 ├── make_standalone.py         打包單一檔案驗收版的工具
+├── .gitignore                ★ 擋「進不進 git」（repo 為 public，見 §7.2）
+├── .assetsignore             ★ 擋「會不會被發佈成網站資產」（見 §7）
 ├── README.md / PROMPT.md      根目錄文件（本檔）
 └── SPEC-v4.md                 v1–v4 詳細規格（歷史，供深入查閱）
 ```
@@ -428,6 +430,7 @@ z 軸號誤、配色洗牌與對比、地理資料、版面標籤、呼吸、站
 - `cloudmd/`（開發筆記，不隨站部署）
 - `alarm-notification-simulator/source/`（告警模擬台完整原始碼，git 有
   追蹤供參考，但不隨靜態站部署——見下方「後端部署」）
+- 部署過程的暫存筆記檔（見 §7.2）
 
 `shared/`、`project-02/`..`project-06/`、`alarm-notification-simulator/`
 （僅 `index.html` 與 `assets/`）、`tools/` 皆為一般靜態資源／原始碼，
@@ -453,3 +456,36 @@ Pages 無法執行。這兩個服務部署於 **Render.com 免費方案**，設�
 `source/.env` 的 `VITE_API_BASE_URL`／`VITE_OPS_BASE_URL` **內聯進打包後的
 JS**——這是 Vite 的標準行為，不是本站特有的設計。後端網址若改變（例如
 Render 服務改名），必須重新執行建置腳本，不能只改設定檔生效。
+
+### 7.2 兩道排除防線（重建時務必一併建立）/ Two exclusion barriers
+
+**重建這個站時，`.gitignore` 與 `.assetsignore` 都必須建立，不可只建一個。**
+
+這個 repo 有一個容易致命的特性：**工作目錄本身就是發佈根目錄，而 repo 是
+公開的**（`github.com/Steven8925/st8925lab`，`visibility: public`）。因此
+放進工作目錄的任何檔案，預設會同時出現在兩個公開位置：
+
+| 檔案 | 管的是 | 攔不住的情況 |
+|---|---|---|
+| `.gitignore` | 檔案會不會進入 git → 公開 GitHub 歷史 | 若採直接上傳部署，未進 git 的檔案仍可能被發佈 |
+| `.assetsignore` | 檔案會不會被當成網站資產發佈 | 已被發佈排除的檔案，仍可能 commit 進公開 git 歷史 |
+
+兩者職責不重疊，**只設一道就等於只擋住一半**。兩份檔案目前都刻意涵蓋
+同一批「部署過程暫存筆記」檔名，這個重複是設計，不是冗餘。
+
+**這條規則的由來**：2026-08-14 收尾覆核時發現一個含有正式
+`INTERNAL_WEBHOOK_SECRET` 明文的部署筆記檔躺在發佈樹內，而當時根目錄
+**根本沒有 `.gitignore`**——差一次 `git add .` 就會把正式密鑰永久寫進公開
+的 git 歷史。已查證該密鑰從未進入版控、從未被發佈（詳細查證方式與事件
+經過見 [README.md](README.md) §13.9）。
+
+**新增規則**：任何含有密鑰、憑證、或 `.env` 內容的檔案，**不得放進這個
+工作目錄**。要留存就放到專案目錄外或密碼管理器。`render.yaml` 的
+`sync: false` 只保證那個值不在 `render.yaml` 裡，它管不到旁邊的純文字檔。
+
+**When rebuilding this site, create BOTH `.gitignore` and `.assetsignore`.**
+The working directory doubles as the publish root and the repo is public,
+so anything placed here is exposed twice over by default. The two files
+guard different paths (git history vs. served assets) and deliberately
+overlap; one alone leaves half the gap open. Never place secrets,
+credentials, or `.env` content in this directory at all.

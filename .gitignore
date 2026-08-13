@@ -1,0 +1,27 @@
+# ==========================================================================
+# 這個 repo 是「公開」的（github.com/Steven8925/st8925lab，visibility: public），
+# 而且整個工作目錄同時就是 Cloudflare Pages 的發佈來源。因此任何被 commit 的
+# 檔案會同時出現在兩個公開位置，且 git 歷史無法真正刪除。
+#
+# This repo is PUBLIC (github.com/Steven8925/st8925lab), and the working
+# directory doubles as the Cloudflare Pages publish root. Anything committed
+# is exposed in two public places at once, and git history cannot truly
+# un-publish it.
+#
+# 之前沒有這個檔案 —— 也就是說一次 `git add .` 就會把下列筆記檔連同其中的
+# 正式密鑰推上公開 repo。新增於 2026-08-14 覆核時。
+# This file did not exist before: a single `git add .` would have pushed the
+# notes files below — including a live production secret — to the public repo.
+# Added during the 2026-08-14 review.
+# ==========================================================================
+
+# 部署過程的個人筆記檔，內含正式環境密鑰／示範帳密，不得進版控。
+# Personal deployment scratch notes containing live secrets / demo credentials.
+render installation guide.txt
+手機密碼.txt
+
+# 防禦性規則：任何 .env 都不進版控（source/.gitignore 已擋一次，這裡再擋一次）。
+# Defensive: never commit any .env (source/.gitignore already covers its own).
+.env
+.env.*
+!.env.example
