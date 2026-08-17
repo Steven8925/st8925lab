@@ -1,0 +1,121 @@
+version: '3.8'
+
+# =========================================================================
+#  Wayne IoT Server Gen 2 — Production VPS Docker Compose Infrastructure
+#  生產環境容器編排：Nginx + PHP 8.3-FPM + TimescaleDB + Redis 7 + AI + Worker
+# =========================================================================
+
+services:
+  # 1. Edge Reverse Proxy (Nginx + SSL + HTTP/2)
+  nginx:
+    image: nginx:alpine
+    container_name: wayne_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./src/public:/var/www/html/public:ro
+    depends_on:
+      - app
+      - ai-service
+    networks:
+      - wayne_net
+    restart: always
+
+  # 2. Laravel 11 Ingestion & Core API (PHP 8.3-FPM)
+  app:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: wayne_app
+    volumes:
+      - ./src:/var/www/html
+    env_file:
+      - .env.example
+    depends_on:
+      - timescaledb
+      - redis
+    networks:
+      - wayne_net
+    restart: always
+
+  # 3. High-Throughput Stream & Queue Worker (Supervisor)
+  worker:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: wayne_worker
+    command: /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+    volumes:
+      - ./src:/var/www/html
+      - ./docker/php/supervisord.conf:/etc/supervisor/supervisord.conf:ro
+    env_file:
+      - .env.example
+    depends_on:
+      - app
+      - timescaledb
+      - redis
+    networks:
+      - wayne_net
+    restart: always
+
+  # 4. TimescaleDB (PostgreSQL 16 with TimescaleDB extension)
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: wayne_timescaledb
+    environment:
+      - POSTGRES_DB=wayne_iot
+      - POSTGRES_USER=wayne_user
+      - POSTGRES_PASSWORD=Wayne_Secure_Timescale_2026!
+      - TIMESCALEDB_TELEMETRY=off
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./db/01_init_timescaledb.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./db/02_seed_production_fleet.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    networks:
+      - wayne_net
+    restart: always
+
+  # 5. Redis 7 (In-Memory Buffer, Streams & Queue)
+  redis:
+    image: redis:7-alpine
+    container_name: wayne_redis
+    command: redis-server --appendonly yes --requirepass Wayne_Redis_Secret_2026! --maxmemory 2gb --maxmemory-policy noeviction
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - wayne_net
+    restart: always
+
+  # 6. Python FastAPI AI Predictive Maintenance Microservice
+  ai-service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: wayne_ai
+    environment:
+      - DB_URL=postgresql://wayne_user:Wayne_Secure_Timescale_2026!@timescaledb:5432/wayne_iot
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=Wayne_Redis_Secret_2026!
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - timescaledb
+      - redis
+    networks:
+      - wayne_net
+    restart: always
+
+volumes:
+  timescaledb_data:
+  redis_data:
+
+networks:
+  wayne_net:
+    driver: bridge

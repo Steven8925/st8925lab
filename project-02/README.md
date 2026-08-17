@@ -1,56 +1,51 @@
-# Project 02 — 開發紀錄 / Development Log
+# ST8925 LAB — Project 02: Wayne IoT Server Gen 2 (Simulation & Production Console)
 
-本檔記錄 `project-02/`（`config.js` 內 `id: '02'`）這個子頁面**自己的**變更歷史。
-整站共用的架構決策（軌道、星雲爆炸、色相傳遞機制、共用站名元件等）記錄在
-根目錄的 [`../README.md`](../README.md) 與 [`../PROMPT.md`](../PROMPT.md)，本檔不重複。
-
-This file records the change history **local to** `project-02/`
-(`id: '02'` in `config.js`). Site-wide architecture decisions (the orbit,
-the nebula burst, the hue-handoff mechanism, the shared wordmark
-component, …) live in the root [`../README.md`](../README.md) and
-[`../PROMPT.md`](../PROMPT.md) — not duplicated here.
+> **專案代碼**: `02`  
+> **專案標籤**: `IOT GEN2 SIMULATOR & MONITOR`  
+> **路由路徑**: `/project-02/index.html` (對應首頁第二軌道環)  
+> **狀態**: 生產級模擬展示 (LAB Staging) & VPS 部署套件就緒
 
 ---
 
-## 本頁身份 / Identity
+## 1. 專案簡介 (Overview)
 
-| 項目 Item | 值 Value |
-|---|---|
-| 內部代碼 Internal id | `02`（永不變動 / never changes）|
-| 顯示名稱 Display label | 取自 `config.js` 的 `PROJECTS[].label`（目前為 `PROJECT 02`）|
-| 資料夾／URL Slug | `project-02`（**必須**與 label 同步改名，見下方「命名同步規則」）|
-| 軌道顏色 Ring colour | 由首頁彩虹配色第 2 環決定，隨機洗牌 |
+本專案為 **Wayne IoT Server Gen 2 (第二代物聯網架構)** 的前端實體模擬與監控中控台。系統模擬並呈現 21 台實體冰水主機 (Chillers) 與冷卻水塔 (Cooling Towers) 的 Modbus RTU/TCP 遙測數據上報、熱力學能效 (COP) 計算、動態 JSON 規則引擎求值、AI 48 小時負載預測與多通道警報推播分發。
 
 ---
 
-## 命名同步規則 / Folder-Rename-on-Label-Change Rule
+## 2. 核心功能亮點 (Key Features)
 
-> ⚠️ 若你（或未來的 AI 助手）修改了本專案在網站上顯示的名稱（`config.js` 的
-> `label` 欄位），**必須同步將本資料夾改名**，讓資料夾名稱與顯示名稱維持
-> 一致。不要只改 `label` 而漏改資料夾。
->
-> 建議使用根目錄的 `tools/rename_project.py` 一次完成兩者：
-> ```bash
-> python tools/rename_project.py 02 "新的顯示名稱"
-> ```
-> 該腳本會同時重新命名資料夾、更新 `config.js` 的 `label`／`slug`，並提醒你
-> 執行 `python verify.py` 確認全站仍然一致。詳見根目錄 [`PROMPT.md`](../PROMPT.md)
-> 的「新增／改名專案」一節。
->
-> If you (or a future AI assistant) change this project's displayed name
-> (the `label` field in `config.js`), **this folder must be renamed to
-> match in the same edit** — never change the label alone. Use
-> `python tools/rename_project.py 02 "New Display Name"` from the repo
-> root to do both atomically; see root [`PROMPT.md`](../PROMPT.md) →
-> "Adding / renaming a project".
+1. **21 台實體機組跨廠區遙測模擬**：
+   - 內湖生技園區 (4 主機 + 4 水塔)、台中榮總、信義金融大樓、竹科晶圓六廠等 8 大客戶。
+   - 每秒動態模擬冰水出回水溫、冷卻水出回水溫、冷媒高低壓、總耗電量 (kW)、COP 能效與累計時數。
+2. **Modbus 59 暫存器矩陣**：
+   - 即時顯示 `AAA0001` ~ `AAA0059` 實體點位之狀態與數值。
+3. **故障注入模擬器 (Fault Injector)**：
+   - 一鍵模擬冷媒高壓過高 (`AAA0036` > 18.0)、防凍保護開關跳脫 (`AAA0013` = 1)、壓縮機過電流 (`AAA0018` = 1) 等實體警報。
+4. **AI Prophet 48h 預測與異常檢測**：
+   - 預測未來 48 小時設備運轉負載與置信區間，並提供孤立森林多維度能效異常評分。
+5. **多通道警報推播預覽**：
+   - 支援 LINE Notify / Flex Message 樣式卡片與 Flutter FCM Push 結構化 Payload 預覽。
+6. **動態 JSON 規則引擎沙盒**：
+   - 展示對標生產級 TimescaleDB / Redis 的 JSON 條件求值機制。
 
 ---
 
-## 變更歷史 / Change History
+## 3. VPS 生產環境部署套件 (`project-02/vps/`)
 
-| 日期 Date | 變更 Change | 說明 Notes |
-|---|---|---|
-| 2026-08-09 | 建立本資料夾 Folder created | 全站架構由「單一動態 `project.html?id=`」改為「六個獨立實體資料夾」，本頁取代舊有 `project.html?id=02` 的角色。內容：導覽列（共用站名元件，含 5 秒呼吸與 hover 逐字透鏡）＋ halo ＋ `this is "PROJECT 02" home page. Welcome to "PROJECT 02"` 文字＋返回首頁連結。頁面 accent color 沿用點擊軌道時傳遞的 `?hue=` 參數，與首頁色彩系統保持一致。詳見根目錄 README.md 與 PROMPT.md。<br>Site-wide architecture changed from a single dynamic `project.html?id=` page to six real folders. This page supersedes the old `project.html?id=02`. Content: top bar (shared wordmark component, 5 s pulse + hover per-glyph lens) + halo + the literal text `this is "PROJECT 02" home page. Welcome to "PROJECT 02"` + a back-to-orbit link. The page's accent colour follows the `?hue=` param carried from the clicked orbit ring, preserving the site's colour-continuity design. See the root README.md / PROMPT.md for full rationale. |
+本專案目錄內收錄了完整之 VPS 生產環境交付物：
+- `vps/docker-compose.yml`: TimescaleDB (PostgreSQL 16) + Redis 7 + PHP 8.3 JIT + Python AI 服務 + Nginx。
+- `vps/db/01_init_timescaledb.sql`: 時序超表 (Hypertable) 初始化腳本、7天壓縮與數據留存策略。
+- `vps/src/`: Laravel 11 Ingestion API、Redis Stream Batch Worker 與 Dynamic Rule Engine 服務。
+- `vps/ai_service/`: FastAPI + Prophet + Scikit-Learn AI 微服務。
+- `vps/README_VPS.md`: VPS 一鍵部署與生產運維指南。
 
-*(未來每次修改本頁，請在此表新增一列，附日期與說明。)*
-*(Add a new dated row here every time this page changes.)*
+---
+
+## 4. 全站相容性與驗證
+
+本專案符合 ST8925 LAB 宇宙深空設計體系規範：
+- 共享 `../config.js` 單一資料源。
+- 共享 `../shared/wordmark.js` 站名元件與字型對齊。
+- 支援首頁軌道色相傳遞 (`--accent`, `--c`)。
+- 通過 `python verify.py` 全站自動化測試。
