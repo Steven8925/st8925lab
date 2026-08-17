@@ -63,7 +63,7 @@ site-root/
 ├── alarm-notification-simulator/  id '01'。★ 例外：不是手寫 HTML，是
 │                              Vite/React 建置產物，見該資料夾自己的
 │                              PROMPT.md（§4 有完整說明）
-├── project-02/ .. project-06/  五個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
+├── iot-gen2-simulator-monitor/ .. project-06/  五個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
 ├── tools/
 │   ├── rename_project.py     ★ 專案改名同步工具
 │   └── build_alarm_frontend.py  ★ 重建 alarm-notification-simulator 前端
@@ -123,7 +123,7 @@ const RAINBOW = [
 
 const PROJECTS = [
     { id: '01', label: 'PROJECT 01', slug: 'project-01' },
-    { id: '02', label: 'PROJECT 02', slug: 'project-02' },
+    { id: '02', label: 'PROJECT 02', slug: 'iot-gen2-simulator-monitor' },
     { id: '03', label: 'PROJECT 03', slug: 'project-03' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
@@ -323,7 +323,7 @@ orbitR = ORBIT_RADIUS * breath
 
 ## 4. Project-XX 頁面規格 / Project Page Specification
 
-> ⚠️ **本節描述的樣板僅適用於 project-02 ~ project-06。**
+> ⚠️ **本節描述的樣板僅適用於 iot-gen2-simulator-monitor ~ project-06。**
 > `alarm-notification-simulator/`（id `01`）2026-08-13 起是例外——它不是
 > 手寫 HTML，而是一個真實 React 應用（告警通知模擬台）的 Vite 建置產物，
 > 經 `tools/build_alarm_frontend.py` 後製注入頂列／站名／色相邏輯。完整
@@ -331,7 +331,7 @@ orbitR = ORBIT_RADIUS * breath
 > 本節不重複、也不適用於它。一個專案一旦被填入真實內容，就沒有義務繼續
 > 套用「六份逐位元組相同」的樣板——那個樣板本來就只是給空白佔位頁用的。
 >
-> **This section's template applies to project-02 through project-06 only.**
+> **This section's template applies to iot-gen2-simulator-monitor through project-06 only.**
 > `alarm-notification-simulator/` (id `01`) has been an exception since
 > 2026-08-13 — it's the Vite build output of a real React app, not
 > hand-authored HTML. Full spec:
@@ -432,7 +432,7 @@ z 軸號誤、配色洗牌與對比、地理資料、版面標籤、呼吸、站
   追蹤供參考，但不隨靜態站部署——見下方「後端部署」）
 - 部署過程的暫存筆記檔（見 §7.2）
 
-`shared/`、`project-02/`..`project-06/`、`alarm-notification-simulator/`
+`shared/`、`iot-gen2-simulator-monitor/`..`project-06/`、`alarm-notification-simulator/`
 （僅 `index.html` 與 `assets/`）、`tools/` 皆為一般靜態資源／原始碼，
 `tools/*.py` 不會被瀏覽器請求，留在 repo 中純供維運使用，不影響前端載入。
 
