@@ -2,7 +2,7 @@
 
 > **專案代碼**: `02`  
 > **專案標籤**: `IOT GEN2 SIMULATOR & MONITOR`  
-> **路由路徑**: `/project-02/index.html` (對應首頁第二軌道環)  
+> **路由路徑**: `/iot-gen2-simulator-monitor/index.html` (對應首頁第二軌道環)  
 > **狀態**: 生產級模擬展示 (LAB Staging) & VPS 部署套件就緒
 
 ---
@@ -31,7 +31,7 @@
 
 ---
 
-## 3. VPS 生產環境部署套件 (`project-02/vps/`)
+## 3. VPS 生產環境部署套件 (`iot-gen2-simulator-monitor/vps/`)
 
 本專案目錄內收錄了完整之 VPS 生產環境交付物：
 - `vps/docker-compose.yml`: TimescaleDB (PostgreSQL 16) + Redis 7 + PHP 8.3 JIT + Python AI 服務 + Nginx。

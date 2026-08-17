@@ -2,7 +2,7 @@
 
 > **Project ID**: `02`  
 > **Display Label**: `IOT GEN2 SIMULATOR & MONITOR`  
-> **Folder / Slug**: `project-02`  
+> **Folder / Slug**: `iot-gen2-simulator-monitor`  
 > **Last Updated**: 2026-08-17
 
 ---
@@ -10,7 +10,7 @@
 ## 1. Directory Structure
 
 ```
-project-02/
+iot-gen2-simulator-monitor/
 ├── index.html                  # 主頁面：整合 Topbar、圖表、Modbus 矩陣與警報列表
 ├── app.js                      # 前端控制器：整合機隊模擬、動態規則求值與 Chart.js
 ├── style.css                   # 深色科技毛玻璃設計系統

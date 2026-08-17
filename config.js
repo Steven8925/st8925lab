@@ -71,7 +71,7 @@ const SITE_NAME = 'ST8925 LAB';
 // 硬上限 RAINBOW.length (12)；超過會使兩專案同色，雙向對應即失效。
 const PROJECTS = [
     { id: '01', label: 'ALARM NOTIFICATION SIMULATOR', slug: 'alarm-notification-simulator' },
-    { id: '02', label: 'IOT GEN2 SIMULATOR & MONITOR', slug: 'project-02' },
+    { id: '02', label: 'IOT GEN2 SIMULATOR & MONITOR', slug: 'iot-gen2-simulator-monitor' },
     { id: '03', label: 'PROJECT 03', slug: 'project-03' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
