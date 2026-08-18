@@ -1,17 +1,18 @@
-# AI Diagnostic Knowledge Base (Project 03) — 功能成果展示與驗證報告 / Walkthrough & Verification Report
+# AI Diagnostic Knowledge Base (Project 03) — 功能成果展示、線上發布與 VPS 部署驗證 / Walkthrough, Live Release & VPS Deployment Report
 
-> **Project ID**: `03`
-> **Display Label**: `AI DIAGNOSTIC KB`
-> **Folder / Slug**: `ai-diagnostic-kb`
-> **Date**: 2026-08-18
-> **Live URL**: `https://st8925lab.com/ai-diagnostic-kb/`
+> **Project ID**: `03`  
+> **Display Label**: `AI DIAGNOSTIC KB`  
+> **Folder / Slug**: `ai-diagnostic-kb`  
+> **Repository**: `Steven8925/st8925lab`  
+> **Live LAB URL**: `https://st8925lab.com/ai-diagnostic-kb/`  
+> **Date**: 2026-08-18  
+> **Git Commit**: `23e7ecb`
 
 ---
 
 ## 1. 系統建置總覽 / System Overview
 
-本專案成功建置了 **AI Diagnostic Knowledge Base（工業冷卻水與冰水機組智慧診斷知識庫平台）**。
-系統完美彌補了工業物聯網（IoT）場域中「僅有超限閾值告警」而「缺乏漸進劣化預警與根本原因診斷」的巨大缺口。
+本專案成功建置了 **AI Diagnostic Knowledge Base（工業冷卻水與冰水機組智慧診斷知識庫平台）**，已於 Cloudflare Pages 上線發布，並提供了完整的 VPS 生產級容器化部署藍圖。
 
 ```
 ┌────────────────────────────────┐     ┌────────────────────────────────┐     ┌────────────────────────────────┐
@@ -27,7 +28,7 @@
 
 ---
 
-## 2. 核心功能亮點與截圖 / Key Features Walkthrough
+## 2. 核心功能亮點與線上體驗 / Key Live Features
 
 ### 2.1 全機隊 AI 健康總覽 (Fleet Health Dashboard)
 - **21 台實體機組**（8 大園區客戶）即時狀態網格。
@@ -58,9 +59,32 @@
 
 ---
 
-## 3. 測試與驗證結果 / Verification Results
+## 3. VPS 生產環境部署指引索引 / VPS Production Deployment Summary
 
-### 3.1 後端測試套件 (`python tests/test_backend.py`)
+日後將後端遷移至正式 VPS 時，請遵循 [README.md §4](file:///d:/st8925lab/ai-diagnostic-kb/README.md) 的完整指引：
+
+1. **執行資料庫 DDL**：
+   ```bash
+   psql -h localhost -U postgres -d iot_gen2 -f iot-gen2-simulator-monitor/vps/db/04_ai_diagnostic_kb.sql
+   ```
+2. **啟動 Docker Compose 服務**：
+   ```bash
+   docker compose up -d ai-diagnostic-kb
+   ```
+3. **執行種子灌入與基線初算**：
+   ```bash
+   curl -X POST http://127.0.0.1:8000/api/baseline/recalculate
+   ```
+4. **驗證健康端點**：
+   ```bash
+   curl -s http://127.0.0.1:8000/health | jq .
+   ```
+
+---
+
+## 4. 測試與驗證結果 / Verification Results
+
+### 4.1 後端測試套件 (`python tests/test_backend.py`)
 ```
 Running backend tests...
   [PASS] test_baseline_calculator
@@ -72,10 +96,10 @@ Running backend tests...
 === ALL 6 BACKEND TESTS PASSED ===
 ```
 
-### 3.2 全站一致性驗證 (`python verify.py`)
+### 4.2 全站一致性驗證 (`python verify.py`)
 ```
 ==================================================================
  ALL CHECKS PASSED / 全部檢查通過
 ==================================================================
 ```
-全站幾何角度、配色對比度（WCAG AAA $\ge 7.26$）、單一資料源 `config.js` 與 URL 色相傳遞完全合規。
+全站幾何角度、配色對比度（WCAG AAA $\ge 7.26$）、單一資料源 `config.js`、URL 色相傳遞與 Cloudflare 發布完全合規。

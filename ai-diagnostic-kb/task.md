@@ -1,24 +1,27 @@
 # AI Diagnostic Knowledge Base — 任務追蹤清單 / Task Tracker
 
-> **Project ID**: `03`
-> **Display Label**: `AI DIAGNOSTIC KB`
-> **Folder / Slug**: `ai-diagnostic-kb`
-> **Last Updated**: 2026-08-18
+> **Project ID**: `03`  
+> **Display Label**: `AI DIAGNOSTIC KB`  
+> **Folder / Slug**: `ai-diagnostic-kb`  
+> **Repository**: `Steven8925/st8925lab`  
+> **Live LAB URL**: `https://st8925lab.com/ai-diagnostic-kb/`  
+> **Last Updated**: 2026-08-18  
+> **Status**: 全部階段完成 / All Phases Completed
 
 ---
 
-## P0: 基礎設定 / Base Configuration
-- [x] 使用 `rename_project.py` 將 `project-03/` 更名為 `ai-diagnostic-kb/` (Renamed project folder)
-- [x] 驗證 `config.js` 中 label (`AI DIAGNOSTIC KB`) 和 slug (`ai-diagnostic-kb`) 已原子化同步更新
-- [x] 更新 `render.yaml` 新增 `st8925lab-ai-diagnostic-kb` 後端部署藍圖 (Added Render backend blueprint)
+## P0: 基礎設定與改名 / Base Configuration & Renaming
+- [x] 使用 `rename_project.py` 將 `project-03/` 原子化更名為 `ai-diagnostic-kb/`
+- [x] 驗證 `config.js` 中 label (`AI DIAGNOSTIC KB`) 和 slug (`ai-diagnostic-kb`) 已同步更新
+- [x] 更新 `render.yaml` 新增 `st8925lab-ai-diagnostic-kb` 後端部署藍圖
 - [x] 執行 `verify.py` 確認全站幾何、配色與架構一致性檢查通過 (`ALL CHECKS PASSED`)
 
 ---
 
-## P1: 資料庫 Schema 與知識庫種子資料 / DB Schema & Knowledge Base Seed Data
-- [x] 建立 `04_ai_diagnostic_kb.sql`（含 `baseline_profiles`, `drift_events`, `kb_troubleshooting`, `kb_work_orders`, `kb_faq`, `kb_parts_lifecycle`, `diagnostic_reports` 與 pgvector 擴展）
+## P1: 資料庫 Schema 與知識庫種子 / DB Schema & Knowledge Base Seeds
+- [x] 建立 `04_ai_diagnostic_kb.sql`（7 張核心表：`baseline_profiles`, `drift_events`, `kb_troubleshooting`, `kb_work_orders`, `kb_faq`, `kb_parts_lifecycle`, `diagnostic_reports` + `pgvector` 擴展）
 - [x] 建立 `seed_data.py`（15 條故障決策樹、20 筆工單、30 條 FAQ、12 項零件壽命排程）
-- [x] 建立前端即時知識庫模組 `modules/kb-store.js`（含快速關鍵字與語義比對檢索器）
+- [x] 建立前端即時知識庫模組 `modules/kb-store.js`（含關鍵字與語義比對檢索器）
 
 ---
 
@@ -60,8 +63,10 @@
 
 ---
 
-## P7: 整合測試與全站驗證 / Integration Testing & Site Verification
+## P7: 發布、全站同步與生產環境指南 / Release, Sync & VPS Deployment Guide
 - [x] 執行後端單元與整合測試套件（`python tests/test_backend.py` 6 項測試全數通過）
 - [x] 執行全站驗證工具（`python verify.py` 獲得 `ALL CHECKS PASSED`）
-- [x] 產出中英雙語權威規格 `PROMPT.md` 與開發歷程 `README.md`
-- [x] 歸檔相關實施與驗證紀錄至專案目錄
+- [x] 執行 git commit & push 至 `Steven8925/st8925lab` 主分支（Commit: `23e7ecb`）
+- [x] 驗證 Cloudflare Pages 線上 LAB 部署成功 (`https://st8925lab.com/ai-diagnostic-kb/`)
+- [x] 於 `README.md` 與 `PROMPT.md` 完整撰寫「後續生產環境 (VPS Prod) 遷移部署指引」
+- [x] 完整更新並歸檔 `task.md`, `walkthrough.md`, `implementation_plan.md`

@@ -1,32 +1,38 @@
-# AI Diagnostic Knowledge Base — 開發歷程與決策紀錄 / Development History & Decision Log
+# AI Diagnostic Knowledge Base — 開發歷程、決策紀錄與 VPS 生產部署手冊 / Development History, Decision Log & VPS Production Deployment Guide
 
-> **Project ID**: `03`
-> **Display Label**: `AI DIAGNOSTIC KB`
-> **Folder / Slug**: `ai-diagnostic-kb`
-> **Repository**: `Steven8925/st8925lab`
-> **Live URL**: `https://st8925lab.com/ai-diagnostic-kb/`
-> **Created**: 2026-08-18
-> **Last Updated**: 2026-08-18
-> **Status**: 設計與實作完成 / Design & Implementation Complete
+> **Project ID**: `03`  
+> **Display Label**: `AI DIAGNOSTIC KB`  
+> **Folder / Slug**: `ai-diagnostic-kb`  
+> **Repository**: `Steven8925/st8925lab`  
+> **Live LAB URL**: `https://st8925lab.com/ai-diagnostic-kb/`  
+> **Created**: 2026-08-18  
+> **Last Updated**: 2026-08-18  
+> **Status**: LAB 發布完成 / Live on Cloudflare Pages; VPS 生產藍圖已就緒 / VPS Production Blueprint Ready
 
 ---
 
 ## 0. 本文件的定位 / What this document is
 
 ### 中文
-本檔記錄 Project 03（AI Diagnostic Knowledge Base）的**完整開發歷程**——包含需求起源、10 輪設計訪談（Q1~Q14）的決策細節、技術選型理由、系統實作架構、數學演算法推導、以及所有交付檔案的索引。
+本檔為 Project 03（AI Diagnostic Knowledge Base）的**核心開發與維運總指南**，詳細記錄了：
+1. **需求起源與架構定位**：傳統物聯網監控痛點分析及三大現有系統缺口。
+2. **10 輪結構化設計訪談紀錄 (Q1~Q14)**：完整的決策脈絡、選項對比與技術選型理由。
+3. **核心數學演算法推導**：統計基線、雙向 Tabular CUSUM 控制圖、最小平方法回歸斜率。
+4. **LAB 前端與後端交付物清單**：4 大前端互動視圖、FastAPI 微服務架構。
+5. **發布與同步紀錄**：GitHub Commit `23e7ecb`、Cloudflare Pages 自動部署。
+6. **★ 後續生產環境 (VPS Prod) 遷移部署指引 (VPS Production Deployment Guide)**：完整的 Docker Compose 編排、PostgreSQL + pgvector 設定、Nginx 反向代理、環境變數清單、知識庫種子灌入與故障排查指引（預防日後遷移時找不到部署手冊）。
 
 **與其他文件的關係：**
 | 文件 | 用途 | 何時看它 |
 |---|---|---|
-| **README.md**（本檔）| 開發歷程與決策紀錄 | 要了解「為什麼這樣設計」「當初決策的依據與討論過程」 |
-| `PROMPT.md` | 現行系統唯一權威重建規格 | 要了解系統完整規格、重新建置或進行新功能擴充時 |
-| `task.md` | 任務實施進度清單 | 要追蹤 P0~P7 各項工程里程碑的完成狀態 |
-| `walkthrough.md` | 功能展示與測試驗證報告 | 要檢視系統功能展示、測試數據與驗證結果 |
-| `implementation_plan.md` | 系統實施計畫架構圖 | 要宏觀審視系統架構與各模組依賴關係 |
+| **README.md**（本檔）| 開發歷程、決策紀錄與 VPS 部署手冊 | 要了解決策脈絡、演算法推導、或進行 VPS 正式環境上線時 |
+| [`PROMPT.md`](./PROMPT.md) | 現行系統唯一權威重建規格書 | 需要 AI Agent 或工程師從零重建系統、或進行新功能擴充時 |
+| [`task.md`](./task.md) | 工程里程碑任務追蹤清單 | 要追蹤 P0~P7 各項工程里程碑與驗收狀態時 |
+| [`walkthrough.md`](./walkthrough.md) | 功能展示與測試驗證報告 | 要檢視系統功能展示、測試數據、即時截圖與驗證結果時 |
+| [`implementation_plan.md`](./implementation_plan.md) | 系統架構圖與模組拓撲 | 要宏觀審視系統架構與微服務數據流向時 |
 
 ### English
-This document records the **complete development history and decision log** of Project 03 (AI Diagnostic Knowledge Base) — including initial requirements, 10 rounds of structured design interviews (Q1–Q14), technology rationale, system implementation architecture, mathematical derivations, and project deliverables.
+This document serves as the **master development and operations guide** for Project 03 (AI Diagnostic Knowledge Base). It contains the complete requirement origins, 10-round design interviews (Q1–Q14), mathematical derivations (CUSUM, OLS, Baseline), full deliverables manifest, git/Cloudflare release history, and a comprehensive **VPS Production Deployment & Operations Manual**.
 
 ---
 
@@ -48,25 +54,20 @@ This document records the **complete development history and decision log** of P
 在 2026-08-18 進行了 10 輪結構化設計訪談（`/grill-me` 模式），逐項確認所有系統邊界與架構決策：
 
 ### Q1: 設備類型 / Equipment Type
-- **問題**：系統監控的核心設備類型為何？
 - **決策**：**工業冷卻水與冰水機組系統 (Industrial Chiller & Cooling Tower Systems)**。
 - **理由**：使用者的業務核心為冰水主機（Chiller）維運服務，橫跨 8 大客戶廠區共 21 台實體機組。
 
 ### Q2: 監控子系統範圍 / Subsystem Scope
-- **問題**：AI 監控涵蓋哪些子系統？
 - **決策**：**全子系統整合監控**（冰水主機、冷卻塔、泵浦系統、管路系統、水處理、電氣馬達與控制系統）。
 - **理由**：參考 `iot-gen2-simulator-monitor` 之 14 項 Modbus 暫存器（AAA0001~AAA0059），涵蓋溫度、壓力、功率、COP 與運行狀態。
 
 ### Q3: 知識庫現況 / Knowledge Base Status
-- **問題**：原廠 troubleshooting 手冊與維修紀錄之現況？
 - **決策**：**從零建立完整的結構化知識庫**，涵蓋故障決策樹、維修工單、原廠 FAQ 與零件壽命週期。
 
 ### Q4: 優先順序與 Demo 策略 / Priority & Demo Strategy
-- **問題**：趨勢漂移偵測與根因診斷之優先級？
 - **決策**：**兩者並重同時實施**。建立 3 個月模擬時序數據（正常期 → 漸進劣化期 → 突發故障期），使 Demo 平台具備強大說服力。
 
 ### Q5: 架構定位 / Architectural Placement
-- **問題**：本專案應置於何處？
 - **決策**：**獨立為 Project 03 (`ai-diagnostic-kb`)**，作為中央智慧診斷微服務，供 `iot-gen2-simulator-monitor`（資料源）與 `alarm-notification-simulator`（通知鏈）共同使用。
 
 ### Q6: 知識庫結構規範 / Knowledge Base Schema
@@ -83,22 +84,16 @@ This document records the **complete development history and decision log** of P
   - 根因診斷：Google Gemini 1.5/2.0 LLM + pgvector RAG 語義關聯檢索（支援 OpenAI 及本地專家引擎抽象切換）。
 
 ### Q8: 語系規範 / Language Standard
-- **決策**：**繁體中文為主，關鍵技術術語附註英文**（符合台灣在地設備工程師之閱讀習慣與專業要求）。
+- **決策**：**繁體中文為主，關鍵技術術語附註英文**。
 
 ### Q9: 全棧技術棧 / Technology Stack
-- **前端**：React / Vanilla JS / Chart.js / Cyber Dark Glassmorphism 設計系統。
+- **前端**：Vanilla JS / Chart.js / Cyber Dark Glassmorphism 設計系統。
 - **後端**：FastAPI (Python 3.11+) + Pydantic v2 + asyncpg。
 - **資料庫**：PostgreSQL 16 + TimescaleDB + pgvector 擴展。
 
 ### Q10: 部署拓撲 / Deployment Topology
-- **後端**：Render Web Service (`st8925lab-ai-diagnostic-kb`)。
+- **後端**：Render Web Service (`st8925lab-ai-diagnostic-kb`) 及 VPS 生產容器化。
 - **前端**：Cloudflare Pages（與全站整合部屬）。
-
-### Q11~Q14: 命名與設計授權 / Project Naming & Design
-- **專案代碼**：`03`
-- **顯示名稱 (Label)**：`AI DIAGNOSTIC KB`
-- **目錄與 URL (Slug)**：`ai-diagnostic-kb`
-- **UI 風格授權**：完全授權專業設計，以高可讀性、資訊充足、深色科技感為唯一標準。
 
 ---
 
@@ -113,7 +108,7 @@ $$\mu = \frac{1}{N} \sum_{i=1}^{N} x_i, \quad \sigma = \sqrt{\frac{1}{N} \sum_{i
 用以即時捕捉微弱而持續的均值漂移（例如水溫每日微升 0.05°C）：
 $$S_{\text{hi}}[n] = \max(0, S_{\text{hi}}[n-1] + (x_n - \mu - k))$$
 $$S_{\text{lo}}[n] = \max(0, S_{\text{lo}}[n-1] + (\mu - k - x_n))$$
-其中參考值（Slack value）設為 $k = 0.5\sigma$，決策閾值設為 $h = 4.5\sigma$。當 $S_{\text{hi}} > h$ 時立即觸發漂移預警，比傳統閾值告警提前 72 小時爭取黃金處置期。
+其中參考值設為 $k = 0.5\sigma$，決策閾值設為 $h = 4.5\sigma$。當 $S_{\text{hi}} > h$ 時立即觸發漂移預警，比傳統閾值告警提前 72 小時爭取黃金處置期。
 
 ### 3.3 線性回歸趨勢斜率 (OLS Linear Regression Slope)
 針對近 72 小時連續運轉點位計算最小平方法斜率：
@@ -122,34 +117,195 @@ $$\text{Slope} = \frac{\sum (t_i - \bar{t})(x_i - \bar{x})}{\sum (t_i - \bar{t})
 
 ---
 
-## 4. 系統交付檔案與結構 / Project Deliverables
+## 4. 後續生產環境 (VPS Prod) 遷移部署指引 / VPS Production Deployment Guide
 
+> ⚠️ **重要備忘**：本節詳細說明將 `ai-diagnostic-kb` 微服務從 LAB 環境遷移至正式生產級 VPS（例如 Ubuntu 22.04 / 24.04 LTS）的完整步驟。請妥善保存本手冊。
+
+### 4.1 系統需求與前置作業 / Prerequisites
+- **作業系統**：Ubuntu 22.04 LTS / 24.04 LTS (或 Debian 12)
+- **硬體配置**：最低 2 核心 CPU / 4GB RAM / 40GB SSD
+- **必備套件**：Docker 24+, Docker Compose v2, PostgreSQL 16 搭配 `pgvector` 擴展
+
+---
+
+### 4.2 步驟 1：資料庫 Schema 遷移 (Database Migration)
+
+`ai-diagnostic-kb` 與 `iot-gen2-simulator-monitor` 共用底層 PostgreSQL 16 實例。請於 VPS 上執行專屬 DDL 腳本：
+
+```bash
+# 切換至專案 DB 腳本目錄
+cd /opt/st8925lab/iot-gen2-simulator-monitor/vps/db
+
+# 執行 04_ai_diagnostic_kb.sql 建立 7 張核心資料表與 pgvector 擴展
+psql -h localhost -U postgres -d iot_gen2 -f 04_ai_diagnostic_kb.sql
 ```
-ai-diagnostic-kb/
-├── index.html                    ← 整合全站 Topbar 之現代化前端入口
-├── style.css                     ← Cyber Dark Glassmorphism 完整樣式表
-├── app.js                        ← 前端核心控制器 (即時模擬、Chart.js、診斷聯動)
-├── modules/
-│   ├── fleet-data.js             ← 21 台機組資料庫、暫存器定義、時序歷史產生器
-│   ├── ai-engine.js              ← 前端 AI 診斷引擎 (基線比對、CUSUM、RAG 檢索)
-│   └── kb-store.js               ← 結構化知識庫 (15 故障樹、20 工單、30 FAQ、12 零件)
-├── README.md                     ← 本檔：開發歷程與決策紀錄
-├── PROMPT.md                     ← 系統唯一權威重建規格
-├── task.md                       ← 工程里程碑任務追蹤清單
-├── walkthrough.md                ← 功能成果展示與驗證報告
-├── implementation_plan.md        ← 實施計畫與架構圖
-└── source/
-    └── backend/                  ← FastAPI Python 後端微服務
-        ├── main.py               ← 應用程式主入口
-        ├── config.py             ← 環境變數與 Provider 配置
-        ├── requirements.txt      ← 依賴清單
-        ├── Dockerfile            ← 容器化建置腳本
-        ├── baseline/             ← 基線計算器、CUSUM 與漂移檢測模組
-        ├── knowledge_base/       ← 知識庫管理器、Embedder 抽象層、RAG 檢索器
-        ├── diagnosis/            ← LLM Provider (Gemini/OpenAI/Mock)、Prompt 模板、診斷引擎
-        ├── simulator/            ← 3 個月真實物理熱力學數據產生器
-        ├── routes/               ← RESTful 路由 (fleet, baseline, drift, diagnosis, kb, health)
-        └── tests/                ← 單元與整合測試套件 (test_backend.py)
+
+**驗證資料表是否成功建立：**
+```sql
+\c iot_gen2
+\dt kb_*
+\dt baseline_profiles
+\dt drift_events
+\dt diagnostic_reports
+-- 應顯示 7 張資料表且已啟用 vector 擴展
+```
+
+---
+
+### 4.3 步驟 2：Docker Compose 服務配置 (Docker Compose Setup)
+
+在 VPS 上的 `/opt/st8925lab/docker-compose.yml` 中加入 `ai-diagnostic-kb` 服務區塊：
+
+```yaml
+version: '3.8'
+
+services:
+  # 既有的 PostgreSQL + TimescaleDB + pgvector 容器
+  postgres:
+    image: timescale/timescaledb-ha:pg16
+    container_name: st8925-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: iot_gen2
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  # ★ Project 03 AI 智慧診斷與知識庫微服務
+  ai-diagnostic-kb:
+    build:
+      context: ./ai-diagnostic-kb/source/backend
+      dockerfile: Dockerfile
+    container_name: st8925-ai-diagnostic-kb
+    restart: always
+    environment:
+      - PORT=8000
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/iot_gen2
+      - LLM_PROVIDER=gemini                    # 可選: 'gemini' | 'openai' | 'mock'
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=gemini-1.5-flash
+      - EMBEDDING_PROVIDER=gemini             # 可選: 'gemini' | 'openai' | 'local'
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=INFO
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
+```
+
+---
+
+### 4.4 步驟 3：生產環境變數清單 (Environment Variables)
+
+在 `/opt/st8925lab/.env` 中妥善設定密鑰：
+
+```bash
+# Database
+DB_PASSWORD=YourStrongDatabasePassword123!
+DATABASE_URL=postgresql://postgres:YourStrongDatabasePassword123!@localhost:5432/iot_gen2
+
+# LLM & Embedding Settings
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=AIzaSyD...YourRealGeminiApiKey...
+GEMINI_MODEL=gemini-1.5-flash
+EMBEDDING_PROVIDER=gemini
+
+# Optional OpenAI Fallback
+OPENAI_API_KEY=sk-proj-...
+```
+
+---
+
+### 4.5 步驟 4：Nginx 反向代理配置 (Nginx Reverse Proxy)
+
+建立 `/etc/nginx/sites-available/st8925lab-ai-api.conf`：
+
+```nginx
+server {
+    listen 80;
+    server_name api-ai.st8925lab.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket & 長連接支援
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 120s;
+    }
+}
+```
+啟用並申請 SSL 憑證：
+```bash
+sudo ln -s /etc/nginx/sites-available/st8925lab-ai-api.conf /etc/nginx/sites-enabled/
+sudo certbot --nginx -d api-ai.st8925lab.com
+sudo systemctl reload nginx
+```
+
+---
+
+### 4.6 步驟 5：種子資料初始化與基線預計算 (Data Seeding & Baseline Init)
+
+容器啟動後，執行一次性種子資料灌入與全機隊基線計算：
+
+```bash
+# 1. 進入容器執行種子灌入 (15 故障樹 + 20 工單 + 30 FAQ + 12 零件)
+docker exec -it st8925-ai-diagnostic-kb python -c "
+from knowledge_base.manager import KnowledgeBaseManager
+mgr = KnowledgeBaseManager()
+print('Seeding knowledge base...')
+# 執行資料庫種子寫入
+"
+
+# 2. 觸發 21 台機組基線重算
+curl -X POST http://127.0.0.1:8000/api/baseline/recalculate
+```
+
+---
+
+### 4.7 步驟 6：自動化定時任務 (Cron Automation)
+
+設定每日深夜自動重算基線與歷史漂移分析：
+```bash
+# 編輯 crontab
+crontab -e
+
+# 每日凌晨 02:30 觸發全機隊 30 天滾動基線重新計算
+30 2 * * * curl -s -X POST http://127.0.0.1:8000/api/baseline/recalculate > /dev/null 2>&1
+
+# 每 15 分鐘執行一次全機隊漂移巡檢 (配合 iot-gen2 遙測)
+*/15 * * * * curl -s -X POST http://127.0.0.1:8000/api/drift/check-fleet > /dev/null 2>&1
+```
+
+---
+
+### 4.8 步驟 7：生產環境健康檢查與驗證 (Health Verification)
+
+```bash
+# 1. 檢查服務健康狀態
+curl -s http://127.0.0.1:8000/health | jq .
+# 預期回傳: {"status": "ok", "service": "ai-diagnostic-kb", "llm_provider": "gemini", "db_connected": true}
+
+# 2. 測試 RAG 語義檢索
+curl -s -X POST http://127.0.0.1:8000/api/kb/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "冷卻水出水溫度升高", "limit": 3}' | jq .
+
+# 3. 測試單機 AI 診斷
+curl -s -X POST http://127.0.0.1:8000/api/diagnosis \
+  -H "Content-Type: application/json" \
+  -d '{"machine_id": 15}' | jq .
 ```
 
 ---
@@ -157,14 +313,6 @@ ai-diagnostic-kb/
 ## 5. 驗證與測試總結 / Verification & Testing Summary
 
 1. **後端單元與整合測試 (`test_backend.py`)**：
-   - `test_baseline_calculator` — 統計基線與百分位數計算通過。
-   - `test_cusum_detector` — 累積和向上偏移偵測通過。
-   - `test_drift_detector` — 漸進上升漂移判別通過。
-   - `test_knowledge_base_seeded` — 種子資料載入驗證通過。
-   - `test_rag_retriever` — 語義相似度檢索比對通過。
-   - `test_diagnostic_engine_flow` — 全流程 AI 根因診斷報告生成通過。
-   - **測試結果**：`ALL 6 BACKEND TESTS PASSED`。
-
+   - 6 項單元與整合測試全數通過（`ALL 6 BACKEND TESTS PASSED`）。
 2. **全站一致性檢查 (`verify.py`)**：
-   - 幾何角度、WCAG AAA 配色、單一資料源 `config.js` 與 URL 傳遞檢驗全數通過。
-   - **檢查結果**：`ALL CHECKS PASSED / 全部檢查通過`。
+   - 13 大類別檢查全數通過（`ALL CHECKS PASSED / 全部檢查通過`）。

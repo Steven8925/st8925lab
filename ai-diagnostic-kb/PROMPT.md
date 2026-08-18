@@ -1,18 +1,18 @@
-# PROMPT.md — 系統重建與開發規格 / Authoritative System Specification
+# PROMPT.md — 系統重建、開發規格與 VPS 生產部署指引 / System Specification & VPS Deployment Guide
 
 > **專案名稱 Project Name:** AI Diagnostic Knowledge Base — 工業冷卻水與冰水機組智慧診斷與知識庫平台
 > **專案代碼 Project ID:** `03`
 > **顯示名稱 Label:** `AI DIAGNOSTIC KB`
 > **資料夾目錄 Slug:** `ai-diagnostic-kb`
 > **版本 Version:** v1.0 權威完整版 / Authoritative Specification v1.0, 2026-08-18
-> **狀態 Status:** 實作完成 / Implemented & Verified
+> **狀態 Status:** 實作完成 / Implemented & Verified; VPS 藍圖就緒 / VPS Blueprint Ready
 
 ---
 
 ## 0. 本文件的定位 / What this document is
 
 ### 中文
-**本文件為 Project 03 的唯一權威規格書。** 任何 AI Agent 或開發工程師僅需研讀本檔案，即可完整重建出等價且功能完備的工業 AI 智慧診斷與知識庫系統。
+**本文件為 Project 03 的唯一權威規格書。** 任何 AI Agent 或開發工程師僅需研讀本檔案，即可完整重建出等價且功能完備的工業 AI 智慧診斷與知識庫系統，並能在日後依循本規格將系統順利部署至 VPS 生產環境。
 
 本文件詳細規範了：
 1. 系統架構與業務定位
@@ -23,14 +23,15 @@
 6. 工業熱力學 Prompt Engineering 模板
 7. 知識庫種子資料庫規範 (15 故障樹、20 工單、30 FAQ、12 零件壽命)
 8. 前端 4 大互動式視圖規格
-9. 部署配置與全站整合規則
+9. **★ VPS 生產環境部署與運維規格 (VPS Production Deployment Specification)**
+10. 全站整合規則與 Invariants
 
 > 開發決策歷史與訪談紀錄請參閱 [`README.md`](./README.md)。
 > 功能展示報告請參閱 [`walkthrough.md`](./walkthrough.md)。
 > 任務進度清單請參閱 [`task.md`](./task.md)。
 
 ### English
-**This document serves as the sole authoritative specification for Project 03.** An AI agent or engineer reading only this document possesses all the necessary architectural, algorithmic, database, and interface contracts required to reconstruct the complete system from scratch.
+**This document serves as the sole authoritative specification for Project 03.** An AI agent or engineer reading only this document possesses all the necessary architectural, algorithmic, database, interface contracts, and **VPS Production Deployment Guides** required to reconstruct and operate the complete system.
 
 ---
 
@@ -327,7 +328,49 @@ $$\text{Slope} = \frac{\sum (t_i - \bar{t})(x_i - \bar{x})}{\sum (t_i - \bar{t})
 
 ---
 
-## 8. Invariants 與全站規範 / Rules & Invariants
+## 8. VPS 生產環境部署與維運規格 / VPS Production Deployment Specification
+
+### 8.1 Docker 容器規格
+- **Base Image**: `python:3.11-slim`
+- **Exposed Port**: `8000`
+- **Resource Limits**: 建議 CPU: 1.0 core, Memory: 1024MB
+
+### 8.2 Docker Compose 片段
+```yaml
+ai-diagnostic-kb:
+  build:
+    context: ./ai-diagnostic-kb/source/backend
+    dockerfile: Dockerfile
+  container_name: st8925-ai-diagnostic-kb
+  restart: always
+  environment:
+    - PORT=8000
+    - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/iot_gen2
+    - LLM_PROVIDER=gemini
+    - GEMINI_API_KEY=${GEMINI_API_KEY}
+    - GEMINI_MODEL=gemini-1.5-flash
+    - EMBEDDING_PROVIDER=gemini
+  ports:
+    - "127.0.0.1:8000:8000"
+  depends_on:
+    - postgres
+```
+
+### 8.3 部署驗證指令
+```bash
+# 1. 執行 DDL
+psql -h localhost -U postgres -d iot_gen2 -f iot-gen2-simulator-monitor/vps/db/04_ai_diagnostic_kb.sql
+
+# 2. 啟動容器
+docker compose up -d ai-diagnostic-kb
+
+# 3. 驗證健康狀態
+curl -s http://127.0.0.1:8000/health | jq .
+```
+
+---
+
+## 9. Invariants 與全站規範 / Rules & Invariants
 
 1. **`MY_ID` 宣告**：前端 `index.html` 內必須明確宣告 `const MY_ID = '03';`。
 2. **單一資料源**：必須引用全站共用之 `../config.js` 與 `../shared/wordmark.js`。
