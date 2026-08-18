@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST8925 LAB — AI Diagnostic Knowledge Base</title>
+<meta name="description" content="工業冷卻水與冰水機組 AI 智慧診斷與知識庫平台 (AI Diagnostic Knowledge Base) — 整合統計基線、漂移預警、RAG 語義知識庫與 Gemini LLM 根因診斷。">
+<link rel="stylesheet" href="../shared/wordmark.css">
+<link rel="stylesheet" href="./style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header id="st8925-topbar">
+    <div style="display:flex; align-items:center; gap: clamp(1rem, 2vw, 2.5rem);">
+        <a id="wordmark" href="../index.html" aria-label="ST8925 LAB"></a>
+        <nav class="topbar-nav">
+            <button class="nav-tab active" data-view="dashboard">
+                <span>📊</span> 全機隊健康總覽
+            </button>
+            <button class="nav-tab" data-view="diagnosis">
+                <span>🤖</span> 單機深度診斷
+            </button>
+            <button class="nav-tab" data-view="trends">
+                <span>📈</span> 多維趨勢與 CUSUM
+            </button>
+            <button class="nav-tab" data-view="knowledge">
+                <span>📚</span> 知識庫檢索瀏覽
+            </button>
+        </nav>
+    </div>
+    <div class="topbar-actions">
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span>AI ENGINE ACTIVE</span>
+        </div>
+    </div>
+</header>
+
+<main class="app-container">
+
+    <!-- ── VIEW 1: FLEET HEALTH DASHBOARD ── -->
+    <section id="view-dashboard" class="view-section active">
+        <div class="view-header">
+            <div class="view-title-group">
+                <h1>全機隊 AI 健康總覽 (Fleet Health Overview)</h1>
+                <div class="view-subtitle">即時監測 8 大工業園區 21 台冰水機組與冷卻水塔 · 統計基線比對與漸進漂移預警</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="btn-fault-fouling" class="btn-secondary">⚠️ 注入水塔結垢故障 (機組15)</button>
+                <button id="btn-fault-leak" class="btn-secondary">🚨 注入冷媒洩漏故障 (機組6)</button>
+                <button id="btn-reset-faults" class="btn-secondary">🔄 重置全機隊狀態</button>
+            </div>
+        </div>
+
+        <div class="stat-cards-grid">
+            <div class="stat-card">
+                <div class="stat-card-label">監控機組總數</div>
+                <div id="stat-total-machines" class="stat-card-value stat-info">21</div>
+                <div class="stat-card-sub">涵蓋 8 個客戶廠區</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">健康運轉機組</div>
+                <div id="stat-healthy-count" class="stat-card-value stat-healthy">18</div>
+                <div class="stat-card-sub">基線偏差 &lt; 1.5σ</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">漂移預警機組</div>
+                <div id="stat-warning-count" class="stat-card-value stat-warning">2</div>
+                <div class="stat-card-sub">偵測到趨勢漂移 (1.8σ~2.5σ)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">危急異常機組</div>
+                <div id="stat-critical-count" class="stat-card-value stat-critical">1</div>
+                <div class="stat-card-sub">觸發安全跳脫保護邊界</div>
+            </div>
+        </div>
+
+        <div id="fleet-cards-grid" class="fleet-grid">
+            <!-- Dynamically populated by app.js -->
+        </div>
+    </section>
+
+    <!-- ── VIEW 2: MACHINE DEEP DIAGNOSIS ── -->
+    <section id="view-diagnosis" class="view-section">
+        <div class="view-header">
+            <div class="view-title-group">
+                <h1 id="diag-target-name">機組深度 AI 診斷</h1>
+                <div id="diag-target-meta" class="view-subtitle">載入中...</div>
+            </div>
+            <div>
+                <button id="btn-run-diagnosis" class="btn-primary">⚡ 重新執行 AI 根因診斷</button>
+            </div>
+        </div>
+
+        <div class="diagnosis-layout">
+            <!-- Sidebar Machine Selector -->
+            <div class="sidebar-panel">
+                <div class="sidebar-title">選擇監控機組 (21 Machines)</div>
+                <div id="diag-machine-list">
+                    <!-- Populated by app.js -->
+                </div>
+            </div>
+
+            <!-- Main Diagnostic Details -->
+            <div class="diagnosis-main">
+                <!-- AI Report Container -->
+                <div id="ai-report-container">
+                    <!-- Populated by app.js -->
+                </div>
+
+                <!-- Telemetry Baseline Meter Table -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">📊 即時感測器數值 vs 30天統計基線對比 (Telemetry vs Baseline)</div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Modbus 監測點位</th>
+                                    <th>即時量測讀值</th>
+                                    <th>30天基準 (Mean ± 1σ)</th>
+                                    <th>區間分佈</th>
+                                    <th>偏差幅度 (Z-Score)</th>
+                                    <th>狀態指標</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diag-comparison-tbody">
+                                <!-- Populated by app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 72h History Trend Chart -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">📈 近 72 小時連續運轉趨勢 (Continuous Telemetry Trend)</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="diag-trend-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── VIEW 3: MULTI-SCALE TRENDS & CUSUM ── -->
+    <section id="view-trends" class="view-section">
+        <div class="view-header">
+            <div class="view-title-group">
+                <h1>統計品管與 CUSUM 累積和漂移分析 (Statistical Quality Control)</h1>
+                <div class="view-subtitle">應用 Tabular CUSUM 控制圖於冷卻水溫與冷媒壓力 · 提前 72 小時抓出微弱漸進劣化趨勢</div>
+            </div>
+        </div>
+
+        <div class="panel-card" style="margin-bottom: 20px;">
+            <div class="panel-header">
+                <div class="panel-title">📉 CUSUM 累積和控制圖 (Tabular CUSUM Control Chart — A區南區1號機)</div>
+                <span class="status-badge badge-warning">CUSUM 漂移警報已觸發</span>
+            </div>
+            <div class="chart-container" style="height: 380px;">
+                <canvas id="cusum-chart-canvas"></canvas>
+            </div>
+            <div style="font-size:12px; color:var(--muted); margin-top:14px; line-height:1.6; background:rgba(0,0,0,0.25); padding:12px 16px; border-radius:var(--radius-sm)">
+                💡 <strong>CUSUM 原理說明：</strong> 標準閾值告警只有在水溫突破 36.5°C 時才會觸發；但 CUSUM 演算法透過持續累積微小正向偏差 (x<sub>i</sub> - μ - k)，在水溫僅上升至 35.2°C 時即突破決策區間 h (4.5σ)，提前 3~5 天為現場維運團隊爭取預防性處置時間。
+            </div>
+        </div>
+    </section>
+
+    <!-- ── VIEW 4: KNOWLEDGE BASE BROWSER ── -->
+    <section id="view-knowledge" class="view-section">
+        <div class="view-header">
+            <div class="view-title-group">
+                <h1>冷卻水系統智慧診斷知識庫 (Diagnostic Knowledge Base)</h1>
+                <div class="view-subtitle">整合 20 年資深技師維運經驗 · 故障決策樹、歷史維修工單、原廠 FAQ 與零件壽命週期</div>
+            </div>
+        </div>
+
+        <div class="kb-search-bar">
+            <input type="text" id="kb-search-input" class="kb-search-input" placeholder="🔍 輸入自然語言或關鍵字 (例如: 冷卻水出水溫度升高、冷媒洩漏、COP 劣化、散熱片結垢)...">
+        </div>
+
+        <div class="kb-subnav">
+            <button class="kb-subtab active" data-tab="troubleshooting">🌳 故障診斷決策樹 (15條)</button>
+            <button class="kb-subtab" data-tab="workorders">📋 歷史維修工單紀錄 (20筆)</button>
+            <button class="kb-subtab" data-tab="faqs">❓ 原廠與現場 FAQ (30條)</button>
+            <button class="kb-subtab" data-tab="parts">⚙️ 零件壽命與保養排程 (12項)</button>
+        </div>
+
+        <div id="kb-content-area">
+            <!-- Populated by app.js -->
+        </div>
+    </section>
+
+</main>
+
+<script src="../config.js"></script>
+<script src="../shared/wordmark.js"></script>
+<script>
+// Project id '03' definition and hue handoff
+const MY_ID = '03';
+const idx  = PROJECTS.findIndex(p => p.id === MY_ID);
+const proj = PROJECTS[idx];
+
+const hue = new URLSearchParams(location.search).get('hue');
+const col = RAINBOW.find(c => c.name === hue) || RAINBOW[idx % RAINBOW.length];
+document.documentElement.style.setProperty('--c', col.hex);
+
+initWordmark('wordmark', SITE_NAME);
+</script>
+<script type="module" src="./app.js"></script>
+
+</body>
+</html>

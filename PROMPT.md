@@ -63,11 +63,13 @@ site-root/
 ├── alarm-notification-simulator/  id '01'。★ 例外：不是手寫 HTML，是
 │                              Vite/React 建置產物，見該資料夾自己的
 │                              PROMPT.md（§4 有完整說明）
-├── iot-gen2-simulator-monitor/ .. project-06/  五個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
+├── iot-gen2-simulator-monitor/    id '02'。Wayne IoT Server Gen 2 模擬監控台與 VPS 生產藍圖
+├── ai-diagnostic-kb/              id '03'。工業冷卻水與冰水機組 AI 智慧診斷與知識庫平台
+├── project-04/ .. project-06/     三個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
 ├── tools/
 │   ├── rename_project.py     ★ 專案改名同步工具
 │   └── build_alarm_frontend.py  ★ 重建 alarm-notification-simulator 前端
-├── render.yaml                 alarm-notification-simulator 後端的 Render 部署藍圖
+├── render.yaml                 Render 部署藍圖（alarm 與 ai-diagnostic-kb 服務）
 ├── verify.py                  驗證腳本（常數直接從原始碼解析）
 ├── make_standalone.py         打包單一檔案驗收版的工具
 ├── .gitignore                ★ 擋「進不進 git」（repo 為 public，見 §7.2）
@@ -122,9 +124,9 @@ const RAINBOW = [
 ];   // every hex >= 7.26 contrast against #04070e (WCAG AAA), 12-project ceiling
 
 const PROJECTS = [
-    { id: '01', label: 'PROJECT 01', slug: 'project-01' },
-    { id: '02', label: 'PROJECT 02', slug: 'iot-gen2-simulator-monitor' },
-    { id: '03', label: 'PROJECT 03', slug: 'project-03' },
+    { id: '01', label: 'ALARM NOTIFICATION SIMULATOR', slug: 'alarm-notification-simulator' },
+    { id: '02', label: 'IOT GEN2 SIMULATOR & MONITOR', slug: 'iot-gen2-simulator-monitor' },
+    { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
     { id: '06', label: 'PROJECT 06', slug: 'project-06' },

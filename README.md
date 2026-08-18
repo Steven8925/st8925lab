@@ -1528,3 +1528,61 @@ Wayne IoT 伺服器一代系統長期受限於虛擬主機（Shared Hosting）�
 $env:PYTHONIOENCODING="utf-8"; python verify.py
 ```
 - **13 大類別驗證全數通過 (ALL CHECKS PASSED)**，包含色相合規 (WCAG AAA >= 7.26)、雙向 Wordmark 導航、實體資料夾對應、`MY_ID` 宣告、`config.js` 引用與軌道動態擴充性。
+
+---
+
+## 15. 階段 7 - 專案 03 整合：AI 智慧診斷與知識庫平台 / Stage 7 - Project 03: AI Diagnostic Knowledge Base Integration
+
+> **執行時間 / Timestamp**: 2026-08-18  
+> **專案代碼 / Project ID**: `03`  
+> **顯示標籤 / Display Label**: `AI DIAGNOSTIC KB`  
+> **網址路徑 / URL Slug**: `https://st8925lab.com/ai-diagnostic-kb/`  
+> **後端原始碼目錄 / Backend Source**: `ai-diagnostic-kb/source/backend/`  
+> **資料庫腳本目錄 / DB Schema**: `iot-gen2-simulator-monitor/vps/db/04_ai_diagnostic_kb.sql`
+
+---
+
+### 15.1 專案背景與定位 / Background & Architectural Placement
+
+在工業冷凍空調與冷卻水系統中，傳統監控系統普遍面臨「只有超限閾值告警、無法在數值微幅漂移時及早預警」以及「告警只報異常現象、無法給出根本原因與處置步驟」兩大痛點。
+
+Project 03（`ai-diagnostic-kb`）作為中央智慧診斷微服務，串聯 `iot-gen2-simulator-monitor`（數據源）與 `alarm-notification-simulator`（通知鏈）：
+1. **統計基線與漸進漂移預警 (Statistical Baseline & CUSUM)**：利用移動平均基準線與雙向 Tabular CUSUM 控制圖，在水溫每日微升 0.05°C 或冷媒微漏時，**提前 72 小時**發出預防性告警。
+2. **RAG 向量知識庫 (pgvector RAG Knowledge Base)**：結構化收錄 15 條故障決策樹、20 筆工單、30 條 FAQ 與 12 項零件壽命排程。
+3. **Gemini LLM 智慧根因診斷 (Prescriptive Root Cause Diagnosis)**：自動輸出診斷摘要、根本原因排行、具體處置步驟、所需工具、預估耗時與惡化預警。
+
+---
+
+### 15.2 命名與路由同步 / Naming & Route Synchronization
+
+- **Display Label**: `AI DIAGNOSTIC KB`
+- **Folder & Slug**: `ai-diagnostic-kb`
+- **Single Source of Truth (`config.js`)**:
+  ```javascript
+  { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' }
+  ```
+- **自動化工具同步**: 透過 `tools/rename_project.py` 原子化完成改名。
+
+---
+
+### 15.3 前端互動式視圖與後端服務清單 / Deliverables Manifest
+
+| 模組 / 檔案 | 職責與特點 |
+|---|---|
+| `ai-diagnostic-kb/index.html` | 整合全站 Topbar、Wordmark 與 Cyber Dark Glassmorphism 前端介面（4 大視圖）。 |
+| `ai-diagnostic-kb/app.js` | 前端控制器：21 台機組 30 天時序模擬、Chart.js 雙 Y 軸曲線、故障注入 Demo。 |
+| `ai-diagnostic-kb/modules/` | 模組化數據與演算法（`fleet-data.js`, `ai-engine.js`, `kb-store.js`）。 |
+| `source/backend/` | FastAPI Python 後端（基線計算、CUSUM、RAG 檢索、Gemini/OpenAI 抽象 Provider、REST 路由與測試套件）。 |
+| `04_ai_diagnostic_kb.sql` | 7 張 PostgreSQL 16 資料表 + pgvector 擴展定義。 |
+| `render.yaml` | 擴充新增 `st8925lab-ai-diagnostic-kb` 後端部署藍圖。 |
+
+---
+
+### 15.4 全站驗證結果 / Site-wide Verification Passed
+
+執行全站驗證工具：
+```powershell
+$env:PYTHONIOENCODING="utf-8"; python verify.py
+```
+- **13 大類別檢查全數通過 (`ALL CHECKS PASSED / 全部檢查通過`)**。
+

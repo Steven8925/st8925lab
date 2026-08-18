@@ -90,7 +90,20 @@
     /* --- 專案導覽 / Project nav -------------------------------- */
     #projects {
         display: flex;
-        justify-content: center;
+        /* `safe center`, not plain `center`: a centered flex container that
+           overflows spills past BOTH edges, and the left overflow is
+           unreachable because scrollLeft cannot go negative — the first
+           project becomes permanently clipped and unclickable. `safe`
+           falls back to start-alignment only when overflowing, so the
+           centred look is unchanged at widths where everything fits.
+           Surfaced 2026-08-13 when project 01's label grew to
+           "ALARM NOTIFICATION SIMULATOR" and made the nav overflow below
+           ~1100px; the same trap existed before, just at a narrower width.
+           用 `safe center` 而非 `center`：置中的 flex 容器一旦溢位，內容
+           會往兩側溢出，而左側溢出無法捲動到達（scrollLeft 不能為負），
+           第一個專案會被永久裁切且點不到。`safe` 只在溢位時退回靠左對齊，
+           不影響放得下時的置中外觀。 */
+        justify-content: safe center;
         align-items: center;
         gap: clamp(.4rem, 1.4vw, 1.4rem);
         flex: 1 1 auto;
@@ -348,9 +361,9 @@ const SITE_NAME = 'ST8925 LAB';
 // Guarded at runtime in app.js.
 // 硬上限 RAINBOW.length (12)；超過會使兩專案同色，雙向對應即失效。
 const PROJECTS = [
-    { id: '01', label: 'PROJECT 01', slug: 'project-01' },
-    { id: '02', label: 'PROJECT 02', slug: 'project-02' },
-    { id: '03', label: 'PROJECT 03', slug: 'project-03' },
+    { id: '01', label: 'ALARM NOTIFICATION SIMULATOR', slug: 'alarm-notification-simulator' },
+    { id: '02', label: 'IOT GEN2 SIMULATOR & MONITOR', slug: 'iot-gen2-simulator-monitor' },
+    { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
     { id: '06', label: 'PROJECT 06', slug: 'project-06' },

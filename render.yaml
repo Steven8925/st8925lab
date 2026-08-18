@@ -128,3 +128,30 @@ services:
         sync: false
       - key: OPS_CORS_ORIGIN
         value: https://st8925lab.com,https://www.st8925lab.com
+
+  - type: web
+    name: st8925lab-ai-diagnostic-kb
+    runtime: python
+    plan: free
+    rootDir: ai-diagnostic-kb/source/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: EMBEDDING_PROVIDER
+        value: gemini
+      - key: EMBEDDING_DIM
+        value: "768"
+      - key: CORS_ORIGINS
+        value: https://st8925lab.com,https://www.st8925lab.com,http://localhost:5173,http://localhost:3000
+

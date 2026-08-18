@@ -72,7 +72,7 @@ const SITE_NAME = 'ST8925 LAB';
 const PROJECTS = [
     { id: '01', label: 'ALARM NOTIFICATION SIMULATOR', slug: 'alarm-notification-simulator' },
     { id: '02', label: 'IOT GEN2 SIMULATOR & MONITOR', slug: 'iot-gen2-simulator-monitor' },
-    { id: '03', label: 'PROJECT 03', slug: 'project-03' },
+    { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
     { id: '06', label: 'PROJECT 06', slug: 'project-06' },

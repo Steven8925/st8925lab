@@ -25,3 +25,15 @@ render installation guide.txt
 .env
 .env.*
 !.env.example
+
+# Python 暫存快取
+__pycache__/
+*.pyc
+
+# 暫存下載與筆記
+*.digest
+*.download
+github_commit.txt
+V4/
+*新文件*.txt
+
