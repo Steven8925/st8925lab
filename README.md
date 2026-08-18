@@ -1586,3 +1586,69 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
 ```
 - **13 大類別檢查全數通過 (`ALL CHECKS PASSED / 全部檢查通過`)**。
 
+---
+
+## 16. 階段 8 - 三專案互聯協同、首頁聯絡機制更新與 VPS 生產部署手冊 / Stage 8 - 3-Project Triad Synergy, Contact Update & Master VPS Deployment Guide
+
+> **執行時間 / Timestamp**: 2026-08-18  
+> **版本 / Version**: v4.5 (Triad Ecosystem & VPS Production Guide)  
+> **涉及專案 / Projects Involved**: `st8925lab` (Root), `alarm-notification-simulator` (P01), `iot-gen2-simulator-monitor` (P02), `ai-diagnostic-kb` (P03)  
+> **獨立部署手冊 / Master VPS Guide**: [`VPS_DEPLOYMENT_GUIDE.md`](VPS_DEPLOYMENT_GUIDE.md)
+
+---
+
+### 16.1 首頁聯絡機制全面升級 / Homepage Contact Mechanism Upgrade
+
+依據營運需求，全站首頁 [`index.html`](index.html) 及單檔驗收版 [`ST8925-LAB-standalone.html`](ST8925-LAB-standalone.html) 右上角的 **CONTACT** 按鈕已全面升級：
+- **目標信箱**: `stsai@st8925lab.com` 及 `azr8725.telegram.bot@gmail.com`
+- **協定支援**: 標準 RFC 6068 `mailto:stsai@st8925lab.com,azr8725.telegram.bot@gmail.com?subject=Inquiry%20from%20ST8925%20LAB`
+- **體驗優化**: 懸停提示 (Tooltip) 與無障礙屬性 (`aria-label`) 明確展示雙信箱地址，一鍵喚起郵件軟體。
+
+---
+
+### 16.2 三大專案互聯閉環生態系 / The 3-Project Triad Closed-Loop Architecture
+
+三大實體專案已完成跨專案頂部導覽列整合與數據流向閉環定義：
+
+```mermaid
+flowchart LR
+    P02["Project 02: IoT Gen 2<br/>(Telemetry & Physical Simulation)"] -->|高頻時序數據流| P03["Project 03: AI Diagnostic KB<br/>(72h CUSUM & RAG LLM Brain)"]
+    P02 -->|突發臨界值告警| P01["Project 01: Alarm Notification<br/>(Notification & Escalation Sink)"]
+    P03 -->|AI 處方型根因診斷報告| P01
+    P01 --> DISP["多通道分發: LINE / FCM / Web Push"]
+```
+
+1. **`iot-gen2-simulator-monitor` (P02 - 工業遙測源頭)**: 21 台機組熱力學物理模擬、59 點位 Modbus 暫存器矩陣、即時 COP 計算與動態 JSON 規則求值。
+2. **`ai-diagnostic-kb` (P03 - AI 智慧大腦)**: 滾動統計基線、雙向 Tabular CUSUM 72 小時漸進漂移預警、pgvector 4 大領域知識庫與 Gemini LLM 處方型根因診斷。
+3. **`alarm-notification-simulator` (P01 - 告警推播中樞)**: 接收 P02 與 P03 告警，進行去重、排班分發、階梯升級與多通道模擬推播。
+4. **頂部導覽列一鍵跨頁跳轉**: 三大專案頁面頂列均配置專屬 Cross-Nav 按鈕，使用者可自由切換驗證。
+
+---
+
+### 16.3 獨立 VPS 生產環境部署指南 / Master VPS Production Deployment Guide
+
+為提供日後由展示環境 (LAB Staging) 順利遷移至生產級主機 (VPS Prod)，根目錄已獨立撰寫完整中英文雙語手冊：[`VPS_DEPLOYMENT_GUIDE.md`](VPS_DEPLOYMENT_GUIDE.md)。
+
+手冊包含 10 大標準章節：
+1. 全景系統架構圖與內部/外部通訊矩陣
+2. Ubuntu 22.04/24.04 LTS 主機環境準備、UFW 防火牆與 Docker 24+ 安裝
+3. 統一部署目錄佈局與 `.env` 安全變數設定
+4. 統一 `docker-compose.prod.yml` 容器編排（TimescaleDB + pgvector + Redis 7 + Laravel Ingestion + FastAPI AI + Fastify Alarm + Nginx）
+5. 資料庫 Schema 初始化 (`01_init_timescaledb.sql` & `04_ai_diagnostic_kb.sql`)
+6. 知識庫種子資料匯入與全機隊基線計算
+7. Nginx 反向代理配置、WebSocket 升級與 Let's Encrypt SSL 自動申請
+8. Crontab 自動化維護（每日深夜基線重算、時序超表壓縮與留存清理）
+9. 健康檢查、Smoke Test 與 Curl 測試腳本
+10. 生產環境疑難排解與運維 SOP (Troubleshooting Runbook)
+
+---
+
+### 16.4 全站驗證與交付 / Verification Passed
+
+執行全站驗證工具：
+```powershell
+$env:PYTHONIOENCODING="utf-8"; python verify.py
+```
+- **13 大類別檢查全數通過 (`ALL CHECKS PASSED`)**。
+
+

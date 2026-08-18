@@ -263,3 +263,17 @@ and reversed decisions are in [`source/README.md`](source/README.md).
 - After any change: add a dated row to [`README.md`](./README.md) and run
   `python verify.py` from the repo root to confirm the whole site is
   still consistent.
+
+---
+
+## 5. 三專案協同互聯規範 / 3-Project Triad Integration & Invariants
+
+1. **角色職責**: 本專案（P01）為 ST8925 LAB 的告警推播與排班升級中樞 (Notification & Escalation Hub)。
+2. **數據輸入流向**:
+   - **來自 P02 (`iot-gen2-simulator-monitor`)**: 接收設備 Modbus 即時閾值超限告警（如冷媒高壓過高、壓縮機過電流、水流開關跳脫）。
+   - **來自 P03 (`ai-diagnostic-kb`)**: 接收 AI 預防性診斷報告與 72h CUSUM 漸進漂移預警（如冷卻水塔結垢趨勢、冷媒微漏預警、處方型建議）。
+3. **頂部導覽列規範**:
+   - `st8925-topbar` 必須提供前往 `../iot-gen2-simulator-monitor/index.html` (P02) 與 `../ai-diagnostic-kb/index.html` (P03) 的快速切換連結。
+4. **生產環境部署**:
+   - 完整的 VPS Docker 容器化部署請參照根目錄 [`../VPS_DEPLOYMENT_GUIDE.md`](../VPS_DEPLOYMENT_GUIDE.md)。
+

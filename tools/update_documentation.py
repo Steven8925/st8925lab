@@ -20,7 +20,8 @@ old_manifest = """├── alarm-notification-simulator/  id '01'實體專案�
 
 new_manifest = """├── alarm-notification-simulator/  id '01'實體專案：警報推播通知模擬器（Vite/React 編譯產出）
 ├── iot-gen2-simulator-monitor/    id '02'實體專案：Wayne IoT Server Gen 2 模擬監控中控台與 VPS 生產藍圖
-├── project-03/ .. project-06/     四個獨立專案子頁（各含 index.html／README.md／PROMPT.md）"""
+├── ai-diagnostic-kb/              id '03'實體專案：AI 智慧診斷知識庫平台與 CUSUM 漂移引擎
+├── project-04/ .. project-06/     三個獨立專案子頁（各含 index.html／README.md／PROMPT.md）"""
 
 if old_manifest in prompt_text:
     prompt_text = prompt_text.replace(old_manifest, new_manifest)
@@ -40,7 +41,7 @@ old_projects_snippet = """const PROJECTS = [
 new_projects_snippet = """const PROJECTS = [
     { id: '01', label: 'ALARM NOTIFICATION SIMULATOR', slug: 'alarm-notification-simulator' },
     { id: '02', label: 'IOT GEN2 SIMULATOR & MONITOR', slug: 'iot-gen2-simulator-monitor' },
-    { id: '03', label: 'PROJECT 03', slug: 'project-03' },
+    { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
     { id: '06', label: 'PROJECT 06', slug: 'project-06' },

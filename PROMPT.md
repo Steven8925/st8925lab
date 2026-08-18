@@ -70,6 +70,7 @@ site-root/
 │   ├── rename_project.py     ★ 專案改名同步工具
 │   └── build_alarm_frontend.py  ★ 重建 alarm-notification-simulator 前端
 ├── render.yaml                 Render 部署藍圖（alarm 與 ai-diagnostic-kb 服務）
+├── VPS_DEPLOYMENT_GUIDE.md     ★ 獨立生產環境 (VPS Prod) 遷移部署與維運總手冊
 ├── verify.py                  驗證腳本（常數直接從原始碼解析）
 ├── make_standalone.py         打包單一檔案驗收版的工具
 ├── .gitignore                ★ 擋「進不進 git」（repo 為 public，見 §7.2）

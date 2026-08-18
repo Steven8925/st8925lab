@@ -1,13 +1,14 @@
-# ST8925 LAB — Project 02: Rebuild & Maintenance Prompt
+# ST8925 LAB — Project 02: Rebuild & Maintenance Specification
 
 > **Project ID**: `02`  
 > **Display Label**: `IOT GEN2 SIMULATOR & MONITOR`  
 > **Folder / Slug**: `iot-gen2-simulator-monitor`  
-> **Last Updated**: 2026-08-17
+> **Last Updated**: 2026-08-18  
+> **Authority**: 本檔為 Project 02 的維護與重建規格書 / Sole rebuild spec for Project 02
 
 ---
 
-## 1. Directory Structure
+## 1. 系統架構與檔案結構 / Directory Structure
 
 ```
 iot-gen2-simulator-monitor/
@@ -19,14 +20,29 @@ iot-gen2-simulator-monitor/
 │   ├── rule-engine.js          # 動態 JSON 條件樹警報規則引擎
 │   └── ai-predictor.js         # Prophet 48h 趨勢預測與孤立森林異常檢測
 ├── vps/                        # VPS 生產環境部署完整套件
-├── README.md                   # 專案架構與操作說明
-└── PROMPT.md                   # 維護與重建規範
+├── README.md                   # 專案架構與操作說明 (Bilingual Dev Guide)
+└── PROMPT.md                   # 維護與重建規範 (本檔)
 ```
 
 ---
 
-## 2. Invariants & Rules
+## 2. 核心契約與不變量 / Core Invariants & Rules
 
-1. **`MY_ID` 定義**: `index.html` 內必須宣告 `const MY_ID = '02';`。
-2. **單一資料源**: 必須引入 `../config.js` 與 `../shared/wordmark.js`。
-3. **驗證指令**: 修改後必須執行 `$env:PYTHONIOENCODING="utf-8"; python verify.py` 確認通過所有測試。
+1. **`MY_ID` 宣告**: `index.html` 內必須包含 `const MY_ID = '02';`。
+2. **單一資料源**: 必須引入 `../config.js` 與 `../shared/wordmark.js`，站名與顏色遵循全站體系。
+3. **三專案互聯導覽**: 頂部導覽列必須保留跨專案快速按鈕：
+   - 前往 P03: `../ai-diagnostic-kb/index.html` (`🤖 AI 智慧診斷 (P03)`)
+   - 前往 P01: `../alarm-notification-simulator/index.html` (`🔔 告警推播模擬 (P01)`)
+   - 返回首頁: `../index.html` (`&larr; BACK TO ORBIT`)
+4. **命名同步**: 若 `config.js` 的 `PROJECTS[1].label` 變動，必須使用 `python tools/rename_project.py 02 "<New Label>"` 同步修改 slug 與資料夾。
+5. **遙測數據契約 (Modbus Registers Data Contract)**:
+   - `AAA0001`: 冰水出水溫度 (°C)
+   - `AAA0002`: 冰水回水溫度 (°C)
+   - `AAA0003`: 冷卻水回水溫度 (°C)
+   - `AAA0004`: 冷卻水出水溫度 (°C)
+   - `AAA0018`: 壓縮機電流 (A)
+   - `AAA0036`: 冷媒高壓 (kg/cm²)
+   - `AAA0037`: 冷媒低壓 (kg/cm²)
+   - `AAA0050`: 總功耗 (kW)
+   - `COP`: 能效比 = $(AAA0002 - AAA0001) \times \text{FlowRate} \times 0.3024 / AAA0050$
+6. **驗證指令**: 任何修改後必須執行 `$env:PYTHONIOENCODING="utf-8"; python verify.py` 確認通過所有測試。

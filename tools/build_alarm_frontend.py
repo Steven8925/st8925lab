@@ -68,6 +68,11 @@ TOPBAR_CSS = """
 TOPBAR_HTML = (
     '<header id="st8925-topbar">'
     '<a id="wordmark" href="../index.html" aria-label="ST8925 LAB"></a>'
+    '<div style="display:flex; align-items:center; gap:8px; margin-left:auto;">'
+    '<a href="../iot-gen2-simulator-monitor/index.html" style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; color:#cbd5e1; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">📡 IoT 遙測 (P02)</a>'
+    '<a href="../ai-diagnostic-kb/index.html" style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; color:#cbd5e1; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">🤖 AI 診斷 (P03)</a>'
+    '<a href="../index.html" style="font-family:ui-monospace,monospace; font-size:11px; color:#8a9bb5; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03);">&larr; BACK TO ORBIT</a>'
+    '</div>'
     "</header>\n"
 )
 
