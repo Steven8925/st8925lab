@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminApi, API_BASE, OPS_BASE } from "./api/client.js";
 import type { AdminUser, ConsolePolicy } from "./api/types.js";
+import { PRODUCTION_FLEET } from "./constants/fleet.js";
 import { DeviceQueues } from "./components/DeviceQueues.js";
 import { EventStream } from "./components/EventStream.js";
 import { Ledger } from "./components/Ledger.js";
@@ -15,6 +16,7 @@ const PHONE_LABELS = ["Pixel-8", "Galaxy-S24"];
 export function App() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [selectedAlarmId, setSelectedAlarmId] = useState<string | null>(null);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<number>(15);
   const [refreshSignal, setRefreshSignal] = useState(0);
   const [bootError, setBootError] = useState<string | null>(null);
   /**
@@ -23,6 +25,9 @@ export function App() {
    * enforces, or the header becomes a promise nothing keeps.
    */
   const [policy, setPolicy] = useState<ConsolePolicy | null>(null);
+
+  const selectedDevice =
+    PRODUCTION_FLEET.find((m) => m.id === selectedDeviceId) ?? PRODUCTION_FLEET[0];
 
   const bump = useCallback(() => setRefreshSignal((value) => value + 1), []);
 
@@ -68,6 +73,32 @@ export function App() {
         </div>
       </header>
 
+      {/* ── Device Selector & Global Switcher ── */}
+      <div className="device-switcher-bar">
+        <div className="device-selector-group">
+          <label htmlFor="deviceSelect">🔍 目標監控機組 / Active Monitored Device:</label>
+          <select
+            id="deviceSelect"
+            className="device-dropdown"
+            value={selectedDeviceId}
+            onChange={(e) => setSelectedDeviceId(Number(e.target.value))}
+          >
+            {PRODUCTION_FLEET.map((machine) => (
+              <option key={machine.id} value={machine.id}>
+                {machine.id}. {machine.name} ({machine.sn})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="device-meta-pills">
+          <span className="pill-tag">
+            <b>{selectedDevice.sn}</b>
+          </span>
+          <span className="pill-tag">{selectedDevice.model}</span>
+          <span className="pill-tag">🟢 監控中 Active</span>
+        </div>
+      </div>
+
       {bootError ? (
         <p className="app__boot-error">
           無法載入使用者清單：{bootError}
@@ -81,11 +112,12 @@ export function App() {
             title="① 感測器與門檻條件"
             subtitle="客戶端條件評估 → 寫入資料庫 flag=1"
           >
-            <SensorPanel onRowWritten={bump} />
+            <SensorPanel onRowWritten={bump} selectedDevice={selectedDevice} />
           </Panel>
 
           <TriggerConsole
             users={users}
+            selectedDevice={selectedDevice}
             onEventRaised={bump}
             onAlarmSelected={(alarmId) => {
               setSelectedAlarmId(alarmId);

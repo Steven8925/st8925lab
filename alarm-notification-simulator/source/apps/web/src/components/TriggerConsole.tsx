@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { opsApi } from "../api/client.js";
 import type { AdminUser, FlapResult, OpsEventRecord, Scenario } from "../api/types.js";
+import type { FleetMachine } from "../constants/fleet.js";
 import { Badge, EmptyState, Field, Panel, SeverityTag, Toggle, clockTime } from "./ui.js";
 import "./trigger-console.css";
 
 type Props = {
   users: AdminUser[];
+  selectedDevice?: FleetMachine;
   onEventRaised: (record: OpsEventRecord) => void;
   onAlarmSelected: (alarmId: string) => void;
 };
@@ -13,7 +15,7 @@ type Props = {
 type SignatureMode = "valid" | "invalid" | "missing";
 type SourceFormat = "standard" | "legacy-ops-v1";
 
-export function TriggerConsole({ users, onEventRaised, onAlarmSelected }: Props) {
+export function TriggerConsole({ users, selectedDevice, onEventRaised, onAlarmSelected }: Props) {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [scenarioId, setScenarioId] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -126,8 +128,14 @@ export function TriggerConsole({ users, onEventRaised, onAlarmSelected }: Props)
                 {scenario.deduplicated ? "有去重鍵 dedup" : "不去重 no dedup"}
               </Badge>
             </div>
-            <p className="trigger__preview-title">{scenario.title}</p>
-            <p className="trigger__preview-body">{scenario.body}</p>
+            <p className="trigger__preview-title">
+              {selectedDevice ? `[${selectedDevice.sn}] ${selectedDevice.name} · ` : ""}
+              {scenario.title}
+            </p>
+            <p className="trigger__preview-body">
+              {selectedDevice ? `【${selectedDevice.model}】` : ""}
+              {scenario.body}
+            </p>
           </div>
         ) : null}
 

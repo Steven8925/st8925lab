@@ -99,6 +99,80 @@
   color: var(--text-muted);
 }
 
+/* --- Device Switcher Bar ------------------------------------------------ */
+.device-switcher-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-base);
+  border-bottom: 1px solid var(--border-hairline);
+  padding: 10px var(--space-5);
+  gap: var(--space-3);
+  backdrop-filter: blur(10px);
+}
+
+.device-selector-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 280px;
+}
+
+.device-selector-group label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.device-dropdown {
+  background: var(--surface-inset);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  outline: none;
+  cursor: pointer;
+  flex: 1;
+  max-width: 460px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.device-dropdown:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-dim);
+}
+
+.device-dropdown option {
+  background: var(--surface-base);
+  color: var(--text-primary);
+}
+
+.device-meta-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill-tag {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+}
+
+.pill-tag b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* --- Three-column grid ---------------------------------------------------
    Deliberately unequal: the trigger console is a fixed control strip, the
    evidence column takes the space, the handsets keep a phone-shaped width. */

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { opsApi } from "../api/client.js";
 import type { Sensor, SetValueResult, SourceEventRow } from "../api/types.js";
+import type { FleetMachine } from "../constants/fleet.js";
 import { Badge, EmptyState, Toggle, clockTime } from "./ui.js";
 import "./sensor-panel.css";
 
@@ -11,7 +12,13 @@ import "./sensor-panel.css";
  * The value is a real number the operator can move, not a canned message —
  * without it there is no way to show the difference between 50 degrees and 90.
  */
-export function SensorPanel({ onRowWritten }: { onRowWritten: () => void }) {
+export function SensorPanel({
+  onRowWritten,
+  selectedDevice,
+}: {
+  onRowWritten: () => void;
+  selectedDevice?: FleetMachine;
+}) {
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [rows, setRows] = useState<SourceEventRow[]>([]);
   const [writeEveryReading, setWriteEveryReading] = useState(false);
@@ -61,6 +68,44 @@ export function SensorPanel({ onRowWritten }: { onRowWritten: () => void }) {
 
   const pending = rows.filter((row) => row.flag === 1).length;
 
+  function getSensorDisplay(sensor: Sensor) {
+    if (!selectedDevice) {
+      return {
+        label: sensor.label,
+        deviceId: sensor.deviceId,
+        unit: sensor.unit,
+      };
+    }
+
+    if (sensor.id === "water-temperature") {
+      return {
+        label:
+          selectedDevice.type === "tower"
+            ? "冷卻水出水溫 Cooling water temp"
+            : "冰水出水溫 Chilled water temp",
+        deviceId: selectedDevice.sn,
+        unit: sensor.unit,
+      };
+    }
+
+    if (sensor.id === "server-room-temperature") {
+      return {
+        label:
+          selectedDevice.type === "tower"
+            ? "冷卻塔風機負載 Fan load %"
+            : "冷媒高壓 Refrigerant pressure",
+        deviceId: selectedDevice.sn,
+        unit: selectedDevice.type === "tower" ? "%" : "kg/cm²",
+      };
+    }
+
+    return {
+      label: sensor.label,
+      deviceId: selectedDevice.sn,
+      unit: sensor.unit,
+    };
+  }
+
   return (
     <div className="sensors">
       {error ? <p className="sensors__error">{error}</p> : null}
@@ -69,51 +114,54 @@ export function SensorPanel({ onRowWritten }: { onRowWritten: () => void }) {
         <EmptyState>載入感測器中…</EmptyState>
       ) : (
         <ul className="sensors__list">
-          {sensors.map((sensor) => (
-            <li key={sensor.id} className="sensor" data-level={sensor.level}>
-              <div className="sensor__head">
-                <span className="sensor__label">{sensor.label}</span>
-                <span className="sensor__reading mono">
-                  {sensor.value}
-                  <em>{sensor.unit}</em>
-                </span>
-              </div>
+          {sensors.map((sensor) => {
+            const display = getSensorDisplay(sensor);
+            return (
+              <li key={sensor.id} className="sensor" data-level={sensor.level}>
+                <div className="sensor__head">
+                  <span className="sensor__label">{display.label}</span>
+                  <span className="sensor__reading mono">
+                    {sensor.value}
+                    <em>{display.unit}</em>
+                  </span>
+                </div>
 
-              <input
-                className="sensor__slider"
-                type="range"
-                min={sensor.min}
-                max={sensor.max}
-                step={0.5}
-                value={sensor.value}
-                onChange={(event) => void setValue(sensor.id, Number(event.target.value))}
-                aria-label={`${sensor.label} 讀值`}
-              />
+                <input
+                  className="sensor__slider"
+                  type="range"
+                  min={sensor.min}
+                  max={sensor.max}
+                  step={0.5}
+                  value={sensor.value}
+                  onChange={(event) => void setValue(sensor.id, Number(event.target.value))}
+                  aria-label={`${display.label} 讀值`}
+                />
 
-              <div className="sensor__scale">
-                <span>{sensor.min}</span>
-                <span className="sensor__threshold" data-tone="yellow">
-                  黃 {sensor.yellow}
-                </span>
-                <span className="sensor__threshold" data-tone="red">
-                  紅 {sensor.red}
-                </span>
-                <span>{sensor.max}</span>
-              </div>
+                <div className="sensor__scale">
+                  <span>{sensor.min}</span>
+                  <span className="sensor__threshold" data-tone="yellow">
+                    黃 {sensor.yellow}
+                  </span>
+                  <span className="sensor__threshold" data-tone="red">
+                    紅 {sensor.red}
+                  </span>
+                  <span>{sensor.max}</span>
+                </div>
 
-              <div className="sensor__foot">
-                <span className="sensor__light" data-level={sensor.level}>
-                  <i />
-                  {sensor.level === "RED"
-                    ? "紅燈 告警"
-                    : sensor.level === "YELLOW"
-                      ? "黃燈 警告"
-                      : "正常"}
-                </span>
-                <span className="sensor__device mono">{sensor.deviceId}</span>
-              </div>
-            </li>
-          ))}
+                <div className="sensor__foot">
+                  <span className="sensor__light" data-level={sensor.level}>
+                    <i />
+                    {sensor.level === "RED"
+                      ? "紅燈 告警"
+                      : sensor.level === "YELLOW"
+                        ? "黃燈 警告"
+                        : "正常"}
+                  </span>
+                  <span className="sensor__device mono">{display.deviceId}</span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 

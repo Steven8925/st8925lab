@@ -95,5 +95,7 @@ python tools/rename_project.py 01 "新的顯示名稱"
 | 2026-08-09 | 建立本資料夾 (Folder Created) | 全站架構由單一動態頁改為實體獨立資料夾，初始化樣板。 |
 | 2026-08-13 | **改建為告警通知模擬台 Rebuilt as Alarm Notification Simulator** | 引入 `12_App_notification` 完整 Vite 前端與 Render 後端部署藍圖 (`render.yaml`)。 |
 | 2026-08-18 | **三大專案互聯與頂部 Cross-Nav 整合 3-Project Triad Integration** | 頂部導覽列整合 P02 (IoT 遙測) 與 P03 (AI 智慧診斷) 雙向導航按鈕；確立作為全站告警與 AI 診斷派送終端之架構定位。 |
+| 2026-08-18 | **21 台實體機組選擇器整合 21-Machine Fleet Selector Integration** | 依據 `/grill-me` 訪談，新增與 P02/P03 一致之頂置設備切換橫幅 (`device-switcher-bar`)，感測器滑桿、SN 標籤與直接觸發 Webhook 情境全面動態綁定所選機組。 |
 
 *(未來每次修改本頁，請在此表新增一列，附日期與說明。)*
+
