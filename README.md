@@ -1643,12 +1643,22 @@ flowchart LR
 
 ---
 
-### 16.4 全站驗證與交付 / Verification Passed
+### 16.4 21 台機組選擇器整合與跨專案一致性 / 21-Machine Fleet Selector & Cross-Project Consistency
+
+為確保展示完整性與操作流暢度：
+- **`alarm-notification-simulator` (P01)** 頂部全面整合與 P02/P03 相同之 **21 台實體機組下拉選單 (`device-switcher-bar`)**。
+- 感測器滑桿、SN 標籤、情境 Webhook 觸發全面動態綁定所選機組。
+- 三大專案（P01、P02、P03）在機組清單（8 大客戶廠區共 21 台機組）上達到 100% 嚴格一致。
+
+---
+
+### 16.5 全站驗證與交付 / Verification Passed
 
 執行全站驗證工具：
 ```powershell
 $env:PYTHONIOENCODING="utf-8"; python verify.py
 ```
 - **13 大類別檢查全數通過 (`ALL CHECKS PASSED`)**。
+
 
 

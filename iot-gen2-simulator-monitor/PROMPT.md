@@ -46,3 +46,17 @@ iot-gen2-simulator-monitor/
    - `AAA0050`: 總功耗 (kW)
    - `COP`: 能效比 = $(AAA0002 - AAA0001) \times \text{FlowRate} \times 0.3024 / AAA0050$
 6. **驗證指令**: 任何修改後必須執行 `$env:PYTHONIOENCODING="utf-8"; python verify.py` 確認通過所有測試。
+
+---
+
+## 3. 三大專案互聯與機隊規範 / 3-Project Triad & Fleet Specifications
+
+1. **機隊統一性 (Fleet Invariant)**:
+   - `modules/fleet-simulator.js` 定義的 21 台實體機組（8 大客戶廠區）為全站統一標準。
+   - `alarm-notification-simulator` (`source/apps/web/src/constants/fleet.ts`) 與 `ai-diagnostic-kb` (`source/backend/app/db/database.py`) 之機組定義必須與此嚴格同步。
+2. **數據輸出契約 (Upstream Data Feed)**:
+   - **至 P03 (`ai-diagnostic-kb`)**: 定期推送 21 台機組 14 項核心遙測數據時序流（`sensor_data`），作為 P03 移動平均基線與 72h CUSUM 漂移分析之原始資料源。
+   - **至 P01 (`alarm-notification-simulator`)**: 當動態規則引擎判定發生突發臨界值超限（如 `AAA0018` 壓縮機過電流或 `AAA0012` 水流開關中斷）時，即時向 P01 Webhook 發出告警事件。
+3. **頂部導覽列規範 (Navigation Invariant)**:
+   - 頂部導覽列必須具備統一樣式，右側包含至 P03 (`../ai-diagnostic-kb/index.html`)、P01 (`../alarm-notification-simulator/index.html`) 與首頁 (`../index.html`) 的快速切換連結。
+

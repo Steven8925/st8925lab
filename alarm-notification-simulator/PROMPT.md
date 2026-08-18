@@ -266,14 +266,23 @@ and reversed decisions are in [`source/README.md`](source/README.md).
 
 ---
 
-## 5. 三專案協同互聯規範 / 3-Project Triad Integration & Invariants
+## 5. 三專案協同互聯與機隊規範 / 3-Project Triad & Fleet Invariants
 
 1. **角色職責**: 本專案（P01）為 ST8925 LAB 的告警推播與排班升級中樞 (Notification & Escalation Hub)。
-2. **數據輸入流向**:
+2. **21 台實體機組規範 (21-Machine Production Fleet Scope)**:
+   - 機隊定義由 `source/apps/web/src/constants/fleet.ts` 集中維護，收錄 8 大客戶廠區共 21 台實體冰水機（Chiller）與冷卻水塔（Tower），與 P02 及 P03 完全一致。
+   - 預設機組為 `id: 15`（內湖生技-西側1號主機 `ECO-CH-01`）。
+3. **頂部機組選擇橫幅 (`device-switcher-bar`)**:
+   - `App.tsx` 必須在 header 與 main grid 之間渲染 `.device-switcher-bar`，提供 `🔍 目標監控機組 / Active Monitored Device:` 下拉選單與 `[SN]`, `[型號]`, `[🟢 監控中 Active]` 藥丸標籤。
+4. **遙測動態綁定 (Dynamic Sensor & Trigger Binding)**:
+   - **`SensorPanel.tsx`**: 接收 `selectedDevice` prop。依機組類型自適應調整感測器標籤（Chiller 為冰水出水溫/冷媒高壓；Tower 為冷卻水出水溫/風機負載），右下角顯示 `selectedDevice.sn`。
+   - **`TriggerConsole.tsx`**: 接收 `selectedDevice` prop。情境預覽標題與內文動態帶入 `[${selectedDevice.sn}] ${selectedDevice.name}` 與型號。
+5. **數據輸入流向**:
    - **來自 P02 (`iot-gen2-simulator-monitor`)**: 接收設備 Modbus 即時閾值超限告警（如冷媒高壓過高、壓縮機過電流、水流開關跳脫）。
    - **來自 P03 (`ai-diagnostic-kb`)**: 接收 AI 預防性診斷報告與 72h CUSUM 漸進漂移預警（如冷卻水塔結垢趨勢、冷媒微漏預警、處方型建議）。
-3. **頂部導覽列規範**:
+6. **頂部導覽列規範**:
    - `st8925-topbar` 必須提供前往 `../iot-gen2-simulator-monitor/index.html` (P02) 與 `../ai-diagnostic-kb/index.html` (P03) 的快速切換連結。
-4. **生產環境部署**:
+7. **生產環境部署**:
    - 完整的 VPS Docker 容器化部署請參照根目錄 [`../VPS_DEPLOYMENT_GUIDE.md`](../VPS_DEPLOYMENT_GUIDE.md)。
+
 

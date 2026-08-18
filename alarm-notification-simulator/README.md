@@ -49,7 +49,26 @@ flowchart LR
 
 ---
 
-## 4. 架構上的取捨 / Architectural Trade-offs
+## 4. 21 台實體機組選擇器與動態遙測綁定 / 21-Machine Fleet Selector & Dynamic Binding
+
+為達成全站跨專案一致之操作體驗與展示完整性，本系統頂部整合了與 P02/P03 完全同步的 **21 台實體機組下拉選單 (`device-switcher-bar`)**：
+
+### 4.1 機組清單共享 / Shared Fleet Definition
+- 定義於 `source/apps/web/src/constants/fleet.ts`，收錄 8 大客戶端（內湖生技、中榮分院、信義總部、竹科六廠、高榮醫中、南港生技、桃園精密、綠能園區）共 21 台實體冰水機與冷卻水塔。
+- 預設選擇 `15. 內湖生技-西側1號主機 (ECO-CH-01)`。
+
+### 4.2 動態遙測與情境綁定 / Dynamic Telemetry & Scenario Binding
+1. **Panel ① 感測器面板 (Sensor Panel)**：
+   - 根據所選設備類型（Chiller 冰水主機 vs Tower 冷卻水塔）自動切換遙測指標名稱與單位（冰水機顯示冰水出水溫/冷媒高壓；水塔顯示冷卻水出水溫/風機負載）。
+   - 感測器右下角即時顯示所選機組 SN（如 `ECO-CH-01`, `ECO-CT-01`）。
+   - 寫入客戶端資料庫 `source_alarm_events` 時攜帶該機組標籤。
+2. **Panel ② 直接觸發情境 (Trigger Console)**：
+   - 在情境標題與告警預覽中動態注入所選機組之 `[SN]`、`客戶名稱` 與 `型號`。
+   - 模擬直接觸發時，推播訊息與不可篡改日誌均具備該特定機組之真實身份。
+
+---
+
+## 5. 架構上的取捨 / Architectural Trade-offs
 
 st8925lab.com 為純靜態站（Cloudflare Pages）。告警模擬台需要 Fastify API、模擬營運伺服器、WebSocket 與 SQLite 資料庫：
 
