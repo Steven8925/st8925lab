@@ -21,7 +21,8 @@ old_manifest = """├── alarm-notification-simulator/  id '01'實體專案�
 new_manifest = """├── alarm-notification-simulator/  id '01'實體專案：警報推播通知模擬器（Vite/React 編譯產出）
 ├── iot-gen2-simulator-monitor/    id '02'實體專案：Wayne IoT Server Gen 2 模擬監控中控台與 VPS 生產藍圖
 ├── ai-diagnostic-kb/              id '03'實體專案：AI 智慧診斷知識庫平台與 CUSUM 漂移引擎
-├── project-04/ .. project-06/     三個獨立專案子頁（各含 index.html／README.md／PROMPT.md）"""
+├── project-04/ .. project-05/     兩個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
+├── Travel-Assistance/             id '06'。旅遊協助平台（git submodule，指向 Steven8925/Travel-Assistance）"""
 
 if old_manifest in prompt_text:
     prompt_text = prompt_text.replace(old_manifest, new_manifest)
@@ -35,7 +36,7 @@ old_projects_snippet = """const PROJECTS = [
     { id: '03', label: 'PROJECT 03', slug: 'project-03' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
-    { id: '06', label: 'PROJECT 06', slug: 'project-06' },
+    { id: '06', label: 'TRAVEL ASSISTANCE', slug: 'Travel-Assistance' },
 ];"""
 
 new_projects_snippet = """const PROJECTS = [
@@ -44,7 +45,7 @@ new_projects_snippet = """const PROJECTS = [
     { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
-    { id: '06', label: 'PROJECT 06', slug: 'project-06' },
+    { id: '06', label: 'TRAVEL ASSISTANCE', slug: 'Travel-Assistance' },
 ];"""
 
 if old_projects_snippet in prompt_text:

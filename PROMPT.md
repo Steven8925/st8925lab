@@ -65,7 +65,8 @@ site-root/
 │                              PROMPT.md（§4 有完整說明）
 ├── iot-gen2-simulator-monitor/    id '02'。Wayne IoT Server Gen 2 模擬監控台與 VPS 生產藍圖
 ├── ai-diagnostic-kb/              id '03'。工業冷卻水與冰水機組 AI 智慧診斷與知識庫平台
-├── project-04/ .. project-06/     三個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
+├── project-04/ .. project-05/     兩個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
+├── Travel-Assistance/             id '06'。旅遊協助平台（git submodule，指向 Steven8925/Travel-Assistance）
 ├── tools/
 │   ├── rename_project.py     ★ 專案改名同步工具
 │   └── build_alarm_frontend.py  ★ 重建 alarm-notification-simulator 前端
@@ -130,7 +131,7 @@ const PROJECTS = [
     { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
-    { id: '06', label: 'PROJECT 06', slug: 'project-06' },
+    { id: '06', label: 'TRAVEL ASSISTANCE', slug: 'Travel-Assistance' },
 ];
 
 const PROJECT_URL = (slug, hue) =>
@@ -326,15 +327,16 @@ orbitR = ORBIT_RADIUS * breath
 
 ## 4. Project-XX 頁面規格 / Project Page Specification
 
-> ⚠️ **本節描述的樣板僅適用於 iot-gen2-simulator-monitor ~ project-06。**
+> ⚠️ **本節描述的樣板僅適用於 iot-gen2-simulator-monitor ~ project-05。**
 > `alarm-notification-simulator/`（id `01`）2026-08-13 起是例外——它不是
 > 手寫 HTML，而是一個真實 React 應用（告警通知模擬台）的 Vite 建置產物，
 > 經 `tools/build_alarm_frontend.py` 後製注入頂列／站名／色相邏輯。完整
 > 規格見 [`alarm-notification-simulator/PROMPT.md`](alarm-notification-simulator/PROMPT.md)，
-> 本節不重複、也不適用於它。一個專案一旦被填入真實內容，就沒有義務繼續
-> 套用「六份逐位元組相同」的樣板——那個樣板本來就只是給空白佔位頁用的。
+> 本節不重複、也不適用於它。`Travel-Assistance/`（id `06`）亦為例外——
+> 它是獨立的 git submodule，有自己的完整前後端結構。一個專案一旦被填入
+> 真實內容，就沒有義務繼續套用「佔位頁」的樣板。
 >
-> **This section's template applies to iot-gen2-simulator-monitor through project-06 only.**
+> **This section's template applies to iot-gen2-simulator-monitor through project-05 only.**
 > `alarm-notification-simulator/` (id `01`) has been an exception since
 > 2026-08-13 — it's the Vite build output of a real React app, not
 > hand-authored HTML. Full spec:
@@ -343,10 +345,39 @@ orbitR = ORBIT_RADIUS * breath
 > the "six byte-identical files" template — that template only ever existed
 > for blank placeholder pages.
 
-每個 `project-XX/index.html`（`XX` = 02~06）**是一個真實、獨立可編輯的
-靜態頁面**（不是由查詢字串渲染的樣板）。五份檔案除了一行
-`const MY_ID = '0N';` 之外逐位元組相同。完整版面／CSS／JS 見任一
-`project-XX/PROMPT.md`（內容彼此僅 `MY_ID` 不同）；摘要如下：
+### 4.1 共用頂列強制規則 / Mandatory Shared Top Bar
+
+> ⚠️ **此規則適用於所有專案子頁面，無一例外——無論是樣板佔位頁、Vite 建置**
+> **產物、還是獨立 git submodule。違反此規則的頁面不得合併。**
+>
+> **This rule applies to EVERY sub-project page without exception — whether**
+> **it is a template placeholder, a Vite build output, or an independent git**
+> **submodule. Pages violating this rule must not be merged.**
+
+每個專案子頁面都**必須**包含以下站點共用元素：
+
+1. **ST8925 LAB 字樣（左上）**：載入 `../shared/wordmark.css` +
+   `../shared/wordmark.js`，並呼叫 `initWordmark('wordmark', SITE_NAME)`。
+   字樣必須具備 5 秒灰階呼吸動畫與滑鼠 hover 逐字透鏡放大效果。
+2. **BACK TO ORBIT 連結（右上）**：`href="../index.html"`，回到首頁軌道頁。
+3. **`config.js` 載入**：`<script src="../config.js">`，確保
+   `PROJECTS`、`RAINBOW`、`SITE_NAME` 等全站常數可用。
+4. **`MY_ID` 宣告**：`const MY_ID = '<id>';`，`<id>` 為該專案在 `PROJECTS`
+   中的 `id` 值（如 `'01'`、`'06'`）。
+5. **色相傳遞**：從 `?hue=` 查詢參數接收首頁傳來的色相名稱，以
+   `RAINBOW.find(c => c.name === hue)` 解析；直接開啟時退回
+   `RAINBOW[idx % RAINBOW.length]` 的索引配色。寫入 CSS 自訂屬性
+   `--c` 以統一頂列底線顏色。
+
+**實作參考**：
+- 樣板佔位頁：見 `project-04/index.html`、`project-05/index.html`
+- 工業監控主控台：見 `iot-gen2-simulator-monitor/index.html`
+- AI 智慧診斷知識庫：見 `ai-diagnostic-kb/index.html`
+- Vite 建置產物：見 `alarm-notification-simulator/index.html`（由 `tools/build_alarm_frontend.py` 注入）
+- 獨立 submodule：見 `Travel-Assistance/index.html`（在原有 header 之上疊加 `#st8925-topbar`）
+
+目前僅 `project-04` 與 `project-05` 仍為樣板佔位頁；其餘 `alarm-notification-simulator` (01)、`iot-gen2-simulator-monitor` (02)、`ai-diagnostic-kb` (03)、`Travel-Assistance` (06) 皆為真實獨立子專案，均具備全站共用頂列規範。
+對於佔位頁樣板，版面／CSS／JS 摘要如下：
 
 **版面**：毛玻璃導覽列（僅站名，無專案導覽）→ 置中的 halo（顏色
 `var(--c)`，2.6 秒呼吸動畫）→ 文字 `this is "<label>" home page.` →
@@ -435,7 +466,7 @@ z 軸號誤、配色洗牌與對比、地理資料、版面標籤、呼吸、站
   追蹤供參考，但不隨靜態站部署——見下方「後端部署」）
 - 部署過程的暫存筆記檔（見 §7.2）
 
-`shared/`、`iot-gen2-simulator-monitor/`..`project-06/`、`alarm-notification-simulator/`
+`shared/`、`iot-gen2-simulator-monitor/`..`project-05/`、`Travel-Assistance/`、`alarm-notification-simulator/`
 （僅 `index.html` 與 `assets/`）、`tools/` 皆為一般靜態資源／原始碼，
 `tools/*.py` 不會被瀏覽器請求，留在 repo 中純供維運使用，不影響前端載入。
 

@@ -65,7 +65,7 @@
            不影響放得下時的置中外觀。 */
         justify-content: safe center;
         align-items: center;
-        gap: clamp(.4rem, 1.4vw, 1.4rem);
+        gap: clamp(.25rem, 1vw, 1.4rem);
         flex: 1 1 auto;
         min-width: 0;
         overflow-x: auto;
@@ -76,26 +76,36 @@
         --c: #ffffff;
         display: inline-flex;
         align-items: center;
-        gap: .45rem;
+        gap: .35rem;
         color: var(--c);
         text-decoration: none;
-        font-size: clamp(.62rem, 1.1vw, .78rem);
+        font-size: clamp(.5rem, 1vw, .78rem);
         font-weight: 600;
-        letter-spacing: .1em;
-        padding: .42rem .7rem;
+        letter-spacing: .06em;
+        padding: .35rem .5rem;
         border: 1px solid color-mix(in srgb, var(--c) 24%, transparent);
         border-radius: 7px;
         background: color-mix(in srgb, var(--c) 5%, transparent);
         transition: transform .18s ease, box-shadow .18s ease,
                     background .18s ease, border-color .18s ease;
         white-space: nowrap;
-        flex: none;
+        /* Allow items to shrink when space is tight, with a minimum width
+           that keeps the dot + at least a few characters visible.
+           允許窄螢幕時項目收縮，保留色點加至少幾個字元可見。 */
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: clamp(6rem, 16vw, 22rem);
+        overflow: hidden;
     }
     .project .dot {
         width: 6px; height: 6px; border-radius: 50%;
         background: var(--c);
         box-shadow: 0 0 7px var(--c);
         flex: none;
+    }
+    .project .txt {
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .project:hover, .project:focus-visible {
         transform: translateY(-2px);
