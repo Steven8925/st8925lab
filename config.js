@@ -75,7 +75,7 @@ const PROJECTS = [
     { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
     { id: '04', label: 'PROJECT 04', slug: 'project-04' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
-    { id: '06', label: 'PROJECT 06', slug: 'project-06' },
+    { id: '06', label: 'PROJECT 06', slug: 'Travel-Assistance' },
 ];
 
 // Each project is a real folder + index.html now (not a single dynamic
