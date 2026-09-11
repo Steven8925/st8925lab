@@ -90,52 +90,32 @@
     /* --- 專案導覽 / Project nav -------------------------------- */
     #projects {
         display: flex;
-        /* `safe center`, not plain `center`: a centered flex container that
-           overflows spills past BOTH edges, and the left overflow is
-           unreachable because scrollLeft cannot go negative — the first
-           project becomes permanently clipped and unclickable. `safe`
-           falls back to start-alignment only when overflowing, so the
-           centred look is unchanged at widths where everything fits.
-           Surfaced 2026-08-13 when project 01's label grew to
-           "ALARM NOTIFICATION SIMULATOR" and made the nav overflow below
-           ~1100px; the same trap existed before, just at a narrower width.
-           用 `safe center` 而非 `center`：置中的 flex 容器一旦溢位，內容
-           會往兩側溢出，而左側溢出無法捲動到達（scrollLeft 不能為負），
-           第一個專案會被永久裁切且點不到。`safe` 只在溢位時退回靠左對齊，
-           不影響放得下時的置中外觀。 */
         justify-content: safe center;
         align-items: center;
-        gap: clamp(.25rem, 1vw, 1.4rem);
+        gap: clamp(.2rem, .7vw, .9rem);
         flex: 1 1 auto;
         min-width: 0;
-        overflow-x: auto;
-        scrollbar-width: none;
+        overflow: hidden;
     }
-    #projects::-webkit-scrollbar { display: none; }
     .project {
         --c: #ffffff;
         display: inline-flex;
         align-items: center;
-        gap: .35rem;
+        gap: clamp(.2rem, .35vw, .38rem);
         color: var(--c);
         text-decoration: none;
-        font-size: clamp(.5rem, 1vw, .78rem);
+        font-size: clamp(.55rem, .8vw, .76rem);
         font-weight: 600;
-        letter-spacing: .06em;
-        padding: .35rem .5rem;
+        letter-spacing: .04em;
+        padding: clamp(.26rem, .35vw, .38rem) clamp(.36rem, .6vw, .7rem);
         border: 1px solid color-mix(in srgb, var(--c) 24%, transparent);
         border-radius: 7px;
         background: color-mix(in srgb, var(--c) 5%, transparent);
         transition: transform .18s ease, box-shadow .18s ease,
                     background .18s ease, border-color .18s ease;
         white-space: nowrap;
-        /* Allow items to shrink when space is tight, with a minimum width
-           that keeps the dot + at least a few characters visible.
-           允許窄螢幕時項目收縮，保留色點加至少幾個字元可見。 */
         flex: 0 1 auto;
         min-width: 0;
-        max-width: clamp(6rem, 16vw, 22rem);
-        overflow: hidden;
     }
     .project .dot {
         width: 6px; height: 6px; border-radius: 50%;
@@ -144,8 +124,11 @@
         flex: none;
     }
     .project .txt {
+        display: inline-flex;
+        align-items: center;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .project:hover, .project:focus-visible {
         transform: translateY(-2px);
@@ -153,6 +136,58 @@
         background: color-mix(in srgb, var(--c) 13%, transparent);
         box-shadow: 0 0 16px color-mix(in srgb, var(--c) 38%, transparent);
         outline: none;
+    }
+
+    /* 多階層自適應名稱階梯 / Multi-tier Responsive Labels */
+    .project .t-full  { display: inline; }
+    .project .t-mid   { display: none; }
+    .project .t-short { display: none; }
+    .project .t-tiny  { display: none; }
+
+    /* 寬螢幕筆電 / 125%~150% 系統縮放螢幕（約 1150px ~ 1420px）切換精簡標籤 */
+    @media (max-width: 1420px) {
+        .project .t-full  { display: none; }
+        .project .t-mid   { display: inline; }
+        .project .t-short { display: none; }
+        .project .t-tiny  { display: none; }
+    }
+
+    /* 平板 / 窄視窗分割畫面（約 840px ~ 1149px）切換短標籤 */
+    @media (max-width: 1149px) {
+        .project .t-full  { display: none; }
+        .project .t-mid   { display: none; }
+        .project .t-short { display: inline; }
+        .project .t-tiny  { display: none; }
+    }
+
+    /* 手機 / 極窄螢幕（< 840px）切換 P01..P06 徽章 */
+    @media (max-width: 839px) {
+        .project .t-full  { display: none; }
+        .project .t-mid   { display: none; }
+        .project .t-short { display: none; }
+        .project .t-tiny  { display: inline; }
+        .project {
+            padding: .25rem .45rem;
+            letter-spacing: .02em;
+        }
+    }
+
+    @media (max-width: 480px) {
+        #topbar {
+            padding: 0 .5rem;
+            gap: .3rem;
+        }
+        #projects {
+            gap: .25rem;
+        }
+        .project {
+            padding: .2rem .35rem;
+            font-size: .62rem;
+        }
+        #cta {
+            padding: .35rem .6rem;
+            font-size: .62rem;
+        }
     }
 
     /* --- 右側按鈕 / Right-hand CTA ----------------------------- */
@@ -1412,7 +1447,18 @@ function render(now) {
 // ===============================================================
 
 // --- project nav, coloured to match each ring's lead point ---
-// 專案導覽，字色對應各環主光點顏色
+// Responsive label tiers for each project so all buttons always fit cleanly
+// on any screen width without rightmost projects being pushed off or cut.
+// 各專案多階層自適應文字階梯，確保在任何螢幕寬度下所有按鈕皆完整可見。
+const RESPONSIVE_LABELS = {
+    '01': { mid: 'ALARM SIMULATOR', short: 'ALARM', tiny: 'P01' },
+    '02': { mid: 'IOT GEN2 MONITOR', short: 'IOT GEN2', tiny: 'P02' },
+    '03': { mid: 'AI DIAGNOSTIC', short: 'AI KB', tiny: 'P03' },
+    '04': { mid: 'PROJECT 04', short: 'P04', tiny: 'P04' },
+    '05': { mid: 'PROJECT 05', short: 'P05', tiny: 'P05' },
+    '06': { mid: 'TRAVEL ASSIST', short: 'TRAVEL', tiny: 'P06' },
+};
+
 function buildProjects() {
     const list = document.getElementById('projects');
     PROJECTS.forEach((proj, i) => {
@@ -1424,7 +1470,18 @@ function buildProjects() {
         // 真實網址，中鍵與另開分頁照常運作；左鍵才攔截以播放爆炸。
         a.href = PROJECT_URL(proj.slug);
         a.style.setProperty('--c', ringColours[i].hex);
-        a.innerHTML = `<span class="dot"></span><span class="txt">${proj.label}</span>`;
+        a.title = `${proj.id}: ${proj.label}`;
+        const resp = RESPONSIVE_LABELS[proj.id] || {
+            mid: proj.label,
+            short: `P${proj.id}`,
+            tiny: `P${proj.id}`
+        };
+        a.innerHTML = `<span class="dot"></span><span class="txt">` +
+            `<span class="t-full">${proj.label}</span>` +
+            `<span class="t-mid">${resp.mid}</span>` +
+            `<span class="t-short">${resp.short}</span>` +
+            `<span class="t-tiny">${resp.tiny}</span>` +
+            `</span>`;
         a.setAttribute('data-ring', String(i + 1));
         a.addEventListener('click', e => {
             // Let modified clicks through to the browser untouched.

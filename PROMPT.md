@@ -321,7 +321,23 @@ orbitR = ORBIT_RADIUS * breath
 時鐘列：本地時間（62 城市下拉選單，`WORLD_CITIES`，`Intl.DateTimeFormat`）
 與 GMT+8（`CLOCK_TZ_OFFSET`）並列，彩虹隨機取 2 色。
 
-完整參數表與每個決策的實測依據見 SPEC-v4.md §4–§7。
+### 3.6 頂部導覽列全專案永遠可見原則 / Responsive Top Bar & Universal Visibility Invariant
+
+> ⚠️ **核心原則：全站頂部導覽列（`#projects`）之所有子專案按鈕在任何視窗尺寸、螢幕解析度或系統縮放比例（如 Windows 125%/150% 縮放）下，都必須永遠完整可見，絕對禁止將右側子專案推擠至螢幕外或裁切隱藏。**
+>
+> **Core Invariant: All sub-project buttons in the top navigation bar (`#projects`) must remain fully visible at all times across any viewport size, display resolution, or system scaling level (125%/150%). Under no circumstances may right-hand sub-projects be pushed off-screen, clipped, or hidden.**
+
+為達成此原則，導覽列採用「多階層自適應文字階梯」（Multi-tier Responsive Labeling）：
+
+1. **多階層自適應階梯 (Multi-tier Adaptive Labeling)**：
+   - **寬螢幕（> 1420px）**：顯示完整全名（`.t-full`，例如 `ALARM NOTIFICATION SIMULATOR`、`TRAVEL ASSISTANCE`）。
+   - **標準桌機 / 筆電縮放（1150px ~ 1420px）**：自動切換為精簡標籤（`.t-mid`，例如 `ALARM SIMULATOR`、`IOT GEN2 MONITOR`、`AI DIAGNOSTIC`、`TRAVEL ASSIST`）。
+   - **平板 / 窄視窗分割（840px ~ 1149px）**：自動切換為短標籤（`.t-short`，例如 `ALARM`、`IOT GEN2`、`AI KB`、`P04`、`P05`、`TRAVEL`）。
+   - **手機 / 極窄螢幕（< 840px）**：自動切換為編號徽章（`.t-tiny`，例如 `P01`、`P02`、`P03`、`P04`、`P05`、`P06`）。
+   - **完整名稱 Tooltip**：所有按鈕均綁定 `a.title = "${proj.id}: ${proj.label}"`，滑鼠懸停時隨時可查閱完整專案名稱。
+
+2. **禁止隱形橫向捲動裁切**：
+   - 嚴格禁止使用 `overflow-x: auto; scrollbar-width: none;` 來遮掩溢位。這種做法會導致桌機使用者在無觸控板時無法察覺右側專案的存在。容器必須使用彈性流式佈局配合文字階梯，確保 100% 空間配比自然相容。
 
 ---
 

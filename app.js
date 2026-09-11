@@ -852,7 +852,18 @@ function render(now) {
 // ===============================================================
 
 // --- project nav, coloured to match each ring's lead point ---
-// 專案導覽，字色對應各環主光點顏色
+// Responsive label tiers for each project so all buttons always fit cleanly
+// on any screen width without rightmost projects being pushed off or cut.
+// 各專案多階層自適應文字階梯，確保在任何螢幕寬度下所有按鈕皆完整可見。
+const RESPONSIVE_LABELS = {
+    '01': { mid: 'ALARM SIMULATOR', short: 'ALARM', tiny: 'P01' },
+    '02': { mid: 'IOT GEN2 MONITOR', short: 'IOT GEN2', tiny: 'P02' },
+    '03': { mid: 'AI DIAGNOSTIC', short: 'AI KB', tiny: 'P03' },
+    '04': { mid: 'PROJECT 04', short: 'P04', tiny: 'P04' },
+    '05': { mid: 'PROJECT 05', short: 'P05', tiny: 'P05' },
+    '06': { mid: 'TRAVEL ASSIST', short: 'TRAVEL', tiny: 'P06' },
+};
+
 function buildProjects() {
     const list = document.getElementById('projects');
     PROJECTS.forEach((proj, i) => {
@@ -864,7 +875,18 @@ function buildProjects() {
         // 真實網址，中鍵與另開分頁照常運作；左鍵才攔截以播放爆炸。
         a.href = PROJECT_URL(proj.slug);
         a.style.setProperty('--c', ringColours[i].hex);
-        a.innerHTML = `<span class="dot"></span><span class="txt">${proj.label}</span>`;
+        a.title = `${proj.id}: ${proj.label}`;
+        const resp = RESPONSIVE_LABELS[proj.id] || {
+            mid: proj.label,
+            short: `P${proj.id}`,
+            tiny: `P${proj.id}`
+        };
+        a.innerHTML = `<span class="dot"></span><span class="txt">` +
+            `<span class="t-full">${proj.label}</span>` +
+            `<span class="t-mid">${resp.mid}</span>` +
+            `<span class="t-short">${resp.short}</span>` +
+            `<span class="t-tiny">${resp.tiny}</span>` +
+            `</span>`;
         a.setAttribute('data-ring', String(i + 1));
         a.addEventListener('click', e => {
             // Let modified clicks through to the browser untouched.
