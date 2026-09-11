@@ -418,7 +418,38 @@ orbitR = ORBIT_RADIUS * breath
 5. **按鈕與徽章 (Badges & Buttons)**：
    - 狀態標籤採用低透明度暗彩色膠囊（如 `rgba(16, 185, 129, 0.16)` 綠、`rgba(245, 158, 11, 0.16)` 橘黃、`rgba(59, 130, 246, 0.16)` 藍），字色明亮飽和。
    - 主要操作按鈕採精緻飽和漸層與陰影，呈現頂級儀表板質感。
-對於佔位頁樣板，版面／CSS／JS 摘要如下：
+
+### 4.3 全站 AI API 金鑰與環境變數統一原則 / Unified AI API Key & Environment Configuration Invariant
+
+> ⚠️ **核心原則：本專案 `d:\st8925lab`（包含所有子專案與模組），凡有使用到 AI LLM API Key 的地方，一律強制統一使用 NVIDIA NIM API 規範：**
+> - **變數名稱：`NVIDIA_API_KEY` 與 `NVIDIA_MODEL`**
+> - **預設模型：`nvidia/nemotron-3-super-120b-a12b`（或相容之 NVIDIA NIM 模型）**
+> - **設定檔位置：專案根目錄 `.env`（若子專案為獨立執行實體，亦可於子專案目錄建立 `.env`）**
+> - **格式要求：等號兩側不得有空白，值不得加引號（`KEY=value`）**
+> - **版控安全：`.env` 嚴格受 `.gitignore` 排除，絕對禁止提交或推送至公開 Git 儲存庫**
+>
+> **Core Invariant: Across `st8925lab` and all sub-projects, whenever AI/LLM API keys are required, they MUST uniformly adhere to the NVIDIA NIM standard (`NVIDIA_API_KEY`, `NVIDIA_MODEL`). Hardcoding keys in source files or documentation is strictly forbidden; all configurations must be read dynamically from `.env`.**
+
+#### 具體規範 (Configuration Specifications)：
+1. **`.env` 格式規範 (Format Requirements)**：
+   - 檔案命名：`.env`（位於 `d:\st8925lab\.env` 或子專案根目錄）。
+   - 填寫規則：**等號兩側不要有空白，值不要加引號**。
+   ```env
+   NVIDIA_API_KEY=nvapi-...
+   NVIDIA_MODEL=nvidia/nemotron-3-super-120b-a12b
+   ```
+2. **AI 提供者實作規範 (Implementation Standard)**：
+   - 任何涉及 LLM 呼叫的後端或腳本（如 `ai-diagnostic-kb` 故障診斷、`Travel-Assistance` 知識庫自我豐富化），皆以 `NVIDIA_API_KEY` + `NVIDIA_MODEL` 作為第一優先之生產環境供應者。
+   - NVIDIA NIM 採用 OpenAI 相容介面（Base URL: `https://integrate.api.nvidia.com/v1`），透過標準 AsyncOpenAI 或 HTTP POST 呼叫。
+3. **金鑰不落地與環境變數優先層級 (Key Isolation & Precedence)**：
+   - 程式啟動時依序從系統環境變數、當前工作目錄 `.env`、上層根目錄 `.env` 自動探測讀取（透過 `dotenv.load_dotenv()`）。
+   - 絕不可將正式金鑰明文寫入程式碼、Markdown 文件、範例檔案或 commit 訊息。
+4. **Git 版控防護 (Gitignore Invariant)**：
+   - 根目錄與各 Submodule 的 `.gitignore` 必須永久保留 `.env`、`.env.*` 阻擋規則，僅允許 `.env.example` 提交。
+
+### 4.4 佔位頁樣板規格 / Placeholder Template Specification
+
+對於尚未填入真實內容的佔位頁樣板（目前為 project-04 與 project-05），版面／CSS／JS 摘要如下：
 
 **版面**：毛玻璃導覽列（僅站名，無專案導覽）→ 置中的 halo（顏色
 `var(--c)`，2.6 秒呼吸動畫）→ 文字 `this is "<label>" home page.` →
