@@ -393,6 +393,31 @@ orbitR = ORBIT_RADIUS * breath
 - 獨立 submodule：見 `Travel-Assistance/index.html`（在原有 header 之上疊加 `#st8925-topbar`）
 
 目前僅 `project-04` 與 `project-05` 仍為樣板佔位頁；其餘 `alarm-notification-simulator` (01)、`iot-gen2-simulator-monitor` (02)、`ai-diagnostic-kb` (03)、`Travel-Assistance` (06) 皆為真實獨立子專案，均具備全站共用頂列規範。
+
+### 4.2 全站子專案視覺風格統一原則 / Unified Industrial Cyber Dark Aesthetic Invariant
+
+> ⚠️ **核心原則：全站所有子專案（無論是獨立 submodule、Vite 編譯物或內部專案）之主視覺配色與設計風格，一律強制統一為 Industrial Cyber Dark Glassmorphism（工業賽博深色毛玻璃）沉浸式宇宙深空風格，與前三個子專案（01 Alarm、02 IoT Gen2、03 AI Diagnostic KB）嚴格保持一致。絕對禁止採用刺眼之淺白底、灰白底等不和諧配色。**
+>
+> **Core Invariant: The visual design and palette of EVERY sub-project (submodules, Vite apps, internal projects) MUST strictly adhere to the Industrial Cyber Dark Glassmorphism theme, fully harmonized with the first 3 sub-projects (P01, P02, P03). Bright white, light-gray, or discordant daytime themes are strictly prohibited.**
+
+#### 具體視覺設計規範 (Theme Specifications)：
+1. **背景基底 (Base Background)**：
+   - 統一使用全站深空暗黑底色 `#04070e` / `#060b14`。
+   - 必須疊加多點柔和環境光暈（`radial-gradient ambient glow`，使用透明度 3%~5% 之動態色相與補色），呈現深邃宇宙微光質感。
+2. **容器與卡片 (Glassmorphism Cards & Panels)**：
+   - 採用半透明暗色毛玻璃卡片（`rgba(18, 30, 54, 0.65~0.75)` 或 `rgba(11, 20, 38, 0.75)`）。
+   - 邊框使用細緻半透明亮邊（`border: 1px solid rgba(255, 255, 255, 0.08)`），並具備 `backdrop-filter: blur(...)` 與陰影深度（`box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45)`）。
+   - 滑鼠懸停（hover）時產生動態邊框提亮或色相外發光。
+3. **字體與文字對比度 (Typography & High Contrast)**：
+   - 主標題與關鍵數據：純白 / 冰白高亮度高對比（`#ffffff` / `#e8eef7`），符合 WCAG AAA 標準。
+   - 次要說明、欄位標籤與元資料：科技金屬藍灰（`#8494ab` / `#94a3b8` / `#cbd5e1`）。
+   - 輔助次要文字：深石板灰（`#64748b`）。
+4. **表單與控制項 (Form Inputs, Dropdowns & Controls)**：
+   - 下拉選單、文字輸入框等一律使用半透明深色玻璃底（`rgba(6, 12, 24, 0.85)` / `#060c18`）。
+   - 選項（`option`、`optgroup`）設定深色背景與高對比淺字，focus 時觸發專案動態色相（`var(--c)`）霓虹光暈外框。
+5. **按鈕與徽章 (Badges & Buttons)**：
+   - 狀態標籤採用低透明度暗彩色膠囊（如 `rgba(16, 185, 129, 0.16)` 綠、`rgba(245, 158, 11, 0.16)` 橘黃、`rgba(59, 130, 246, 0.16)` 藍），字色明亮飽和。
+   - 主要操作按鈕採精緻飽和漸層與陰影，呈現頂級儀表板質感。
 對於佔位頁樣板，版面／CSS／JS 摘要如下：
 
 **版面**：毛玻璃導覽列（僅站名，無專案導覽）→ 置中的 halo（顏色
