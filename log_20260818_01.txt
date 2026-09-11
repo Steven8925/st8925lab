@@ -1,0 +1,105 @@
+Viewed SKILL.md:1-20
+
+# 🚀 ST8925 LAB — Strategic Context & Project State Summary
+
+---
+
+## 1. 系統現況與全域狀態 / System State & Global Status
+
+| 項目 Item | 現況狀態 Current State | 權威來源 / 備註 Reference |
+|---|---|---|
+| **專案名稱** | ST8925 LAB (宇宙軌道架構) | [index.html](file:///d:/st8925lab/index.html), [config.js](file:///d:/st8925lab/config.js) |
+| **GitHub 倉庫** | `Steven8925/st8925lab` (`main` 分支) | Commit `cc866d6` (已全部同步至遠端) |
+| **正式發布站台** | `https://st8925lab.com` | Cloudflare Pages 自動部署 |
+| **單檔驗收版本** | `ST8925-LAB-standalone.html` (105.7 KB) | [make_standalone.py](file:///d:/st8925lab/make_standalone.py) 自動打包產出 |
+| **全站驗證工具** | `verify.py` (13 大類別檢查全數通過) | `$env:PYTHONIOENCODING="utf-8"; python verify.py` |
+| **聯絡信箱設定** | `stsai@st8925lab.com`, `azr8725.telegram.bot@gmail.com` | RFC 6068 多收件人 `mailto:` 整合 |
+
+---
+
+## 2. 三大核心專案閉環架構 / Triad Closed-Loop Architecture
+
+```mermaid
+flowchart LR
+    subgraph P02["Project 02: IoT Gen 2 Telemetry Hub"]
+        M[21 台冰水機/水塔物理模擬] --> MB[Modbus 59 暫存器]
+        MB --> RE[動態 JSON 規則引擎]
+        MB --> COP[即時 COP 能效計算]
+    end
+
+    subgraph P03["Project 03: AI Diagnostic KB"]
+        BASE[時序統計基線 mu, sigma]
+        CUSUM[72h CUSUM 漸進漂移預警]
+        RAG[pgvector 4 大領域知識庫]
+        LLM[Gemini 處方型根因診斷]
+        BASE --> CUSUM --> LLM
+        RAG --> LLM
+    end
+
+    subgraph P01["Project 01: Alarm Notification Simulator"]
+        INGEST[告警收容與去重]
+        DISPATCH[LINE / FCM / Web 多通道推播]
+        ROSTER[值班排程與階梯升級鏈]
+        INGEST --> DISPATCH --> ROSTER
+    end
+
+    P02 -- "高頻物理時序數據流 (Raw Telemetry)" --> P03
+    P02 -- "突發臨界值超限告警 (Instant Faults)" --> P01
+    P03 -- "AI 處方型診斷與預防性預警 (AI Diagnostic Alerts)" --> P01
+```
+
+### 各專案定位與實作矩陣 / Project Summary Matrix
+
+| ID | 專案目錄 Slug | 顯示名稱 Label | 技術棧 Tech Stack | 核心功能 Core Features |
+|---|---|---|---|---|
+| **01** | [`alarm-notification-simulator`](file:///d:/st8925lab/alarm-notification-simulator) | `ALARM NOTIFICATION SIMULATOR` | React 19 + Vite 8 + Fastify + SQLite | 21 台機組頂置切換橫幅 (`device-switcher-bar`)、感測器門檻判定、情境 Webhook、雙層帳本、手機推播模擬、階梯升級鏈。 |
+| **02** | [`iot-gen2-simulator-monitor`](file:///d:/st8925lab/iot-gen2-simulator-monitor) | `IOT GEN2 SIMULATOR & MONITOR` | Vanilla JS + Chart.js + Laravel Ingestion + TimescaleDB | 8 大廠區 21 台機組物理熱力學模擬、Modbus 59 點位矩陣、即時 COP 計算、動態條件樹規則引擎、Prophet 48h 負載預測。 |
+| **03** | [`ai-diagnostic-kb`](file:///d:/st8925lab/ai-diagnostic-kb) | `AI DIAGNOSTIC KB` | FastAPI + pgvector + Gemini RAG + Cyber Glassmorphism | 滾動統計基線、雙向 Tabular CUSUM 72h 漸進漂移預警、4 大領域知識庫 (故障樹/工單/FAQ/零件)、Gemini 處方型根因診斷報告。 |
+
+---
+
+## 3. 核心不變量與約束 / Core Invariants & Rules
+
+1. **機隊統一性 (Fleet Invariant)**:
+   - 全站共享 8 大廠區共 21 台實體冰水主機與冷卻水塔定義：
+     - P01: [`source/apps/web/src/constants/fleet.ts`](file:///d:/st8925lab/alarm-notification-simulator/source/apps/web/src/constants/fleet.ts)
+     - P02: [`modules/fleet-simulator.js`](file:///d:/st8925lab/iot-gen2-simulator-monitor/modules/fleet-simulator.js)
+     - P03: [`source/backend/app/db/database.py`](file:///d:/st8925lab/ai-diagnostic-kb/source/backend/app/db/database.py)
+   - 預設機組為 `id: 15`（`ECO-CH-01` 內湖生技-西側1號主機）。
+2. **單一資料源 (Single Source of Truth)**:
+   - 全站專案陣列、名稱、Slug 與配色集中由 [`config.js`](file:///d:/st8925lab/config.js) 控制。
+   - 所有子專案頂部均由 [`shared/wordmark.js`](file:///d:/st8925lab/shared/wordmark.js) 渲染並提供 Cross-Nav 按鈕。
+3. **P01 建置規範 (P01 Build Rule)**:
+   - 禁止手動編輯 `alarm-notification-simulator/index.html`。
+   - 前端修改需編輯 `source/apps/web/`，並執行 `python tools/build_alarm_frontend.py` 編譯與注入。
+4. **專案更名規範 (Rename Invariant)**:
+   - 若變更 `config.js` 的 `label`，必須執行 `python tools/rename_project.py <id> "<New Label>"` 進行原子化更名。
+
+---
+
+## 4. 交付與文檔索引 / Documentation Index
+
+- **VPS 生產環境部署總手冊**: [`VPS_DEPLOYMENT_GUIDE.md`](file:///d:/st8925lab/VPS_DEPLOYMENT_GUIDE.md) (10 大章節，涵蓋 Docker Compose、TimescaleDB、pgvector、Laravel、FastAPI、Fastify、Nginx SSL、Crontab 與 Runbook)。
+- **全站演進與規格手冊**: [`README.md`](file:///d:/st8925lab/README.md) & [`PROMPT.md`](file:///d:/st8925lab/PROMPT.md)。
+- **各專案獨立文檔**:
+  - P01: [`alarm-notification-simulator/README.md`](file:///d:/st8925lab/alarm-notification-simulator/README.md) & [`PROMPT.md`](file:///d:/st8925lab/alarm-notification-simulator/PROMPT.md)
+  - P02: [`iot-gen2-simulator-monitor/README.md`](file:///d:/st8925lab/iot-gen2-simulator-monitor/README.md) & [`PROMPT.md`](file:///d:/st8925lab/iot-gen2-simulator-monitor/PROMPT.md)
+  - P03: [`ai-diagnostic-kb/README.md`](file:///d:/st8925lab/ai-diagnostic-kb/README.md) & [`PROMPT.md`](file:///d:/st8925lab/ai-diagnostic-kb/PROMPT.md)
+
+---
+
+## 5. 常用運維指令 / Maintenance Commands
+
+```powershell
+# 1. 全站合規與幾何色彩驗證
+$env:PYTHONIOENCODING="utf-8"; python verify.py
+
+# 2. 重新打包單檔離線驗收版
+python make_standalone.py
+
+# 3. 重新編譯 P01 告警通知模擬台前端
+python tools/build_alarm_frontend.py
+
+# 4. 執行 P03 AI 診斷後端單元測試
+python ai-diagnostic-kb/source/backend/tests/test_backend.py
+```
