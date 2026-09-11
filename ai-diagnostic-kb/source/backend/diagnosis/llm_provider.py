@@ -217,11 +217,54 @@ class MockExpertLLMProvider(LLMProvider):
     async def generate_json_diagnosis(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         return self.generate_mock_diagnosis(user_prompt)
 
+class NvidiaNIMLLMProvider(LLMProvider):
+    """
+    NVIDIA NIM API Provider (Nemotron & OpenAI-compatible endpoint)
+    """
+    def __init__(self, api_key: str, model: str = "nvidia/nemotron-3-super-120b-a12b"):
+        self.api_key = api_key
+        self.model_name = model
+        try:
+            from openai import AsyncOpenAI
+            self.client = AsyncOpenAI(
+                base_url="https://integrate.api.nvidia.com/v1",
+                api_key=api_key
+            )
+            logger.info(f"Initialized NVIDIA NIM LLM Provider ({self.model_name}).")
+        except Exception as e:
+            logger.warning(f"Failed to initialize NVIDIA NIM client ({e}).")
+            self.client = None
+
+    async def generate_json_diagnosis(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+        if not self.client or not self.api_key:
+            return MockExpertLLMProvider().generate_mock_diagnosis(user_prompt)
+        try:
+            resp = await self.client.chat.completions.create(
+                model=self.model_name,
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.2
+            )
+            content = resp.choices[0].message.content
+            return json.loads(content)
+        except Exception as e:
+            logger.error(f"NVIDIA NIM API call failed ({e}). Fallback to Mock.")
+            return MockExpertLLMProvider().generate_mock_diagnosis(user_prompt)
+
 def get_llm_provider() -> LLMProvider:
     provider_name = settings.LLM_PROVIDER.lower()
-    if provider_name == "gemini" and settings.GEMINI_API_KEY:
+    # If NVIDIA_API_KEY is configured, prioritize NVIDIA NIM
+    if settings.NVIDIA_API_KEY and (provider_name in ("nvidia", "nvidia_nim") or not settings.GEMINI_API_KEY):
+        return NvidiaNIMLLMProvider(settings.NVIDIA_API_KEY, settings.NVIDIA_MODEL)
+    elif provider_name == "gemini" and settings.GEMINI_API_KEY:
         return GeminiLLMProvider(settings.GEMINI_API_KEY)
     elif provider_name == "openai" and settings.OPENAI_API_KEY:
         return OpenAILLMProvider(settings.OPENAI_API_KEY)
+    elif settings.NVIDIA_API_KEY:
+        return NvidiaNIMLLMProvider(settings.NVIDIA_API_KEY, settings.NVIDIA_MODEL)
     else:
         return MockExpertLLMProvider()
+

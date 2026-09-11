@@ -3,8 +3,24 @@
 # =========================================================================
 
 import os
+from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings
+
+try:
+    from dotenv import load_dotenv
+    # Search for .env from current working dir up to st8925lab workspace root
+    for candidate in [
+        Path.cwd() / ".env",
+        Path(__file__).resolve().parent / ".env",
+        Path(__file__).resolve().parents[2] / ".env",
+        Path(__file__).resolve().parents[3] / ".env",
+    ]:
+        if candidate.is_file():
+            load_dotenv(candidate, override=False)
+            break
+except ImportError:
+    pass
 
 class Settings(BaseSettings):
     # App
@@ -21,7 +37,9 @@ class Settings(BaseSettings):
     )
 
     # LLM Provider Configuration
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini") # "gemini" | "openai" | "ollama" | "mock"
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "nvidia") # "nvidia" | "gemini" | "openai" | "ollama" | "mock"
+    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
+    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-super-120b-a12b")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
