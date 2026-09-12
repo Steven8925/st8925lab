@@ -421,26 +421,56 @@ orbitR = ORBIT_RADIUS * breath
 
 ### 4.3 全站 AI API 金鑰與環境變數統一原則 / Unified AI API Key & Environment Configuration Invariant
 
-> ⚠️ **核心原則：本專案 `d:\st8925lab`（包含所有子專案與模組），凡有使用到 AI LLM API Key 的地方，一律強制統一使用 NVIDIA NIM API 規範：**
-> - **變數名稱：`NVIDIA_API_KEY` 與 `NVIDIA_MODEL`**
-> - **預設模型：`nvidia/nemotron-3-super-120b-a12b`（或相容之 NVIDIA NIM 模型）**
+> ⚠️ **核心原則：本專案 `d:\st8925lab`（包含所有子專案與模組），凡有使用到 AI 工具／LLM 的地方，一律強制統一使用此 NVIDIA NIM API 規範：**
+> - **API 端點 (Base URL)：`https://integrate.api.nvidia.com/v1`**
+> - **標準模型 (Default Model)：`meta/muse-glimmer-30b`**
+> - **環境變數：`NVIDIA_API_KEY` 與 `NVIDIA_MODEL`（優先自 `.env` 動態讀取）**
+> - **呼叫規範：一律使用 `openai` Python SDK（`OpenAI` client）或相容 HTTP POST**
+> - **推論參數標準：`temperature=1`, `top_p=0.95`, `max_tokens=8192`**
 > - **設定檔位置：專案根目錄 `.env`（若子專案為獨立執行實體，亦可於子專案目錄建立 `.env`）**
 > - **格式要求：等號兩側不得有空白，值不得加引號（`KEY=value`）**
 > - **版控安全：`.env` 嚴格受 `.gitignore` 排除，絕對禁止提交或推送至公開 Git 儲存庫**
 >
-> **Core Invariant: Across `st8925lab` and all sub-projects, whenever AI/LLM API keys are required, they MUST uniformly adhere to the NVIDIA NIM standard (`NVIDIA_API_KEY`, `NVIDIA_MODEL`). Hardcoding keys in source files or documentation is strictly forbidden; all configurations must be read dynamically from `.env`.**
+> **Core Invariant: Across `st8925lab` and all sub-projects, whenever AI/LLM tools are used, they MUST uniformly adhere to the NVIDIA NIM API standard (`https://integrate.api.nvidia.com/v1`) using model `meta/muse-glimmer-30b` and keys read from `.env` (`NVIDIA_API_KEY`, `NVIDIA_MODEL`). Hardcoding keys in source files or documentation is strictly forbidden.**
 
-#### 具體規範 (Configuration Specifications)：
+#### 具體規範與 Python 整合標準代碼 (Implementation Standard & Code Template)：
 1. **`.env` 格式規範 (Format Requirements)**：
    - 檔案命名：`.env`（位於 `d:\st8925lab\.env` 或子專案根目錄）。
    - 填寫規則：**等號兩側不要有空白，值不要加引號**。
    ```env
    NVIDIA_API_KEY=nvapi-...
-   NVIDIA_MODEL=nvidia/nemotron-3-super-120b-a12b
+   NVIDIA_MODEL=meta/muse-glimmer-30b
    ```
-2. **AI 提供者實作規範 (Implementation Standard)**：
-   - 任何涉及 LLM 呼叫的後端或腳本（如 `ai-diagnostic-kb` 故障診斷、`Travel-Assistance` 知識庫自我豐富化），皆以 `NVIDIA_API_KEY` + `NVIDIA_MODEL` 作為第一優先之生產環境供應者。
-   - NVIDIA NIM 採用 OpenAI 相容介面（Base URL: `https://integrate.api.nvidia.com/v1`），透過標準 AsyncOpenAI 或 HTTP POST 呼叫。
+2. **AI 工具整合代碼規範 (Python Integration Pattern)**：
+   本專案中所有需要與 AI 整合之程式碼（例如即時聊天、行程建議、知識庫充實、診斷分析），一律採用下列統一模式整合：
+   ```python
+   import os
+   from openai import OpenAI
+   from dotenv import load_dotenv
+
+   # 載入環境變數
+   load_dotenv()
+   api_key = os.getenv("NVIDIA_API_KEY")
+   model = os.getenv("NVIDIA_MODEL", "meta/muse-glimmer-30b")
+
+   client = OpenAI(
+       base_url="https://integrate.api.nvidia.com/v1",
+       api_key=api_key
+   )
+
+   completion = client.chat.completions.create(
+       model=model,
+       messages=[{"role": "user", "content": "..."}],
+       temperature=1,
+       top_p=0.95,
+       max_tokens=8192,
+       stream=False
+   )
+
+   # meta/muse-glimmer-30b 具備 CoT 思維鏈，回傳內容支援 content 與 reasoning_content 取值
+   msg = completion.choices[0].message
+   result_text = (msg.content or "").strip() or getattr(msg, "reasoning_content", "")
+   ```
 3. **金鑰不落地與環境變數優先層級 (Key Isolation & Precedence)**：
    - 程式啟動時依序從系統環境變數、當前工作目錄 `.env`、上層根目錄 `.env` 自動探測讀取（透過 `dotenv.load_dotenv()`）。
    - 絕不可將正式金鑰明文寫入程式碼、Markdown 文件、範例檔案或 commit 訊息。
