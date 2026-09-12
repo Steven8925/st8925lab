@@ -1821,3 +1821,22 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
 2. **後端服務同步**：
    - `planner.py` 之 `date_display` 同步更新為 `f"Day {day_num} - {current_date.day} {cur_mon}"`，前後端無論以 API 實時運算或以離線回退演算法呈現，皆完美一致。
 
+---
+
+### 17.13 全站 AI 推論引擎全面升級 Google Gemma-4-31B-IT (NVIDIA NIM) / Google Gemma-4-31B-IT Engine Upgrade
+
+針對使用者指定切換之 AI 推論金鑰與模型規格：
+1. **核心推論規格統一**：
+   - 服務端點：`https://integrate.api.nvidia.com/v1/chat/completions`
+   - 推論模型：`google/gemma-4-31b-it`
+   - 核心參數：`temperature: 0.5`, `top_p: 1.0`, `max_tokens: 1024`, `stream: false`
+2. **專屬直連無降級**：
+   - 後端 (`main.py` / `/api/chat`) 與前端 (`index.html`、`prototype.html`) 統一調用 `google/gemma-4-31b-it`。
+   - 完全移除任何向其它非指定模型（如 Llama）之降級回退，確保架構純淨性與用戶指令嚴格落實。
+3. **零盲猜原則與中英雙語輸出**：
+   - 知識庫已有者精準依據真實數據列出；無收錄者啟動即時聯網搜尋與達人精華，誠實透明回覆。
+   - 回覆內容強制輸出【繁體中文】與【English】雙語對照，結尾附帶 `本次共用 ? token, 耗時 ? sec, YYYY-MM-DD_HH:MM:SS` 效能指標。
+4. **機密管理安全標準**：
+   - API 金鑰透過 `.env` 動態載入，受 `.gitignore` 嚴密防護，禁止直接 commit 至 GitHub 公開倉庫。
+
+
