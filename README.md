@@ -1660,5 +1660,59 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
 ```
 - **13 大類別檢查全數通過 (`ALL CHECKS PASSED`)**。
 
+---
+
+## 17. 階段 9 - Project 06：豆油哥 AI 旅遊助手全面對接、NVIDIA Nemotron-3 升級與即時多模態對話 / Stage 9 - Project 06: Travel-Assistance Integration, NVIDIA Nemotron-3 Upgrade & Real-Time Multimodal Chat
+
+> **執行時間 / Timestamp**: 2026-09-12  
+> **版本 / Version**: v4.6 (Travel-Assistance Submodule, NVIDIA Nemotron-3 AI Chat & Multimodal Invariant)  
+> **涉及專案 / Projects Involved**: `st8925lab` (Root), `Travel-Assistance` (P06, submodule: `Steven8925/Travel-Assistance.git`)  
+
+---
+
+### 17.1 專案定位與架構 / Project Overview & Submodule Architecture
+
+「豆油哥（AI 旅遊助手）」為 ST8925 LAB 旗下第 6 個旗艦子專案（id `06`，slug `Travel-Assistance`），專為自由行旅客量身打造：
+- **架構模式**：獨立 Git Submodule（指向 `https://github.com/Steven8925/Travel-Assistance.git`），採用前後端分離架構（Python FastAPI 後端 + 原生動態前端與 React 原型雙軌支援）。
+- **視覺一致性**：嚴格遵循全站 **Industrial Cyber Dark Glassmorphism**（工業賽博深色毛玻璃）沉浸式宇宙深空視覺風格，無縫整合 `#st8925-topbar` 與共用站名組件。
+- **即時比價矩陣**：串聯 Google Flights、Skyscanner、Agoda、Booking.com、Klook 與 KKday 動態深層比價連結。
+
+---
+
+### 17.2 全站統一 AI 模型升級：NVIDIA Nemotron-3 / Unified AI Model: NVIDIA Nemotron-3
+
+依據全站 AI API 統一原則（`PROMPT.md` §4.3 與 `Travel-Assistance/PROMPT.md` §0.5）：
+- **統一 API 端點**：`https://integrate.api.nvidia.com/v1`
+- **標準模型**：`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`
+- **推論參數**：`temperature=0.6`, `top_p=0.95`, `max_tokens=65536`, `reasoning_budget=16384`
+- **金鑰管理**：強制動態由 `.env` 讀取 `NVIDIA_API_KEY` 與 `NVIDIA_MODEL`，透過 `.gitignore` 嚴格隔離，杜絕任何金鑰外洩。
+
+---
+
+### 17.3 即時 AI 對話工具核心功能 / Real-Time AI Chat Capabilities
+
+1. **圖文多模態上傳支援 (Multimodal File & Vision Support)**：
+   - 聊天對話框內建附件按鈕，支援上傳圖片（PNG, JPG, WEBP）與文字表格檔案（TXT, MD, CSV, JSON，單檔上限 5MB）。
+   - 圖片自動轉換為 Data URI 送交 Vision 模型進行視覺分析；文件自動提取結構化文字上下文注入 Prompt。
+2. **即時推論指標監控列 (Execution Telemetry Meta Bar)**：
+   - 每一則 AI 回覆底部皆即時顯示格式化監控指標：
+     `本次共用 {tokens} token, 耗時 {duration} sec, YYYY-MM-DD_HH:MM:SS`
+   - Token 數精確統計自 API 回傳之 `total_tokens`，耗時由後端毫秒計時器計算。
+3. **強制中英雙語輸出 (Enforced Bilingual Output)**：
+   - 不論使用者以中文、英文發問或上傳檔案，AI 回覆一律結構化呈現【繁體中文】與【English】雙語內容。
+4. **即時資料查詢機制架構說明 (Live Data Architecture)**：
+   - 底層 LLM 模型為純權重推論，不具自帶網頁爬蟲；
+   - 系統透過 **FastMCP 工具層**（即時機票、旅宿與體驗比價）與 **知識庫定時同步排程器**（`daily_updater.py` 每日自動更新台星官方國定連假與各國淡旺季行情），實現真實即時數據驅動。
+
+---
+
+### 17.4 全站驗證結果 / Site-wide Verification Passed
+
+執行全站幾何、色彩與資料完整性驗證工具：
+```powershell
+$env:PYTHONIOENCODING="utf-8"; python verify.py
+```
+- **13 大類別檢查全數通過 (`ALL CHECKS PASSED / 全部檢查通過`)**。
+
 
 

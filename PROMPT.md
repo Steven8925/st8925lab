@@ -423,15 +423,17 @@ orbitR = ORBIT_RADIUS * breath
 
 > ⚠️ **核心原則：本專案 `d:\st8925lab`（包含所有子專案與模組），凡有使用到 AI 工具／LLM 的地方，一律強制統一使用此 NVIDIA NIM API 規範：**
 > - **API 端點 (Base URL)：`https://integrate.api.nvidia.com/v1`**
-> - **標準模型 (Default Model)：`meta/muse-glimmer-30b`**
+> - **標準模型 (Default Model)：`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`**
 > - **環境變數：`NVIDIA_API_KEY` 與 `NVIDIA_MODEL`（優先自 `.env` 動態讀取）**
 > - **呼叫規範：一律使用 `openai` Python SDK（`OpenAI` client）或相容 HTTP POST**
-> - **推論參數標準：`temperature=1`, `top_p=0.95`, `max_tokens=8192`**
+> - **推論參數標準：`temperature=0.6`, `top_p=0.95`, `max_tokens=65536`, `reasoning_budget=16384`**
+> - **圖文多模態與思維鏈：支援純文字、文字檔案與圖片 Base64 (`image_url`) 多模態輸入；支援 CoT 深度推理相容**
+> - **輸出原則：對話回覆一律採用【繁體中文】與【English】雙語對照輸出，並於訊息尾部附帶 Token 與耗時監控列**
 > - **設定檔位置：專案根目錄 `.env`（若子專案為獨立執行實體，亦可於子專案目錄建立 `.env`）**
 > - **格式要求：等號兩側不得有空白，值不得加引號（`KEY=value`）**
 > - **版控安全：`.env` 嚴格受 `.gitignore` 排除，絕對禁止提交或推送至公開 Git 儲存庫**
 >
-> **Core Invariant: Across `st8925lab` and all sub-projects, whenever AI/LLM tools are used, they MUST uniformly adhere to the NVIDIA NIM API standard (`https://integrate.api.nvidia.com/v1`) using model `meta/muse-glimmer-30b` and keys read from `.env` (`NVIDIA_API_KEY`, `NVIDIA_MODEL`). Hardcoding keys in source files or documentation is strictly forbidden.**
+> **Core Invariant: Across `st8925lab` and all sub-projects, whenever AI/LLM tools are used, they MUST uniformly adhere to the NVIDIA NIM API standard (`https://integrate.api.nvidia.com/v1`) using model `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` and keys read from `.env` (`NVIDIA_API_KEY`, `NVIDIA_MODEL`). Hardcoding keys in source files or documentation is strictly forbidden.**
 
 #### 具體規範與 Python 整合標準代碼 (Implementation Standard & Code Template)：
 1. **`.env` 格式規範 (Format Requirements)**：
@@ -439,7 +441,7 @@ orbitR = ORBIT_RADIUS * breath
    - 填寫規則：**等號兩側不要有空白，值不要加引號**。
    ```env
    NVIDIA_API_KEY=nvapi-...
-   NVIDIA_MODEL=meta/muse-glimmer-30b
+   NVIDIA_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
    ```
 2. **AI 工具整合代碼規範 (Python Integration Pattern)**：
    本專案中所有需要與 AI 整合之程式碼（例如即時聊天、行程建議、知識庫充實、診斷分析），一律採用下列統一模式整合：
@@ -451,7 +453,7 @@ orbitR = ORBIT_RADIUS * breath
    # 載入環境變數
    load_dotenv()
    api_key = os.getenv("NVIDIA_API_KEY")
-   model = os.getenv("NVIDIA_MODEL", "meta/muse-glimmer-30b")
+   model = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning")
 
    client = OpenAI(
        base_url="https://integrate.api.nvidia.com/v1",
@@ -461,13 +463,14 @@ orbitR = ORBIT_RADIUS * breath
    completion = client.chat.completions.create(
        model=model,
        messages=[{"role": "user", "content": "..."}],
-       temperature=1,
+       temperature=0.6,
        top_p=0.95,
-       max_tokens=8192,
+       max_tokens=65536,
+       extra_body={"reasoning_budget": 16384},
        stream=False
    )
 
-   # meta/muse-glimmer-30b 具備 CoT 思維鏈，回傳內容支援 content 與 reasoning_content 取值
+   # nvidia/nemotron-3 具備 CoT 思維鏈，回傳內容支援 content 與 reasoning_content 取值
    msg = completion.choices[0].message
    result_text = (msg.content or "").strip() or getattr(msg, "reasoning_content", "")
    ```
