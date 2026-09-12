@@ -155,3 +155,21 @@ services:
       - key: CORS_ORIGINS
         value: https://st8925lab.com,https://www.st8925lab.com,http://localhost:5173,http://localhost:3000
 
+  - type: web
+    name: st8925lab-travel-assistance
+    runtime: python
+    plan: free
+    rootDir: Travel-Assistance/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 8001
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_MODEL
+        value: meta/muse-glimmer-30b
+      - key: DOUYOU_CORS_ORIGINS
+        value: https://st8925lab.com,https://www.st8925lab.com,http://127.0.0.1:8001,http://localhost:8001
+
