@@ -1740,6 +1740,28 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
 ```
 - **13 大類別檢查全數通過 (`ALL CHECKS PASSED / 全部檢查通過`)**。
 
+---
+
+### 17.7 出發地精準匹配修復 (Origin-Aware Flight Routing Fix - Singapore SIN)
+
+修復使用者選取非台北出發（如 `[SIN] 新加坡樟宜國際機場`）卻誤推薦台北（TPE）長榮航空之問題：
+1. **多樞紐直飛時刻與航網**：後端 `flight_matrix.py` 擴充新航（`SIN-KIX` SQ618/SQ619、`SIN-NRT` SQ638/SQ637、`SIN-DAD` SQ172/SQ171）與酷航（`SIN-BKK` TR600/TR601）真實班次。
+2. **非台灣出發地動態文案**：`planner.py` 新增 `_get_origin_info(orig_code)`，SIN 出發自動對應「🇸🇬 新加坡出發地」與「🇸🇬 平安抵星」，移除硬編碼「平安抵台」。
+3. **離線/靜態雙軌修復**：前端 `index.html` 與 `prototype.html` 的 `generateFallbackPlan()` 支援依出發地動態解析起飛機場代號與航班，出發/抵達日期精準綁定官方連假。
+
+---
+
+### 17.8 多格式離線報告納入旅客偏好與需求設定 (Offline Reports Include Traveler Preferences)
+
+使用者於步驟 1 勾選的 5 大偏好設定（出發時間/連假、出發機場、人數組成、風格主題、旅遊目的地）已全面整合至各格式離線報告中：
+1. **網頁視覺化與 PDF 手冊**：搜尋結果頂部新增 `#userPreferencesCard`（旅客偏好與需求設定卡），瀏覽器列印模式（另存 PDF）與後端 ReportLab 表格 `【旅客偏好與需求設定】` 完整輸出。
+2. **Excel 活頁簿 (`.xlsx`)**：
+   - 第一分頁（Sheet 0）：天數行程指南（保留既有自動化契約）。
+   - 第二分頁（Sheet 1）：專屬「旅客偏好與需求設定」工作表，呈現 5 大維度與每人預估總預算。
+   - 第三分頁（Sheet 2）：各項目費用預算表。後端 openpyxl 與前端 SheetJS 雙軌完全一致。
+3. **行事曆事件 (`.ics`)**：主行程之 `DESCRIPTION` 全面內嵌旅客 5 大偏好維度詳細資訊與豆油哥總評，相容 Apple、Google、Outlook 行事曆。
+
+
 
 
 

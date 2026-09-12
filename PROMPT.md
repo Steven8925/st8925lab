@@ -647,3 +647,16 @@ so anything placed here is exposed twice over by default. The two files
 guard different paths (git history vs. served assets) and deliberately
 overlap; one alone leaves half the gap open. Never place secrets,
 credentials, or `.env` content in this directory at all.
+
+---
+
+## 8. Travel-Assistance 子專案維運與規格準則 / Travel-Assistance Architecture Notes
+
+### 8.1 多樞紐出發地與航線對齊 (Multi-Hub Origin Routing)
+- **原則**：當使用者選擇非台北出發（如 `SIN` 新加坡、`HKG` 香港、`KHH` 高雄、`RMQ` 台中）時，後端（`flight_matrix.py`、`planner.py`）與前端（`generateFallbackPlan`）必須嚴格依照該出發機場推薦直飛或真實班次，絕不可無條件 fallback 為台北桃園（TPE）或長榮 BR132。
+- **文案邊界**：航段、里程碑與安全返航文字動態依據國家與機場代碼調整（如「🇸🇬 平安抵星 [SIN]」），杜絕誤植「平安抵台」。
+
+### 8.2 離線報告規範 (Offline Report Triad - PDF, Excel, ICS)
+- **偏好設定完整收錄**：使用者在「旅客偏好與需求設定」所選之 5 大維度（出發時間/連假、出發機場、人數組成、風格主題、目的地）必須於搜尋結果頂部卡片（`#userPreferencesCard`）、PDF 手冊（ReportLab 表格與列印模式）、Excel 活頁簿（Sheet 1「旅客偏好與需求設定」工作表）、ICS 日曆檔（`DESCRIPTION` 欄位）完整呈現。
+- **測試契約保護**：Excel Sheet 0 必須維持為天數行程指南，保護既有自動化 characterisation 測試不被破壞。
+
