@@ -1706,13 +1706,40 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
 
 ---
 
-### 17.4 全站驗證結果 / Site-wide Verification Passed
+### 17.4 Cloudflare Pages 快速離線路徑與逾時防護盾 / Fast Offline Path & Zero-Hang Timeout Shield
 
-執行全站幾何、色彩與資料完整性驗證工具：
+針對使用者反饋「資訊一直出不來!?」之線上卡頓問題進行根本治理：
+1. **快速離線路徑 (Fast Offline Path, <1.5s)**：
+   - Cloudflare Pages（`st8925lab.com`）為純靜態環境，無本機 Python 8001 連線。
+   - `checkBackendHealth(1800)` 於 1.8 秒內完成探測；若未連線，系統在點擊規劃行程時立即走 Fast Offline Path（約 1.25 秒），秒級渲染策展行程，不向離線端點發起無效等待。
+2. **全網路邊界逾時守護盾 (`AbortSignal.timeout`)**：
+   - 健康檢查：`1.8s`
+   - 行程規劃：`3.5s`（逾時自動降級至高品質離線行程）
+   - AI 對話：`18s`（逾時自動回傳中英雙語離線導覽與完整 Token/耗時監控條）
+   - 匯出下載：`2.5s`（逾時自動轉為前端本地匯出）
+3. **資料結構健壯性防護 (Schema Defensive Guard)**：
+   - 前端取值全面加入安全鏈結與陣列回退（`Array.isArray(plan.flights.segments)`、`plan.hotels.total_price_twd`、`activities` 等），杜絕任何 JavaScript TypeError 導致 DOM 渲染卡死。
+
+---
+
+### 17.5 雙軌頁面與純前端備援匯出 / Dual-File Parity & Client-Side Fallback Exports
+
+1. **雙軌頁面同步 (Dual-File Parity)**：
+   - `Travel-Assistance/index.html` 與 `Travel-Assistance/prototype.html` 同步升級，所有多模態對話、快速離線模式與逾時防護網百分之百一致。
+2. **純瀏覽器端備援匯出 (Client-Side Fallback Exports)**：
+   - **Excel 匯出**：整合 SheetJS（`xlsx.full.min.js`），後端離線時純前端動態產生多工作表 `.xlsx` 活頁簿下載。
+   - **行事曆匯出**：實作 `downloadIcsFile()` 純前端演算法，動態編譯 RFC 5545 標準 `.ics` 檔案供使用者直接匯入行事曆。
+
+---
+
+### 17.6 全站驗證結果 / Site-wide Verification Passed
+
+執行全站幾何、色彩、導覽列階梯與資料完整性驗證工具：
 ```powershell
 $env:PYTHONIOENCODING="utf-8"; python verify.py
 ```
 - **13 大類別檢查全數通過 (`ALL CHECKS PASSED / 全部檢查通過`)**。
+
 
 
 

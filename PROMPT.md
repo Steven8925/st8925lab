@@ -504,6 +504,25 @@ initWordmark('wordmark', SITE_NAME);
 `<label>` 一律讀 `proj.label`，**不寫死**——改了 `config.js` 的 label，
 六個頁面的文字會自動反映，不需要逐檔修改。
 
+### 4.5 Project 06 (Travel-Assistance) 雙模部署與離線韌性規範 / Dual-Mode Deployment & Static Resilience Invariant
+
+> ⚠️ **核心原則：Project 06（Travel-Assistance 豆油哥）線上部署於 Cloudflare Pages 純靜態環境，同時支援本機 Python FastAPI 全功能守護行程。系統必須嚴格遵循雙模零轉圈容錯原則，絕不允許因後端未啟動或網路阻塞陷入無窮等候。**
+>
+> **Core Invariant: Travel-Assistance supports both static showcase (Cloudflare Pages) and full-stack local daemon modes. The frontend must NEVER hang in an infinite spinner due to backend absence.**
+
+1. **雙模部署與快速離線路徑 (Dual-Mode & Fast Offline Path)**：
+   - **線上展示模式 (Cloudflare Pages `st8925lab.com`)**：在無本機 Python 服務環境下，前端透過 `checkBackendHealth(1800)` 於 1.8 秒內完成探測。點擊規劃行程時，系統自動在 1.25 秒內走 Fast Offline Path 完成高品質策展行程渲染，提供秒開體驗。
+   - **本機全功能模式 (Local Daemon `http://127.0.0.1:8001`)**：支援 FastMCP 動態比價工具、NVIDIA Nemotron-3 30B AI 對話推論與知識庫排程更新。
+2. **全網路邊界逾時守護盾 (`AbortSignal.timeout`)**：
+   - 所有 `fetch` 請求必須封裝於安全逾時邊界內：健康檢查 1.8s、行程規劃 3.5s、AI 聊天 18s、匯出下載 2.5s。
+3. **純前端備援匯出 (Client-Side Fallback Exports)**：
+   - 後端 `/api/export/*` 離線時，前端自動無縫降級：使用 SheetJS 於瀏覽器本地生成 Excel（`.xlsx`），使用純 JS 演算法動態生成 RFC 5545 標準 `.ics` 日曆檔供使用者匯入行事曆。
+4. **即時 AI 旅遊助手聊天室標準 (AI Travel Assistant Standards)**：
+   - 多模態上傳：支援 PNG, JPG, WEBP, TXT, MD, CSV, JSON（上限 5MB）。
+   - 雙語輸出：一律依序輸出【繁體中文】與【English】雙語內容。
+   - 監控列：每則回覆尾部必須輸出 `本次共用 {tokens} token, 耗時 {duration} sec, YYYY-MM-DD_HH:MM:SS`。
+   - 雙軌頁面一致性：`Travel-Assistance/index.html` 與 `Travel-Assistance/prototype.html` 雙軌檔案必須 100% 保持同步。
+
 ---
 
 ## 5. 新增／改名專案 / Adding or Renaming a Project
