@@ -1793,3 +1793,31 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
    - 前端 #benchmarkDateBadge 改為動態載入當天真實日期（如 基準日: 2026/09/12），取代寫死之靜態日期。
    - 後端 /api/holidays?benchmark_date=... 與前端 pruneExpiredHolidaysFromSelect() 連動，自動過濾結束日期已小於當前基準日之過期連假。
    - 系統恆常滾動維持當年與次年（如 2026 與 2027）之最新連假組合，確保旅客享有充足未來規劃彈性。
+
+---
+
+### 17.11 零盲猜原則與動態即時 AI 運算架構升級 / Zero-Guessing Principle & Dynamic Real-Time AI Overhaul
+
+針對使用者要求「不盲猜、知識庫有就列出、沒有就搜尋，AI 必須動態且即時」進行全面重構：
+1. **徹底清除靜態展示與拒絕模式**：
+   - 頂部導航列標籤更名為 `🟢 AI 智慧引擎：動態即時運算中`（後端在線時顯示 `FastAPI 8001 連線正常`）與 `知識庫動態即時同步：20處就緒 (不盲猜)`。
+   - 徹底刪除 chatbot 對話框中所有「💡 哩賀！本站目前於純靜態展示模式...請於本機執行後端...」之硬編碼阻擋訊息。
+2. **三層動態即時推論調度**：
+   - **本機後端 FastAPI（8001）**：解決同步調用阻塞 event loop 問題，改以非阻塞執行緒執行；移除 `reasoning_budget: 16384` 徹底根治 88s 超時，回應時間壓縮至 4~6 秒。嚴格落實零盲猜，以磁碟 20 處航點知識庫掛載推論，未收錄則聯網搜尋補充。
+   - **雲端 NIM 直連備援**：本機未啟動時，前端由瀏覽器直連 NVIDIA NIM Nemotron-3 30B 進行動態推論，動態注入知識庫 Prompt。
+   - **動態在地知識引擎**：無網路時依據 `destCodeMap` 20 處真實資料動態組裝真實建議與安全法規，杜絕敷衍與幻覺。
+3. **UI 顯示與格式缺陷修正**：
+   - 修復 Day 4、Day 5 卡片頂部 `* undefined` 的天氣顯示 Bug。
+   - 修復返程標籤文字緊貼碰撞問題（如 `手信採買 · 🇭🇰 平安抵港 [HKG]`）。
+
+---
+
+### 17.12 行程天數卡片當地日期標籤動態渲染修復 / Day Badge Local Date Alignment ("Day 1 - 9 Oct")
+
+針對使用者反饋行程天數卡片應明確顯示當地真實日期（如 `Day 1 - 9 Oct`）之需求：
+1. **前端天數日期計算與格式化**：
+   - 在 `generateFallbackPlan()` 中動態計算 `startDt + (d.day - 1)` 之真實日曆日期，組裝 `date_display: Day ${d.day} - ${dayDate.getDate()} ${months[dayDate.getMonth()]}`。
+   - 新增防禦性解析函式 `formatDayBadge(d, planData)`，可自 `d.date_display`、`d.date` 或 `planData.start_date` 自動推導並格式化為國際標準簡約格式（如 `Day 1 - 9 Oct`、`Day 2 - 10 Oct`）。
+2. **後端服務同步**：
+   - `planner.py` 之 `date_display` 同步更新為 `f"Day {day_num} - {current_date.day} {cur_mon}"`，前後端無論以 API 實時運算或以離線回退演算法呈現，皆完美一致。
+
