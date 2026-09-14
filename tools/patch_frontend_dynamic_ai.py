@@ -159,13 +159,13 @@ DYNAMIC_CHAT_REPLACEMENT = """      const now = new Date();
       } else {
         dynamicReply = `哩賀！我是豆油哥！您所詢問的「${text || '旅遊景點'}」，豆油哥的核心鐵律是【不盲猜原則】：知識庫現有收錄 20 大熱門目的地，未收錄項目我們誠實說明並即時連網檢索分析！\\n\\n` +
           `📌 **即時分析建議**：\\n` +
-          `1. 您可以在上方目的地選單選擇「✏️ 其他」，手動輸入自訂城市，豆油哥會立即啟動爬蟲即時抓取最新航線、精算飯店與門票，並永久收錄至階層知識庫！\\n` +
+          `1. 您可以在上方目的地選單選擇「✏️ 其他」，手動輸入自訂城市，豆油哥會立即啟動網路搜尋獲取最新航線、精算飯店與門票，並永久收錄至階層知識庫！\\n` +
           `2. 若需要日本 (東京/京阪神/北海道)、越南 (峴港)、泰國 (曼谷/清邁)、新加坡、韓國 (首爾)、歐洲 (巴黎/冰島/瑞士)、澳洲 (墨爾本) 或台灣 (台南) 的行程，請隨時告訴我，我會即時為您調出真實報價！\\n\\n` +
           `---\\n\\n` +
           `**English Version**:\\n` +
           `Hello! I'm Brother Dou-You. Regarding "${text || 'your inquiry'}", my core philosophy is the "Zero-Guessing Principle": we strictly present verified data from our curated knowledge base of 20 top destinations, and never guess unknown details.\\n\\n` +
           `📌 **Real-time Recommendations**:\\n` +
-          `1. You can select "✏️ Custom" in the destination dropdown above to enter any new city, and our real-time crawler will automatically fetch flights, hotels, and activities to permanently index it into our knowledge base.\\n` +
+          `1. You can select "✏️ Custom" in the destination dropdown above to enter any new city, and our real-time web search will automatically fetch flights, hotels, and activities to permanently index it into our knowledge base.\\n` +
           `2. Feel free to ask about any of our cataloged regions (Tokyo, Kansai, Hokkaido, Da Nang, Bangkok, Chiang Mai, Singapore, Seoul, Paris, Iceland, Zermatt, Melbourne, Tainan) for instant real-world itineraries and pricing!`;
       }
 
