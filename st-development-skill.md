@@ -45,6 +45,7 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
     * 範例：`[2026-09-14_14:31:18] [Model: Gemini 3.8 Flash (Thinking: Medium)]`
   - **排版間距 (Mandatory Spacing)**：每一筆獨立紀錄之間必須**強制空兩行**。
   - **核心欄位 (Mandatory Content)**：內容必須包含階段任務 (Phase)、變更摘要 (Change Summary)、重大架構決策理由 (Why)、遭遇問題與修復方案 (Issues Encountered & Fixes)。
+  - **反序寫入原則 (Reverse-Chronological Order: Newest First)**：`README.md` **一律採用反序法撰寫**，最新的時間戳記紀錄永遠插入在檔案最前頭，舊紀錄在後頭，以大幅減少每次重新讀取與檢索上下文的時間與 Token 消耗。
 
 ---
 

@@ -684,15 +684,21 @@ credentials, or `.env` content in this directory at all.
 - **標籤格式**：行程天數卡片之橘色標籤嚴格遵循 `Day {day} - {date} {Month}`（例如：`Day 1 - 9 Oct`、`Day 2 - 10 Oct`、`Day 3 - 11 Oct`）。
 - **動態運算**：依照旅客選取之國定連假或出發日期基準日動態計算每日日期，由 `formatDayBadge(d, planData)` 提供前端防禦性解析（相容 `d.date_display`、`d.date` 與 `planData.start_date`），後端 `planner.py` 之 `date_display` 亦 100% 格式同步。
 
-### 8.7 全站 AI 推論引擎升級為 Google Gemma-4-31B-IT (NVIDIA NIM)
+### 8.7 全站 AI 推論引擎升級為 nvidia/nemotron-3-super-120b-a12b (NVIDIA NIM)
 - **模型規格與推論參數**：
   - 端點：`https://integrate.api.nvidia.com/v1/chat/completions`
-  - 模型：`google/gemma-4-31b-it`
+  - 模型：`nvidia/nemotron-3-super-120b-a12b`
   - 參數：`temperature: 0.5`, `top_p: 1.0`, `max_tokens: 1024`, `stream: false`
 - **架構規範**：
-  - 後端 (`/api/chat`) 與前端統一調用 `google/gemma-4-31b-it`，杜絕任何未經指示之降級回退或模型替換。
+  - 後端 (`/api/chat`) 與前端統一調用 `nvidia/nemotron-3-super-120b-a12b`，杜絕任何未經指示之降級回退或模型替換。
   - 嚴格遵守「不盲猜原則」：知識庫有，就精確列出；知識庫沒有，就啟動即時聯網檢索並誠實說明最新動態。
   - 回覆強制輸出【繁體中文】與【English】雙語對照內容，並在結尾輸出真實 token 與耗時遙測指標。
+
+### 8.8 README.md 反序法寫入原則 (Reverse-Chronological Order: Newest First)
+- **規範定義**：全專案之 `README.md` **必須嚴格採用反序法撰寫**：最新的時間戳記紀錄永遠插入/置於檔案最前頭，較舊的紀錄依序留在後頭。
+- **效益**：任何工程師或 AI 重新讀取專案日誌時，無需滾動或掃描到檔案末端，即可第一時間獲取最新系統狀態與架構決策，大幅減少每次重新讀取的時間與 Token 消耗。
+- **格式要求**：每一筆紀錄開頭必須包含標準時間戳記與執行模型標籤 `[YYYY-MM-DD_HH:MM:SS] [Model: <Model_Name> (Thinking: <Level>)]`，且每筆獨立紀錄之間必須強制空兩行。
+
 
 
 
