@@ -37,4 +37,6 @@ github_commit.txt
 V4/
 *新文件*.txt
 $RECYCLE.BIN/
+temp_ref_imgs/
+.agents/
 
