@@ -1867,5 +1867,36 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
 5. **「✈+🚆 飛機加火車」多模態聯運須知**：
    - 針對桃園機場入境之旅客，動態注入聯運指引（機捷 36 分至台北車站 + EMU3000 408 次無縫轉乘直達花蓮）。
 
+---
 
+## 18. 2026-09-23 — Travel-Assistance 全系統檢討與 Phase 0「停止編造」/ Travel-Assistance Full Review & Phase 0 "Stop Fabricating"
 
+> 本節只記錄根目錄層級的影響。完整的分析證據、決策與 Phase 0～3 實作計畫見 [`Travel-Assistance/20260923 修正討論與implementation plan.md`](Travel-Assistance/20260923%20修正討論與implementation%20plan.md)；當天變更細節見 `Travel-Assistance/README.md` 的 `[2026-09-23_19:11:00]` 條目；現行規格見 `Travel-Assistance/PROMPT.md` §0.6（v2）。
+> This section records only the root-level impact. Evidence, decisions and the Phase 0–3 plan are in the Travel-Assistance plan document; the change log is in `Travel-Assistance/README.md`; the current spec is `Travel-Assistance/PROMPT.md` §0.6 (v2).
+
+**山姆哥的要求**：`index.html` 過於龐大、改 A 壞 B；新地點錯誤百出（國內旅遊建議搭不存在的航班）；AI 助手答非所問、申請的 AI API 沒被用到。先分析、以主管角度反問，定案前不得改檔。
+
+**Sam's request**: `index.html` is oversized and fragile; new places produce wrong answers (non-existent flights for domestic trips); the AI assistant misses the point and the AI API is unused. Analyse first, push back as a manager, change nothing until agreed.
+
+**根本原因（2026-09-23 實測）**：線上網站從來沒有用到 AI——Render 上的 Travel-Assistance 後端 5 次請求全部無回應，前端 1.8 秒即判定離線，`render.yaml` 的 CORS 變數名與後端不符、離線模式預設開啟；離線時前端以模板編造飯店與航班，並宣稱已即時查證。規格中的「零拒答」與「不盲猜」互相矛盾，迫使系統在不知道時編造。
+
+**Root cause (measured 2026-09-23)**: the live site never used AI — the Render backend answered none of 5 requests, the front end gives up after 1.8 s, the CORS variable name in `render.yaml` does not match the backend and offline mode is on by default. Offline, the front end fabricated hotels and flights while claiming live verification; the spec's "never refuse" rule contradicted "no guessing".
+
+**決策**：保留「不編造」；AI 模型固定為 `nvidia/nemotron-3-ultra-550b-a55b`；後端改放 Cloudflare 同網域 Functions；知識庫改存 Cloudflare D1，每日 1 AM 查核後由山姆哥審核寫入；Phase 0～2 完成前凍結新功能。
+
+**Decisions**: keep "no fabrication"; model fixed to `nvidia/nemotron-3-ultra-550b-a55b`; backend moves to same-domain Cloudflare Functions; KB moves to Cloudflare D1 with a daily 1 AM check approved by Sam; feature freeze until Phases 0–2 are done.
+
+**根目錄層級變更 / Root-level changes**：
+
+| 檔案 File | 變更 Change |
+|---|---|
+| `.assetsignore` | 新增 Travel-Assistance 排除規則：只發佈 `index.html` 與 `prototype.html`。部署檢查時 `README.md`、`PROMPT.md`、`backend/main.py`、知識庫 JSON、`.env.example`、`git_push_commands.md` 皆回 HTTP 200。**需在下次部署後複驗為 404。** / Publish only `index.html` and `prototype.html`; re-check for 404 after the next deploy. |
+| `PROMPT.md` §4.5 | 聊天監控列：未呼叫模型的回覆不得顯示 token 用量 / no token counts on replies that did not call a model |
+| `PROMPT.md` §7 | 部署排除清單加入 Travel-Assistance / deployment exclusions updated |
+| `PROMPT.md` §8.3、§8.4、§8.7 | 加註「現況：尚未實作／設定不一致」，改寫前這些章節把未實作的功能寫成現況 / annotated as not implemented or inconsistent; they previously described unbuilt features as current |
+| `PROMPT.md` §8.5 | 改寫為 v2「不編造原則與如實狀態顯示」，細節以 `Travel-Assistance/PROMPT.md` §0.6 為準 / rewritten as v2, deferring to the sub-project spec |
+| `Travel-Assistance`（submodule） | 指標更新至 Phase 0 commit / pointer moved to the Phase 0 commit |
+
+**驗收**：山姆哥於 2026-09-23 驗收 Phase 0 通過。/ **Sign-off**: Sam accepted Phase 0 on 2026-09-23.
+
+**已知未處理**：根目錄 `render.yaml` 仍可被公開讀取（不含密鑰，但含其他服務設定），本次未處理，列入後續檢討。/ **Known open item**: the root `render.yaml` is still publicly readable (no secrets, but service configuration); not addressed in this change.

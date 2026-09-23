@@ -520,7 +520,7 @@ initWordmark('wordmark', SITE_NAME);
 4. **即時 AI 旅遊助手聊天室標準 (AI Travel Assistant Standards)**：
    - 多模態上傳：支援 PNG, JPG, WEBP, TXT, MD, CSV, JSON（上限 5MB）。
    - 雙語輸出：一律依序輸出【繁體中文】與【English】雙語內容。
-   - 監控列：每則回覆尾部必須輸出 `本次共用 {tokens} token, 耗時 {duration} sec, YYYY-MM-DD_HH:MM:SS`。
+   - 監控列：實際呼叫 AI 模型的回覆，尾部輸出 `本次共用 {tokens} token, 耗時 {duration} sec, YYYY-MM-DD_HH:MM:SS`；未呼叫模型的回覆（`meta.mode === 'local'`）改輸出「未呼叫 AI 模型 · 本站內建資料」，不得顯示估算 token（2026-09-23 起，見 `Travel-Assistance/PROMPT.md` §0.6）。
    - 雙軌頁面一致性：`Travel-Assistance/index.html` 與 `Travel-Assistance/prototype.html` 雙軌檔案必須 100% 保持同步。
 
 ---
@@ -589,8 +589,9 @@ z 軸號誤、配色洗牌與對比、地理資料、版面標籤、呼吸、站
 - `alarm-notification-simulator/source/`（告警模擬台完整原始碼，git 有
   追蹤供參考，但不隨靜態站部署——見下方「後端部署」）
 - 部署過程的暫存筆記檔（見 §7.2）
+- `Travel-Assistance/` 內除 `index.html` 與其副本 `prototype.html` 以外的文件、後端原始碼、知識庫、測試與開發筆記（2026-09-23 起；部署檢查時這些檔案皆可被公開讀取。完整規則見 `.assetsignore`）
 
-`shared/`、`iot-gen2-simulator-monitor/`..`project-05/`、`Travel-Assistance/`、`alarm-notification-simulator/`
+`shared/`、`iot-gen2-simulator-monitor/`..`project-05/`、`Travel-Assistance/`（僅 `index.html` 與 `prototype.html`）、`alarm-notification-simulator/`
 （僅 `index.html` 與 `assets/`）、`tools/` 皆為一般靜態資源／原始碼，
 `tools/*.py` 不會被瀏覽器請求，留在 repo 中純供維運使用，不影響前端載入。
 
@@ -661,30 +662,39 @@ credentials, or `.env` content in this directory at all.
 - **測試契約保護**：Excel Sheet 0 必須維持為天數行程指南，保護既有自動化 characterisation 測試不被破壞。
 
 ### 8.3 知識庫自我充實引擎與權威資料收錄規格 (Self-Enrichment & Verified Ingestion)
+> ⚠️ **現況（2026-09-23 查證）：本節描述的是目標設計，尚未實作。** `youtube_enricher.py` 為空殼（回傳「YouTube collection is not implemented」），觀光局資料未實際抓取，知識庫檔案沒有任何來源欄位。取代方案（搜尋 API＋每日查核＋人工審核寫入 D1）見 `Travel-Assistance/20260923 修正討論與implementation plan.md` Phase 1～2。
+> **Status (verified 2026-09-23): target design, not implemented.** See the Travel-Assistance plan document, Phases 1–2.
+
 - **快取優先與缺口觸發 (Fetch-on-Gap)**：旅客送出查詢時，系統以 O(1) 讀取 `manifest.json` 與本機 JSON 檔案。凡知識庫未收錄之目的地或自訂風格，即時啟動 `youtube_enricher.py` 聯網補足，嚴禁憑空捏造或縮減規格。
 - **國家觀光局權威對齊**：強制對齊日本 JNTO、越南 VNAT、泰國 TAT、韓國 KTO、新加坡 STB、瑞士 MySwitzerland、法國 France.fr 等官方最新政策、簽證與開放狀態。
 - **Top-Viewed 旅遊達人實測萃取**：自動檢索觀看數最高之真實旅人實測影片，萃取免排隊私房密技、在地排隊名店與交通票券組合，持久化回寫磁碟知識庫。
 
 ### 8.4 各子項目定時更新頻率與動態基準日審查 (Update Cadence & Rolling 2-Year Benchmark)
+> ⚠️ **現況（2026-09-23 查證）：以下排程目前都沒有在執行。** `/api/health` 將 `daily_updater_active` 寫死為 `False`，排程器預設關閉，`sync_log.json` 最後一次執行為 2026-09-12 且更新 0 筆。已定案的取代設計為「每日 1 AM（UTC 17:00）查核、只寄變動項目、山姆哥審核後寫入」，見 `Travel-Assistance/20260923 修正討論與implementation plan.md` Phase 2。
+> **Status (verified 2026-09-23): none of these schedules currently run.** The agreed replacement is a daily 1 AM check emailing only changes, written after Sam's approval (plan document, Phase 2).
+
 - **官方連假資訊**：每年 1/1 全域更新 + 年中政府行事曆公布時同步；每日 00:00 執行過期審核，滾動維持當年與次年（如 2026-2027）至少 2 年連假，自動隱藏已結束日期。
 - **航班航網時刻**：每季（3 個月）配合國際民航夏季（3月）與冬季（10月）班表大換季更新；實時票價透過 FastMCP 工具層即時比價。
 - **觀光局政策指引**：每月 1 日 00:00 自動審查更新。
 - **旅遊達人 YouTube 精華**：每月 1 日 00:00 全域維護 + 遇到新自訂目的地時按需即時觸發。
 - **即時天氣穿搭**：每日 00:00 重新整理氣候季節指標，查詢時調度。
 
-### 8.5 零盲猜原則與動態即時 AI 運算架構 (Zero-Guessing Principle & Dynamic Real-Time AI)
-- **零盲猜公理**：知識庫已有者直接詳實列出，無則聯網搜尋或誠實透明說明，絕不盲目猜測或瞎編內容。
-- **全面動態即時運算**：徹底廢除「靜態展示模式」標籤與「請於本機執行後端」之罐頭阻擋訊息。
-- **三層動態推論調度**：
-  1. **第一層（本機 FastAPI Port 8001）**：非阻塞背景執行緒處理，關閉 `reasoning_budget` 冗餘內部思考，調用 NVIDIA NIM 30B 模型並掛載 20 處驗證知識庫，4~6 秒極速回應。
-  2. **第二層（前端直接連線雲端 NIM API）**：本機未啟動時，前端直接透過瀏覽器發起對雲端模型的即時調用，注入完整的知識庫語境與零盲猜 Prompt。
-  3. **第三層（在地動態知識推論引擎）**：純前端離線時，動態解析用戶意圖，並抽取 `destCodeMap` 驗證資訊動態組裝專業建議，標示驗證狀態，杜絕任何敷衍。
+### 8.5 不編造原則與如實狀態顯示 (Zero-Fabrication Principle & Truthful Status) — v2 (2026-09-23)
+- **取代 v1「零盲猜原則與動態即時 AI 運算架構」**：v1 同時要求「不盲猜」與「廢除靜態模式、不得拒答」，兩者互相矛盾，使系統在不知道時只能編造。山姆哥於 2026-09-23 決定保留「不編造」。推翻經過見 [README.md](README.md) §18；Travel-Assistance 的完整現行規格見 `Travel-Assistance/PROMPT.md` §0.6（唯一權威，本節不重複細節）。
+- **重點**：
+  - 沒有資料就明說「沒有查證資料」並提供查證連結，不得以模板產生飯店、航班、班次代碼、票價、登機門或準點狀態；「查不到」是正確回答。
+  - AI 狀態徽章與頂部指示燈依健康檢查如實顯示離線／連線；未呼叫模型的回覆不得顯示 token 用量。
+  - 前端**沒有**直連雲端 NIM 的路徑（v1 所述「第二層」從未實作）；目前資料來源依序為：後端（健康檢查通過時）→ 本站內建資料（須標示未即時查證）→ 查無資料提示。
+- **Summary (English)**: v2 replaces v1's contradictory "no guessing but never refuse" rule with "never fabricate; say when nothing is verified". Full spec: `Travel-Assistance/PROMPT.md` §0.6.
 
 ### 8.6 行程天數當地日期標籤動態渲染規範 (Day Badge Local Date Alignment)
 - **標籤格式**：行程天數卡片之橘色標籤嚴格遵循 `Day {day} - {date} {Month}`（例如：`Day 1 - 9 Oct`、`Day 2 - 10 Oct`、`Day 3 - 11 Oct`）。
 - **動態運算**：依照旅客選取之國定連假或出發日期基準日動態計算每日日期，由 `formatDayBadge(d, planData)` 提供前端防禦性解析（相容 `d.date_display`、`d.date` 與 `planData.start_date`），後端 `planner.py` 之 `date_display` 亦 100% 格式同步。
 
 ### 8.7 全站 AI 推論引擎升級為 nvidia/nemotron-3-super-120b-a12b (NVIDIA NIM)
+> ⚠️ **現況（2026-09-23 查證）**：山姆哥已決定將模型固定為 `nvidia/nemotron-3-ultra-550b-a55b`，將於 Phase 1 實作；在那之前設定仍不一致——根目錄 `render.yaml` 的 `NVIDIA_MODEL` 為 `meta/muse-glimmer-30b`，`Travel-Assistance/.env.example` 為 `nvidia/nemotron-3-super-120b-a12b`。另外，正式站的 Travel-Assistance 後端目前沒有回應，線上網站實際上沒有呼叫任何模型。「即時聯網檢索」尚未實作（模型本身不上網，需另接搜尋 API）。
+> **Status (verified 2026-09-23)**: model to be fixed to `nvidia/nemotron-3-ultra-550b-a55b` in Phase 1; until then `render.yaml` and `.env.example` disagree, the production backend does not respond, and live web lookup is not implemented.
+
 - **模型規格與推論參數**：
   - 端點：`https://integrate.api.nvidia.com/v1/chat/completions`
   - 模型：`nvidia/nemotron-3-super-120b-a12b`

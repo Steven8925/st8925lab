@@ -10,6 +10,32 @@ alarm-notification-simulator/source/
 alarm-notification-simulator/render installation guide.txt
 alarm-notification-simulator/手機密碼.txt
 
+# Travel-Assistance：網站只需要 index.html（與其副本 prototype.html）；其餘為文件、後端原始碼、
+# 知識庫、測試與開發筆記，不應被當成網頁公開。2026-09-23 部署檢查時發現 README.md、PROMPT.md、
+# backend/main.py、知識庫 JSON、.env.example、git_push_commands.md 皆可被任何人讀取（HTTP 200）。
+# Travel-Assistance: the site needs only index.html (and its copy prototype.html). Everything else is docs,
+# backend source, KB data, tests and dev notes. The 2026-09-23 deployment check found README.md, PROMPT.md,
+# backend/main.py, KB JSON, .env.example and git_push_commands.md publicly readable (HTTP 200).
+Travel-Assistance/*.md
+Travel-Assistance/*.docx
+Travel-Assistance/*.xlsx
+Travel-Assistance/*.txt
+Travel-Assistance/*.json
+Travel-Assistance/*.py
+Travel-Assistance/*.js
+Travel-Assistance/.env*
+Travel-Assistance/.gitignore
+Travel-Assistance/backend/
+Travel-Assistance/frontend/
+Travel-Assistance/integrations/
+Travel-Assistance/mcp_servers/
+Travel-Assistance/poc/
+Travel-Assistance/scratch/
+Travel-Assistance/tools/
+Travel-Assistance/__pycache__/
+Travel-Assistance/.pytest_cache/
+Travel-Assistance/.travel-state/
+
 # Superseded artifacts: kept in the repo as history, but never published.
 # (V4/, project.html and V4_prompt.md used to be listed here too; Sam had
 # them deleted outright on 2026-08-14, so they no longer need excluding.)
