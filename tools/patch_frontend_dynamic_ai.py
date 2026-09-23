@@ -66,7 +66,7 @@ DYNAMIC_CHAT_REPLACEMENT = """      const now = new Date();
       }
 
       // Step 2: Try Direct Client-Side NVIDIA NIM API
-      const NIM_KEY = "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";
+      const NIM_KEY = ""; // 2026-09-23: hardcoded key removed (was public). Never embed API keys in front-end code; use the /api/* Worker.
       const matchedDest = searchLocalKnowledge(text);
       let groundingPrompt = "";
       if (matchedDest) {

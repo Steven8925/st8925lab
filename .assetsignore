@@ -47,6 +47,12 @@ wrangler.jsonc
 .dev.vars*
 render.yaml
 
+# 根目錄開發用腳本：2026-09-23 發現 tools/patch_frontend_dynamic_ai.py 內含寫死的 NVIDIA 金鑰，
+# 且可從 st8925lab.com/tools/ 公開下載。網站頁面沒有引用 tools/ 下的任何檔案。
+# Root dev scripts: on 2026-09-23 tools/patch_frontend_dynamic_ai.py was found to contain a
+# hardcoded NVIDIA key, downloadable from st8925lab.com/tools/. No page references tools/.
+tools/
+
 # Git 中繼資料：Cloudflare 建置時的 clone 含 .git，2026-09-23 發現 /.git/config、/.git/HEAD 可被讀取（HTTP 200）。
 # Git metadata: the Cloudflare build clone contains .git; /.git/config and /.git/HEAD were found
 # publicly readable (HTTP 200) on 2026-09-23.
