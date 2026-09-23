@@ -36,6 +36,22 @@ Travel-Assistance/__pycache__/
 Travel-Assistance/.pytest_cache/
 Travel-Assistance/.travel-state/
 
+# Worker 原始碼與設定（Phase 1，2026-09-23）：程式碼由 Worker 執行，不需也不應再以靜態檔案公開。
+# 部署檢查時發現 Cloudflare 自動產生的 wrangler.jsonc 與 render.yaml 皆可被任何人讀取（HTTP 200）。
+# Worker source and config (Phase 1, 2026-09-23): the code runs as the Worker and must not also be
+# served as a static file. The deployment check found the auto-generated wrangler.jsonc and
+# render.yaml publicly readable (HTTP 200).
+worker/
+wrangler.jsonc
+.wrangler/
+.dev.vars*
+render.yaml
+
+# Git 中繼資料：Cloudflare 建置時的 clone 含 .git，2026-09-23 發現 /.git/config、/.git/HEAD 可被讀取（HTTP 200）。
+# Git metadata: the Cloudflare build clone contains .git; /.git/config and /.git/HEAD were found
+# publicly readable (HTTP 200) on 2026-09-23.
+.git
+
 # Superseded artifacts: kept in the repo as history, but never published.
 # (V4/, project.html and V4_prompt.md used to be listed here too; Sam had
 # them deleted outright on 2026-08-14, so they no longer need excluding.)

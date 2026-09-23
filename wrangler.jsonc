@@ -1,0 +1,26 @@
+// st8925lab Worker 設定 / Worker configuration (Phase 1, 2026-09-23)
+//
+// 在此之前 repo 沒有設定檔，Cloudflare Workers Builds 每次建置時自動產生：
+// name=st8925lab、compatibility_date=2026-09-21、observability、assets.directory="."。
+// 這裡原樣保留那些值，只新增 main／binding／run_worker_first，讓 /api/* 交給 Worker，
+// 其餘路徑照舊直接由靜態資產回應（不經過 Worker）。
+// Before this file existed, Workers Builds auto-generated the values above on every
+// build. They are kept verbatim; only main / binding / run_worker_first are added so
+// that /api/* reaches the Worker while every other path is still served straight
+// from static assets.
+//
+// name 必須維持 "st8925lab"，否則 wrangler 會建立另一個新的 Worker。
+// name MUST stay "st8925lab", otherwise wrangler creates a separate new Worker.
+{
+  "name": "st8925lab",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-21",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  }
+}

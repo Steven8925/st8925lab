@@ -40,3 +40,9 @@ $RECYCLE.BIN/
 temp_ref_imgs/
 .agents/
 
+# Wrangler 本機開發暫存與本機密鑰檔（Phase 1，2026-09-23）。
+# Wrangler local dev state and local secrets file (Phase 1, 2026-09-23).
+.wrangler/
+.dev.vars*
+node_modules/
+
