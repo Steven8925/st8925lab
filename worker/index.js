@@ -23,7 +23,17 @@ export default {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return jsonResponse({ ok: false, error: 'method_not_allowed' }, 405);
       }
-      return jsonResponse({ ok: true, service: 'st8925lab-api', time: new Date().toISOString() });
+      // 只回報金鑰「是否已設定」（布林值），絕不回傳金鑰內容。
+      // Reports only whether each key is configured (boolean) — never the key itself.
+      return jsonResponse({
+        ok: true,
+        service: 'st8925lab-api',
+        time: new Date().toISOString(),
+        configured: {
+          nvidia: Boolean(env.NVIDIA_API_KEY),
+          tavily: Boolean(env.TAVILY_API_KEY),
+        },
+      });
     }
 
     if (pathname.startsWith('/api/')) {

@@ -15,6 +15,9 @@
   "name": "st8925lab",
   "main": "worker/index.js",
   "compatibility_date": "2026-09-21",
+  // 保留在儀表板設定的變數：若金鑰被存成 Text 而非 Secret，部署時才不會被清掉。
+  // Keep variables set in the dashboard, so a key saved as Text (not Secret) survives deploys.
+  "keep_vars": true,
   "observability": {
     "enabled": true
   },
