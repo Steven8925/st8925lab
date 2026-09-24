@@ -57,7 +57,7 @@ wrangler.jsonc
 # working directory as-is. This line is the only guard in that case.
 .env
 .env.*
-!.env.example
+!/.env.example
 
 # 內部文件（2026-09-24 補）：缺陷登記簿與強化計畫。*.md 已被下方全域規則排除，
 # 這裡明確列出 —— 靠別條規則順便擋住不是保護，是巧合。
@@ -128,6 +128,17 @@ st8925lab-deploy-guide.html
 # directory exclusion. Caught during verification on 2026-09-24.
 !/robots.txt
 !/llms.txt
+
+# Windows 與下載殘留（2026-09-24 由 tools/check_public_surface.py 首次執行時抓到）：
+# $RECYCLE.BIN 就在 repo 根目錄，assets.directory="." 會把它當靜態資產發佈 ——
+# 等於把刪除的檔案放到網站上。V4/ 內是一個 Google Drive 下載壓縮檔。
+# 只排除、不刪除：刪除屬受管制動作，需山姆哥個別授權。
+# Windows and download residue, caught by the first run of the surface checker.
+# $RECYCLE.BIN sits in the repo root and would be served as static assets, i.e.
+# deleted files published to the web. Excluded, not deleted.
+$RECYCLE.BIN/
+V4/
+desktop.ini
 
 # 開發腳本與後端 Python 原始碼（根目錄 verify.py／make_standalone.py 等）。
 # Dev scripts and backend Python source (root verify.py / make_standalone.py etc).
