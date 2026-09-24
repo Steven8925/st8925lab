@@ -50,4 +50,12 @@
   # 跨網域政策檔一律不允許。
   X-Permitted-Cross-Domain-Policies: none
 
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.sheetjs.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://unpkg.com https://fonts.gstatic.com; connect-src 'self' https://st8925lab-travel-assistance.onrender.com https://st8925lab-alarm-api.onrender.com https://st8925lab-alarm-ops.onrender.com https://*.tile.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  # 以下兩個來源是**瀏覽器實測**補上的，不是推論出來的（2026-09-24）：
+  #   static.cloudflareinsights.com —— Cloudflare Web Analytics 的 beacon，
+  #     由 Cloudflare 自動注入到每一頁。第一版 CSP 把它擋掉了，等於關掉了
+  #     本站唯一既有的分析。（順帶更正我先前「本站沒有任何分析」的說法。）
+  #   cdn.jsdelivr.net 於 style-src / font-src —— HTML 引用的是
+  #     unpkg.com/@phosphor-icons/web，但該套件的 CSS 會再去 jsdelivr 取
+  #     regular/thin/light/bold/fill/duotone 六份子樣式表。只看 HTML 看不出來。
+  # 這兩項都是靜態審查看不到、只有真的用瀏覽器開才會發現的。
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.sheetjs.com https://cdn.tailwindcss.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net https://unpkg.com https://fonts.gstatic.com; connect-src 'self' https://st8925lab-travel-assistance.onrender.com https://st8925lab-alarm-api.onrender.com https://st8925lab-alarm-ops.onrender.com https://cloudflareinsights.com https://*.tile.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
