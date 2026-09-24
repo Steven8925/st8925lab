@@ -39,7 +39,9 @@ class Settings(BaseSettings):
     # LLM Provider Configuration
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "nvidia") # "nvidia" | "gemini" | "openai" | "ollama" | "mock"
     NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
-    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-super-120b-a12b")
+    # 2026-09-24 裁示 C：模型依用途分離，NVIDIA_MODEL 已停用。診斷推論屬
+    # 對話側，故讀 NVIDIA_CHAT_MODEL；抽取側用 NVIDIA_EXTRACTION_MODEL。
+    NVIDIA_MODEL: str = os.getenv("NVIDIA_CHAT_MODEL", "nvidia/nemotron-3-super-120b-a12b")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")

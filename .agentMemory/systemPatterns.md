@@ -5,7 +5,7 @@
 - **Dual-File Frontend Parity**: `index.html` and `prototype.html` must be kept in exact bitwise synchronization.
 - **Backend**: Python 3.11+ / FastAPI (Port 8001, Async REST API).
 - **Tool Layer**: FastMCP microservices for structured server-side data extraction, avoiding context window bloat.
-- **AI Core**: NVIDIA NIM API integration with `google/gemma-4-31b-it` or `nvidia/nemotron-3-super-120b-a12b`.
+- **AI Core**: NVIDIA NIM API with two purpose-specific models (Sam's ruling, 2026-09-24): `nvidia/nemotron-3-ultra-550b-a55b` for offline knowledge-base extraction and `nvidia/nemotron-3-super-120b-a12b` for interactive chat. No other model is permitted.
   - Parameters: `temperature=0.5`, `top_p=1.0`, `max_tokens=1024`, `stream=false`.
   - Mandates: Strict bilingual output (Traditional Chinese + English), followed by execution telemetry:
     `本次共用 {tokens} token, 耗時 {duration} sec, YYYY-MM-DD_HH:MM:SS`.

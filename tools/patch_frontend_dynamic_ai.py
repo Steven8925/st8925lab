@@ -102,7 +102,7 @@ DYNAMIC_CHAT_REPLACEMENT = """      const now = new Date();
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            model: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+            model: "nvidia/nemotron-3-super-120b-a12b",
             messages: [systemPrompt, ...chatHistory.map(m => ({ role: m.role, content: m.content }))],
             temperature: 0.6,
             max_tokens: 1500

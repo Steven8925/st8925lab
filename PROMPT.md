@@ -423,8 +423,13 @@ orbitR = ORBIT_RADIUS * breath
 
 > ⚠️ **核心原則：本專案 `d:\st8925lab`（包含所有子專案與模組），凡有使用到 AI 工具／LLM 的地方，一律強制統一使用此 NVIDIA NIM API 規範：**
 > - **API 端點 (Base URL)：`https://integrate.api.nvidia.com/v1`**
-> - **標準模型 (Default Model)：`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`**
-> - **環境變數：`NVIDIA_API_KEY` 與 `NVIDIA_MODEL`（優先自 `.env` 動態讀取）**
+> - **標準模型 (Default Model)：依用途分為兩個（2026-09-24 山姆哥裁示）**
+>   - **知識庫離線抽取：`nvidia/nemotron-3-ultra-550b-a55b`** —— 批次作業，逾時 600 秒，要最高品質。
+>   - **互動對話：`nvidia/nemotron-3-super-120b-a12b`** —— 使用者在瀏覽器前等待，逾時 45 秒，要反應快。
+>   - 兩者取捨方向相反，共用單一模型必然犧牲一邊。**本條先前規定全站只用單一
+>     模型，已依該裁示廢止。**
+> - **環境變數：`NVIDIA_API_KEY`，加上 `NVIDIA_EXTRACTION_MODEL` 與
+>   `NVIDIA_CHAT_MODEL`（優先自 `.env` 動態讀取）。`NVIDIA_MODEL` 已停用。**
 > - **呼叫規範：一律使用 `openai` Python SDK（`OpenAI` client）或相容 HTTP POST**
 > - **推論參數標準：`temperature=0.6`, `top_p=0.95`, `max_tokens=65536`, `reasoning_budget=16384`**
 > - **圖文多模態與思維鏈：支援純文字、文字檔案與圖片 Base64 (`image_url`) 多模態輸入；支援 CoT 深度推理相容**
@@ -433,7 +438,7 @@ orbitR = ORBIT_RADIUS * breath
 > - **格式要求：等號兩側不得有空白，值不得加引號（`KEY=value`）**
 > - **版控安全：`.env` 嚴格受 `.gitignore` 排除，絕對禁止提交或推送至公開 Git 儲存庫**
 >
-> **Core Invariant: Across `st8925lab` and all sub-projects, whenever AI/LLM tools are used, they MUST uniformly adhere to the NVIDIA NIM API standard (`https://integrate.api.nvidia.com/v1`) using model `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` and keys read from `.env` (`NVIDIA_API_KEY`, `NVIDIA_MODEL`). Hardcoding keys in source files or documentation is strictly forbidden.**
+> **Core Invariant: Across `st8925lab` and all sub-projects, whenever AI/LLM tools are used, they MUST uniformly adhere to the NVIDIA NIM API standard (`https://integrate.api.nvidia.com/v1`) using two purpose-specific models — `nvidia/nemotron-3-ultra-550b-a55b` for offline knowledge-base extraction and `nvidia/nemotron-3-super-120b-a12b` for interactive chat (their trade-offs are opposite, so a single shared model necessarily penalises one of them; the earlier single-model rule was retired on 2026-09-24) — with keys and model names read from `.env` (`NVIDIA_API_KEY`, `NVIDIA_EXTRACTION_MODEL`, `NVIDIA_CHAT_MODEL`; `NVIDIA_MODEL` is no longer used). Hardcoding keys in source files or documentation is strictly forbidden.**
 
 #### 具體規範與 Python 整合標準代碼 (Implementation Standard & Code Template)：
 1. **`.env` 格式規範 (Format Requirements)**：
@@ -441,7 +446,8 @@ orbitR = ORBIT_RADIUS * breath
    - 填寫規則：**等號兩側不要有空白，值不要加引號**。
    ```env
    NVIDIA_API_KEY=nvapi-...
-   NVIDIA_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+   NVIDIA_EXTRACTION_MODEL=nvidia/nemotron-3-ultra-550b-a55b
+   NVIDIA_CHAT_MODEL=nvidia/nemotron-3-super-120b-a12b
    ```
 2. **AI 工具整合代碼規範 (Python Integration Pattern)**：
    本專案中所有需要與 AI 整合之程式碼（例如即時聊天、行程建議、知識庫充實、診斷分析），一律採用下列統一模式整合：
@@ -453,7 +459,8 @@ orbitR = ORBIT_RADIUS * breath
    # 載入環境變數
    load_dotenv()
    api_key = os.getenv("NVIDIA_API_KEY")
-   model = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning")
+   # 抽取端讀 NVIDIA_EXTRACTION_MODEL；對話端改讀 NVIDIA_CHAT_MODEL 並改用對話預設值。
+   model = os.getenv("NVIDIA_EXTRACTION_MODEL", "nvidia/nemotron-3-ultra-550b-a55b")
 
    client = OpenAI(
        base_url="https://integrate.api.nvidia.com/v1",
@@ -749,16 +756,28 @@ credentials, or `.env` content in this directory at all.
 - **標籤格式**：行程天數卡片之橘色標籤嚴格遵循 `Day {day} - {date} {Month}`（例如：`Day 1 - 9 Oct`、`Day 2 - 10 Oct`、`Day 3 - 11 Oct`）。
 - **動態運算**：依照旅客選取之國定連假或出發日期基準日動態計算每日日期，由 `formatDayBadge(d, planData)` 提供前端防禦性解析（相容 `d.date_display`、`d.date` 與 `planData.start_date`），後端 `planner.py` 之 `date_display` 亦 100% 格式同步。
 
-### 8.7 全站 AI 推論引擎升級為 nvidia/nemotron-3-super-120b-a12b (NVIDIA NIM)
-> ⚠️ **現況（2026-09-23 查證）**：山姆哥已決定將模型固定為 `nvidia/nemotron-3-ultra-550b-a55b`，將於 Phase 1 實作；在那之前設定仍不一致——根目錄 `render.yaml` 的 `NVIDIA_MODEL` 為 `meta/muse-glimmer-30b`，`Travel-Assistance/.env.example` 為 `nvidia/nemotron-3-super-120b-a12b`。另外，正式站的 Travel-Assistance 後端目前沒有回應，線上網站實際上沒有呼叫任何模型。「即時聯網檢索」尚未實作（模型本身不上網，需另接搜尋 API）。
-> **Status (verified 2026-09-23)**: model to be fixed to `nvidia/nemotron-3-ultra-550b-a55b` in Phase 1; until then `render.yaml` and `.env.example` disagree, the production backend does not respond, and live web lookup is not implemented.
+### 8.7 全站 AI 推論引擎：依用途分離的雙模型 (NVIDIA NIM)
+> **現況（2026-09-24 實作並查證）**：模型不一致已收斂。原先全站流通六種模型值
+> （`super-120b`、`ultra-550b`、`meta/muse-glimmer-30b`、`nano-omni-30b-a3b-reasoning`、
+> `llama-3.3-nemotron-super-49b-v1`、`google/gemma-4-31b-it`），其中山姆哥 2026-09-23
+> 裁示的 `ultra-550b` 一行程式碼都沒有實作。2026-09-24 山姆哥改裁示依用途分離為兩個：
+> 抽取用 `nvidia/nemotron-3-ultra-550b-a55b`，對話用 `nvidia/nemotron-3-super-120b-a12b`，其餘四種全數清除。
+> **仍未完成者**：正式站的 Travel-Assistance 後端沒有回應，線上網站實際上沒有呼叫
+> 任何模型；`/api/chat` 端點尚未實作；「即時聯網檢索」尚未實作（模型本身不上網，
+> 需另接搜尋 API）。
+> **Status (implemented and verified 2026-09-24)**: six different model values were in
+> circulation and the `ultra-550b` decided on 2026-09-23 had no implementation at all.
+> Sam then ruled for two purpose-specific models — extraction on `nvidia/nemotron-3-ultra-550b-a55b`,
+> chat on `nvidia/nemotron-3-super-120b-a12b` — and the other four were removed. Still outstanding: the
+> production backend does not respond, `/api/chat` does not exist, and live web lookup
+> is not implemented.
 
 - **模型規格與推論參數**：
   - 端點：`https://integrate.api.nvidia.com/v1/chat/completions`
-  - 模型：`nvidia/nemotron-3-super-120b-a12b`
+  - 模型（對話側）：`nvidia/nemotron-3-super-120b-a12b`；抽取側為 `nvidia/nemotron-3-ultra-550b-a55b`
   - 參數：`temperature: 0.5`, `top_p: 1.0`, `max_tokens: 1024`, `stream: false`
 - **架構規範**：
-  - 後端 (`/api/chat`) 與前端統一調用 `nvidia/nemotron-3-super-120b-a12b`，杜絕任何未經指示之降級回退或模型替換。
+  - 後端 (`/api/chat`) 與前端統一調用對話側模型 `nvidia/nemotron-3-super-120b-a12b`；知識庫離線抽取調用 `nvidia/nemotron-3-ultra-550b-a55b`。兩者皆杜絕任何未經指示之降級回退或模型替換。
   - 嚴格遵守「不盲猜原則」：知識庫有，就精確列出；知識庫沒有，就啟動即時聯網檢索並誠實說明最新動態。
   - 回覆強制輸出【繁體中文】與【English】雙語對照內容，並在結尾輸出真實 token 與耗時遙測指標。
 
