@@ -163,3 +163,10 @@ iot-gen2-simulator-monitor/vps/
 .gitignore
 .assetsignore
 .gitmodules
+
+# CI 工作流（2026-09-24）：.github/ 是 dotfile 目錄，Wrangler 預設不忽略 dotfile，
+# 所以不排除的話 checks.yml 會被當靜態資產發佈。新增工作流當下，
+# tools/check_public_surface.py 在型別黑名單與快照比對兩處同時報警。
+# CI workflows: .github/ is a dotfile directory and Wrangler does not ignore
+# dotfiles, so without this the workflow file would be served publicly.
+.github/

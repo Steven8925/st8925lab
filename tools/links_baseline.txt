@@ -1,0 +1,10 @@
+# 已知未達標的外部相依（無 SRI 或未釘版本）。
+# 這是待清償的債務，不是核可清單。清單見 DEFECTS.md S-7d。
+# 新增的相依若未達標，CI 會失敗；修好後把該行從這裡刪除。
+https://cdn.jsdelivr.net/npm/chart.js
+https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js
+https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js
+https://cdn.tailwindcss.com
+https://unpkg.com/@phosphor-icons/web
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
