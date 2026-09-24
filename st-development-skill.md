@@ -258,6 +258,10 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
   If Sam has not responded, the entry is still written after 7 days (or the next
   time work touches the same file, whichever comes first), prefixed with a
   pending-review marker that only he removes.
+  **已於 2026-09-24 同步寫入全域 `~/.claude/CLAUDE.md`**（Confirm-before-build
+  第 5 點之下），故依 §0 效力順序本條有效，非被 CLAUDE.md 覆蓋。
+  Mirrored into the global CLAUDE.md the same day, so under the §0 precedence
+  order this clause is in force rather than overridden.
 
 ### 階段 8：複盤壓縮與記錄 (Compaction & Logging) — 依 §3A
 
