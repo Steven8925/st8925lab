@@ -506,12 +506,12 @@ initWordmark('wordmark', SITE_NAME);
 
 ### 4.5 Project 06 (Travel-Assistance) 雙模部署與離線韌性規範 / Dual-Mode Deployment & Static Resilience Invariant
 
-> ⚠️ **核心原則：Project 06（Travel-Assistance 豆油哥）線上部署於 Cloudflare Pages 純靜態環境，同時支援本機 Python FastAPI 全功能守護行程。系統必須嚴格遵循雙模零轉圈容錯原則，絕不允許因後端未啟動或網路阻塞陷入無窮等候。**
+> ⚠️ **核心原則：Project 06（Travel-Assistance 豆油哥）線上以 Cloudflare Worker 的靜態資產提供（無專屬後端，等同純靜態環境），同時支援本機 Python FastAPI 全功能守護行程。系統必須嚴格遵循雙模零轉圈容錯原則，絕不允許因後端未啟動或網路阻塞陷入無窮等候。**
 >
-> **Core Invariant: Travel-Assistance supports both static showcase (Cloudflare Pages) and full-stack local daemon modes. The frontend must NEVER hang in an infinite spinner due to backend absence.**
+> **Core Invariant: Travel-Assistance supports both static showcase (served as Worker static assets, no dedicated backend) and full-stack local daemon modes. The frontend must NEVER hang in an infinite spinner due to backend absence.**
 
 1. **雙模部署與快速離線路徑 (Dual-Mode & Fast Offline Path)**：
-   - **線上展示模式 (Cloudflare Pages `st8925lab.com`)**：在無本機 Python 服務環境下，前端透過 `checkBackendHealth(1800)` 於 1.8 秒內完成探測。點擊規劃行程時，系統自動在 1.25 秒內走 Fast Offline Path 完成高品質策展行程渲染，提供秒開體驗。
+   - **線上展示模式 (`st8925lab.com`，Worker 靜態資產)**：在無本機 Python 服務環境下，前端透過 `checkBackendHealth(1800)` 於 1.8 秒內完成探測。點擊規劃行程時，系統自動在 1.25 秒內走 Fast Offline Path 完成高品質策展行程渲染，提供秒開體驗。
    - **本機全功能模式 (Local Daemon `http://127.0.0.1:8001`)**：支援 FastMCP 動態比價工具、NVIDIA Nemotron-3 30B AI 對話推論與知識庫排程更新。
 2. **全網路邊界逾時守護盾 (`AbortSignal.timeout`)**：
    - 所有 `fetch` 請求必須封裝於安全逾時邊界內：健康檢查 1.8s、行程規劃 3.5s、AI 聊天 18s、匯出下載 2.5s。
@@ -559,7 +559,7 @@ python verify.py
 > ⚠️ 資料夾改名會改變其 URL 路徑（`<slug>/index.html`）。若網站已上線
 > 且曾被搜尋引擎索引或有人加了書籤，改名會讓舊網址失效（無自動轉址）。
 > 這是本次架構選擇的已知取捨——換取「資料夾名稱與顯示名稱永遠一致」，
-> 若日後需要，可額外在 Cloudflare Pages 設定 `_redirects` 規則保留舊路徑。
+> 若日後需要，可額外用 `_redirects` 檔（Workers 靜態資產同樣支援）保留舊路徑。
 
 ---
 
@@ -584,16 +584,72 @@ z 軸號誤、配色洗牌與對比、地理資料、版面標籤、呼吸、站
 
 ## 7. 部署 / Deployment
 
-靜態網站，部署於 Cloudflare Pages（`st8925lab.com`）。`.assetsignore` 排除：
-- `cloudmd/`（開發筆記，不隨站部署）
-- `alarm-notification-simulator/source/`（告警模擬台完整原始碼，git 有
-  追蹤供參考，但不隨靜態站部署——見下方「後端部署」）
-- 部署過程的暫存筆記檔（見 §7.2）
-- `Travel-Assistance/` 內除 `index.html` 與其副本 `prototype.html` 以外的文件、後端原始碼、知識庫、測試與開發筆記（2026-09-23 起；部署檢查時這些檔案皆可被公開讀取。完整規則見 `.assetsignore`）
+Cloudflare **Worker + 靜態資產（Workers Static Assets）**，網址
+`st8925lab.com`。設定見根目錄 [`wrangler.jsonc`](wrangler.jsonc)，部署指令
+`npx wrangler deploy`。
+Cloudflare **Worker with static assets**, served at `st8925lab.com`.
 
-`shared/`、`iot-gen2-simulator-monitor/`..`project-05/`、`Travel-Assistance/`（僅 `index.html` 與 `prototype.html`）、`alarm-notification-simulator/`
-（僅 `index.html` 與 `assets/`）、`tools/` 皆為一般靜態資源／原始碼，
-`tools/*.py` 不會被瀏覽器請求，留在 repo 中純供維運使用，不影響前端載入。
+> ⚠️ **不是 Cloudflare Pages。** 2026-09-23 Phase 1 之前本站確實是純靜態站，
+> 本節因此長期寫成「靜態網站，部署於 Cloudflare Pages」；Phase 1 起改為
+> Worker 並新增 `/api/*` 端點，該敘述已不成立，2026-09-24 校正。
+> 依此規格重建時若照舊建成 Pages 純靜態站，`/api/*` 會整個不存在。
+> 同樣的舊敘述仍散見於 `ai-diagnostic-kb/`、`alarm-notification-simulator/`、
+> `cloudmd/` 的文件與 `.gitignore` 檔頭（見 README.md 對應日期條目）。
+> **Not Cloudflare Pages.** The site was pure-static until Phase 1
+> (2026-09-23) and this section described it as Pages for months. It is now a
+> Worker with static assets and live `/api/*` routes. Rebuilding it as a
+> static Pages site would omit the entire API.
+
+### 7.0 wrangler.jsonc 逐值轉寫 / Transcribed configuration
+
+下表每個值都是 2026-09-24 從 `wrangler.jsonc` 讀出的，不是憑記憶寫的。
+Every value below was read from the file, not recalled.
+
+| 欄位 Field | 值 Value |
+|---|---|
+| `name` | `st8925lab` —— **不可更改**，改名 wrangler 會另建一個新的 Worker |
+| `main` | `worker/index.js` |
+| `compatibility_date` | `2026-09-21` |
+| `keep_vars` | `true` —— 儀表板上設定的變數不會因部署被清掉 |
+| `observability.enabled` | `true` |
+| `assets.directory` | `.` —— **repo 根目錄就是發佈根目錄**，這是 §7.2 兩道防線的成因 |
+| `assets.binding` | `ASSETS` |
+| `assets.run_worker_first` | `["/api/*"]` |
+
+路由行為：`/api/*` 先進 Worker；其餘所有路徑直接由靜態資產回應，完全不經過
+Worker。Worker 目前只實作 `/api/health`，回報 `configured.nvidia` 與
+`configured.tavily` 兩個布林值（只說金鑰字串存不存在，**不回傳金鑰本身**），
+並在通過授權時附上 `probe`。其他 `/api/*` 路徑回 404。`/api/chat` 尚未實作，
+屬 Phase 1 Stage C。
+Routing: `/api/*` hits the Worker first; everything else is served straight from
+static assets. Only `/api/health` is implemented today.
+
+### 7.0.1 發佈範圍 / What actually gets published
+
+`.assetsignore` 是唯一權威來源，**請直接讀該檔**，本節不複述完整清單（複述會
+漂移）。截至 2026-09-24，375 個受 git 追蹤的檔案中只有 24 個會被發佈：網站的
+`index.html`／`app.js`／`config.js`／`geodata.js`／`shared/`，以及
+`ai-diagnostic-kb`／`iot-gen2-simulator-monitor`／`alarm-notification-simulator`／
+`project-04`／`project-05` 各自的 `index.html` 與其 `app.js`、`style.css`、
+`modules/`、`assets/`，加上 Travel-Assistance 的 `index.html` 與 `prototype.html`。
+
+排除的類別（規則細節見 `.assetsignore` 內的註解）：所有 `*.md`／`*.txt`／`*.py`、
+`cloudmd/`、`worker/`、`tools/`、`wrangler.jsonc`、`render.yaml`、`.git`、
+`.agentMemory/`、`.claude/`、`alarm-notification-simulator/source/`、
+`ai-diagnostic-kb/source/`、`iot-gen2-simulator-monitor/vps/`、
+`Travel-Assistance/` 除兩個 HTML 以外的全部內容。
+
+> `*.md`／`*.txt`／`*.py` 採全域規則是刻意的：讓「未來新增的子專案」預設就不
+> 外洩文件與腳本，而不是依賴有人記得補規則。2026-09-23 那次只補了
+> Travel-Assistance／worker／tools／cloudmd，其餘子專案就是這樣漏掉的。
+> Blanket type rules are deliberate: future subprojects are private by default
+> instead of depending on someone remembering.
+
+單檔驗收版：`python make_standalone.py` 仍可用（打包 `index.html` +
+`config.js` + `geodata.js` + `shared/wordmark.js` + `app.js` 為一個檔案，
+專案點擊改以隱藏覆蓋層呈現，因為單檔版沒有可導向的實體資料夾）。**此工具
+不處理 `alarm-notification-simulator`**——它是獨立打包的 React 應用，不是
+`app.js` 渲染邏輯的一部分。
 
 單檔驗收版：`python make_standalone.py` 仍可用（打包 `index.html` +
 `config.js` + `geodata.js` + `shared/wordmark.js` + `app.js` 為一個檔案，
@@ -605,7 +661,9 @@ z 軸號誤、配色洗牌與對比、地理資料、版面標籤、呼吸、站
 
 `alarm-notification-simulator/`（id `01`）與其餘專案的關鍵差異：它需要
 兩個持續運行的 Node.js 服務（`apps/api`、`apps/ops-server`），Cloudflare
-Pages 無法執行。這兩個服務部署於 **Render.com 免費方案**，設定見根目錄
+Worker 與靜態資產都無法承載常駐行程（原文寫「Cloudflare Pages 無法執行」，
+2026-09-24 一併校正平台名稱；結論不變）。這兩個服務部署於
+**Render.com 免費方案**，設定見根目錄
 [`render.yaml`](render.yaml)。完整部署步驟、已知限制（免費方案休眠與
 非持久化檔案系統）、展示帳號，見
 [`alarm-notification-simulator/PROMPT.md`](alarm-notification-simulator/PROMPT.md) §3。
