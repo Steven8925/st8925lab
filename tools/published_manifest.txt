@@ -2,7 +2,6 @@
 # 這是「目前會被公開發佈的檔案」快照；任何新增都必須經人覆核。
 # Snapshot of what is publicly published. Any addition needs review.
 Travel-Assistance/index.html
-Travel-Assistance/prototype.html
 ai-diagnostic-kb/app.js
 ai-diagnostic-kb/index.html
 ai-diagnostic-kb/modules/ai-engine.js
