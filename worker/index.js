@@ -19,6 +19,21 @@ function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
 }
 
+// ⬇ 新增：probe 的授權判斷
+// 必須同時滿足 GET + ?probe=1 + 正確的 x-probe-token 標頭。
+// 任一條件不符就「靜默忽略」——回一般健康檢查結果，不回 401，
+// 避免對外洩漏此端點存在、也沒有可供暴力嘗試的目標。
+// PROBE_TOKEN 未設定時一律關閉（fail closed）。
+// The probe requires GET + ?probe=1 + a matching x-probe-token header.
+// Anything else is silently ignored — the plain health response is returned rather
+// than a 401, so the endpoint gives nothing away. Unset PROBE_TOKEN fails closed.
+function isProbeAuthorized(request, url, env) {
+  if (request.method !== 'GET') return false;
+  if (url.searchParams.get('probe') !== '1') return false;
+  if (!env.PROBE_TOKEN) return false;
+  return request.headers.get('x-probe-token') === env.PROBE_TOKEN;
+}
+
 // 拿執行期金鑰實際送一次請求，只回報 HTTP 狀態碼。
 // 絕不回傳金鑰、回應內容或錯誤細節。
 // Sends one real request with the runtime key; reports only the HTTP status.
@@ -60,9 +75,8 @@ export default {
         },
       };
 
-      // 只有 ?probe=1 才真的外呼；一般健康檢查維持零外部請求。
-      // Only ?probe=1 makes a real outbound call; the plain health check stays request-free.
-      if (request.method === 'GET' && url.searchParams.get('probe') === '1') {
+      // ⬇ 改動：從「帶 ?probe=1 就跑」改為「通過授權才跑」
+      if (isProbeAuthorized(request, url, env)) {
         body.probe = { nvidia: await probeNvidia(env) };
       }
 
