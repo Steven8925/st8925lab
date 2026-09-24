@@ -54,6 +54,16 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
    目錄結構、命名規則、全域設定。
 4. **規格絕對死鎖**：需求出現根本邏輯矛盾且無法從現有架構推導。
 
+> **判定不確定時的保守預設（2026-09-24 山姆哥裁示）**：無法確定某任務是否落入
+> 上述四類情境時，**一律當成落入**，停下來問。理由是錯誤成本不對稱 —— 多問一次
+> 只花山姆哥幾秒，判錯一次可能沒有復原路徑。
+> **不得**以「應該還好」「看起來可逆」為由略過閘門 ——「看起來可逆」正是
+> 2026-09-24 我把 `.agents/` 講反的那一類判斷，而那次剛好錯在保守的方向；
+> 反方向錯一次，就是東西真的沒了。
+> When in doubt whether a task falls into the four categories above, treat it as
+> if it does and stop to ask. The costs are asymmetric: one extra question costs
+> seconds; one misclassification may have no recovery path.
+
 中斷提問時，必須附帶「推薦解法（Option A / Option B）」與我建議的路線，
 讓山姆哥能一句話決定。
 
@@ -149,6 +159,14 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
    - 後端/腳本層：防範 SQLi、Command Injection、路徑穿越（Path Traversal）及未捕獲之例外。
 3. **無痕與資源釋放原則**：
    - 狀態暫存採就近與最小化原則（暫態資訊優先使用 Memory / SessionStorage，持久化需具備明確過期生命週期），程序關閉或工作終止時確實銷毀。
+4. **可機械檢核者一律腳本化 (Mechanical checks must be scripts)** — 2026-09-24 山姆哥裁示：
+   - 凡是**能用程式判定對錯**的檢核，都必須寫成腳本，由**離開碼**判定通過與否，
+     **不得以我的自述取代**（例如「我確認過兩份副本一致」）。
+   - 理由：§5 是我自己推導、自己執行、自己判斷有沒有遵守，三個角色都是我。
+     腳本的價值在於它不依賴我誠實 —— `tools/check_skill_sync.py` 在我自己弄出
+     分歧的第一次實戰就抓到了我。
+   - 判準：若一項檢核「只要我忘記就會靜默通過」，它就該是腳本。
+     A check that passes silently whenever I forget to run it must be a script.
 
 ---
 
@@ -206,6 +224,16 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
 - **反向測試與正向測試同等重要** —— 只測擋得住，分不出「保護正常」與
   「設定錯誤導致功能永久失效」。
 - 驗證過程中若發現是自己引入的錯誤，**主動回報，不隱匿**。
+- **驗證失敗的回流路徑（2026-09-24 山姆哥裁示）**：
+  - 自己寫的程式錯 → 回**階段 3** 修。
+  - 環境／依賴問題 → **修好重跑，不回閘門**。可自行安裝的**僅限專案自己已宣告
+    的依賴**（`requirements*.txt`、`package.json`、`pyproject.toml` 等已列出者）；
+    要新增**未宣告**的依賴、或變更執行環境本身，仍屬閘門，須先問。
+  - 規格本身不明 → 回**階段 1**，這是「規格絕對死鎖」。
+  - 由來：2026-09-24 驗證 Travel-Assistance 時，`backend/.venv` 缺少
+    `requirements-dev.txt` 已宣告的 `pytest-socket`，整個測試套件因 `pytest.ini`
+    的 `--disable-socket` 而直接以 `unrecognized arguments` 退出。當時自行安裝
+    該已宣告依賴後才取得測試數字，事後經山姆哥追認可行，遂定為常規。
 
 ### 階段 6：交付與驗證 (Present for Validation) — 依 §0
 
@@ -222,6 +250,14 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
   含時間戳與模型標籤。**只追加，不改寫既有條目**；既有以 `---` 分隔的檔案，
   於下次編輯到該區塊時順手改為空兩行，不做大規模重排（2026-09-24 定）。
 - 嚴禁積壓至最後補寫。
+- **逾時出口（2026-09-24 山姆哥裁示）**：若山姆哥未回覆驗證結果，在**滿 7 天，
+  或下次工作觸及同一檔案時（以先到者為準）**，仍須寫入文件，但該條目開頭必須
+  標記 `⏳ 待山姆哥複核`；山姆哥看過後才移除標記。
+  **不得**因為等不到回覆就不寫 —— 那會讓 log 與文件的落差持續擴大。
+  也**不得**在未加標記的情況下寫入 —— 那等於假裝已經核可過。
+  If Sam has not responded, the entry is still written after 7 days (or the next
+  time work touches the same file, whichever comes first), prefixed with a
+  pending-review marker that only he removes.
 
 ### 階段 8：複盤壓縮與記錄 (Compaction & Logging) — 依 §3A
 
@@ -229,6 +265,27 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
    剔除冗長 raw log 與無效試錯。
 2. 依 CLAUDE.md 自動記錄規則追加當日 log（條目間空兩行），並在回覆結尾列出
    log 完整路徑。
+
+---
+
+### 瑣碎任務例外 (Trivial-task exemption) — 2026-09-24 山姆哥裁示
+
+**判定為「瑣碎」須以下四個條件全部成立：**
+
+1. 只動單一檔案；
+2. 不新增檔案；
+3. 不動設定、金鑰、權限與發佈範圍；
+4. 不改變對外行為。
+
+瑣碎任務**可略過階段 2（研究與重用）與階段 7（文件同步）**；
+**階段 1（閘門）、4（安全檢查）、5（驗證）、8（複盤與 log）一律不可略。**
+
+> 這條例外存在的理由是誠實，不是寬鬆：八階段若套在改一行錯字上，實務上我會
+> 偷跳，而偷跳一次整份流程就失效。明訂哪些可略，不可略的部分才會真的被執行。
+> 四個條件是連集而非選集 —— 只要有一項不成立，就不是瑣碎任務。
+> The exemption exists for honesty, not leniency: a process too heavy for a typo
+> gets skipped in practice, and one silent skip voids the whole thing. All four
+> conditions must hold; any single failure means the task is not trivial.
 
 ---
 
