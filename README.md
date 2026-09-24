@@ -1900,3 +1900,40 @@ $env:PYTHONIOENCODING="utf-8"; python verify.py
 **驗收**：山姆哥於 2026-09-23 驗收 Phase 0 通過。/ **Sign-off**: Sam accepted Phase 0 on 2026-09-23.
 
 **已知未處理**：根目錄 `render.yaml` 仍可被公開讀取（不含密鑰，但含其他服務設定），本次未處理，列入後續檢討。/ **Known open item**: the root `render.yaml` is still publicly readable (no secrets, but service configuration); not addressed in this change.
+
+
+
+## 19. 2026-09-24 — 退役重複工作區保存、AI 模型依用途分離與測試訊號修復 / Retired Duplicate Preserved, Purpose-Split Models & Test-Signal Repair
+
+> 本節只記錄根目錄層級的影響。當日變更細節見 `Travel-Assistance/README.md` 的 `[2026-09-24_15:15:00]` 條目（下午三個工作區塊）與 `[2026-09-24_10:55:00]` 條目（上午的金鑰治理）；現行模型規格見本檔同層的 `PROMPT.md` §4.3。
+> This section records only the root-level impact. The day's changes are detailed in `Travel-Assistance/README.md` under `[2026-09-24_15:15:00]` (the afternoon) and `[2026-09-24_10:55:00]` (the morning's key governance); the current model spec is `PROMPT.md` §4.3.
+
+**山姆哥的裁示 / Sam's rulings**：AI 模型**依用途分離**（裁示 C）—— 知識庫離線抽取用 `nvidia/nemotron-3-ultra-550b-a55b`（慢無所謂、要品質），互動對話用 `nvidia/nemotron-3-super-120b-a12b`（要反應快）；保留這兩個、其餘四種全部清除。測試方面裁示「C，httpx 也改，264 個 error 一起修」。退役工作區方面：131 依建議刪除、130 保留。
+
+**Sam's rulings**: split the model **by purpose** (ruling C) — `nvidia/nemotron-3-ultra-550b-a55b` for offline knowledge-base extraction where quality matters more than latency, `nvidia/nemotron-3-super-120b-a12b` for interactive chat where it does not; keep those two and remove the other four. On testing: "C, httpx too, fix the 264 errors together." On the retired working copies: delete 131 as recommended, keep 130.
+
+**為什麼不能共用一個模型 / Why one shared model does not work**：兩者的取捨方向相反。抽取是離線批次（大上下文、逾時 600 秒、強制 JSON、要最高品質）；對話是使用者在瀏覽器前等待（逾時 45 秒、一般文字、有歷程、要反應快）。共用單一 `NVIDIA_MODEL` 必然犧牲其中一邊。The trade-offs point in opposite directions, so a single shared variable necessarily penalises one side.
+
+**盤點結果（`6dc5363` 當下實測）/ Survey at the time of the change**：專案內同時流通 **六種**模型值，而山姆哥 2026-09-23 決定的 `ultra-550b` **不在任何程式碼中**，只存在於決策紀錄。四個已淘汰的值及其所在位置：`meta/muse-glimmer-30b`（`render.yaml`）、`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`（`PROMPT.md` 核心不變式、`tools/patch_frontend_dynamic_ai.py`）、`nvidia/llama-3.3-nemotron-super-49b-v1`（`Travel-Assistance/poc/README.md`）、`google/gemma-4-31b-it`（`.agentMemory/systemPatterns.md`）。撰寫本節當下反向驗證：四者在**會執行的檔案中各出現 0 次**。
+
+**根目錄層級變更 / Root-level changes**：
+
+| 檔案 File | 變更 Change |
+|---|---|
+| `PROMPT.md` §4.3 | **核心不變式改寫而非編輯**：原文明訂「全專案使用單一模型」，與裁示 C 直接矛盾，無法以編輯方式修補。現載明兩個依用途分離的模型、`NVIDIA_MODEL` 停用並由 `NVIDIA_EXTRACTION_MODEL` 與 `NVIDIA_CHAT_MODEL` 取代，並**明說單一模型規則已被推翻**，免得下一個人得自行判斷舊條文是否仍具拘束力。/ The invariant mandated one model project-wide and had to be rewritten, not edited; it now states the retirement explicitly. |
+| `PROMPT.md` §8.7 | 狀態註記以**當日實際查證的結果**取代，包含仍然缺少的項目：正式環境後端無回應、無 `/api/chat` 端點、無即時網路查詢。/ replaced with what was actually verified, including what is still missing. |
+| `render.yaml` | `- key: NVIDIA_MODEL`（值為 `meta/muse-glimmer-30b`，全專案別處未使用）改為 `- key: NVIDIA_CHAT_MODEL`。該服務執行 `Travel-Assistance/backend`，其 `workflow_session.py` 現在讀的就是這個變數 —— 留著舊 key 等於設定一個沒有任何程式會讀的值。/ the old key would have set something nothing reads. |
+| `tools/patch_frontend_dynamic_ai.py` | 注入 `index.html`／`prototype.html` 的區塊硬編碼了 `nano-omni`。**這不只是過期**：再跑一次就會把已淘汰的模型寫回前端。/ not merely stale — re-running it would have written a retired model back into the frontend. |
+| `ai-diagnostic-kb/source/backend/config.py` | 值本來就是 `super-120b`，但讀的是已停用的 `NVIDIA_MODEL`，改為讀 `NVIDIA_CHAT_MODEL`。**本次工作稍早我曾判定此檔無需修改，該判斷是錯的** —— 只看了值而沒看變數名；改寫後的不變式涵蓋所有子專案。/ an earlier judgement in the same session that this file needed no change was wrong: it looked at the value and not the variable name. |
+| `.agentMemory/systemPatterns.md` | 屬現況文件而非日期紀錄，其模型敘述單純是錯的，直接更正。該檔為混合行尾（1 CRLF、33 LF），故採行內取代、完全不觸及換行字元，寫入後計數不變。/ current-state documentation, so the wrong claim was simply corrected; mixed line endings preserved by an inline-only replacement. |
+| `.assetsignore` | 新增 `Travel-Assistance/requirement/`。搬入的 14 個 2026-09-11 原始產物若未排除，會由 `st8925lab.com/Travel-Assistance/requirement/` 對外提供。**在搬移之前先加，不是之後。** / added before the files were moved, not after. |
+| `st-development-skill.md` | 寫入山姆哥當日的五項工作流裁示：1A 閘門判定採保守預設（不確定是否屬四類受管制情境時，一律視為屬於並停下詢問，「看起來可逆」不構成略過理由）、2A 自裝相依僅限專案已宣告者、3A 文件逾時出口（7 天或下次觸及同一檔案，以先到者為準，並標記 `⏳ 待山姆哥複核`）、4A 瑣碎任務例外需四項條件同時成立、5B 可機械檢核者一律腳本化並以離開碼判定。全域 CLAUDE.md 同步加入 3A 的逾時出口條文。/ Sam's five workflow rulings of the day. |
+| `Travel-Assistance`（submodule） | 指標推進至 `8f249e1`（`8e6744f`）。涵蓋 `8b4e46c` 保存退役工作區產物、`b2f8412` 模型分離、`39fe0c5` 修復 264 個 teardown ERROR、`d60aa7d` `requests`→`httpx`、`8f249e1` Stage C 六檔納入版控。/ pointer advanced through five commits. |
+
+**專案層級（不在本 repo 內）/ Project-level, outside this repository**：`C:\Claude Projects\131_Travel Assistance` 經四項查證確認完全被本 repo 取代（同一 origin remote、HEAD 為本分支祖先、0 個本機獨有 commit、0 個共用檔案較新）後刪除；其未追蹤產物中 14 個只存在該處的檔案已逐位元組原封保存至 `Travel-Assistance/requirement/20260911_claude_outputs/`。`C:\Claude Projects\130_Travel-Planning-tool` 經查證確認**不可取代**（無 remote、7 個本機獨有 commit、技術堆疊不同），依山姆哥裁示保留。
+
+**測試訊號 / Test signal**（細節見子專案 README）：套件原本每一個測試都附帶一個 teardown ERROR —— **264 個**，對照 246 個通過；連全綠的 `test_workflow.py` 都顯示為「59 passed, 59 errors」。根因是知識庫來源目錄帶 Windows ReadOnly 屬性、經 `copystat` 複製到臨時副本後 `os.rmdir` 拒絕刪除。修復後同一指令實測由 `17 failed／246 passed／264 errors`（需 `--ignore`）變為 `0 failed／251 passed／17 xfailed／0 errors`（不需 `--ignore`），`%TEMP%` 殘留副本由 264 份／34.58 MB 降為 0。多出的 5 個通過測試在 `httpx` 遷移前完全無法收集。
+
+**驗收 / Sign-off**：山姆哥於 2026-09-24 確認後指示寫入文件。/ Sam confirmed and instructed that this be written up on 2026-09-24.
+
+**已知未處理 / Known open items**：`project-04`／`project-05` 佔位頁的去留未定（導覽列仍指向它們）；全庫仍存在「Cloudflare Pages」字樣 **85 處、分佈於 36 個檔案**（2026-09-24 實測，不含本節本身）—— 其中哪些屬於應更正的現況敘述、哪些屬於當時為真的歷史紀錄，**尚未逐項分類**，故此處不宣稱應修正的數量；`worker/PROMPT.md` 與 `worker/README.md` 為 LF 行尾，下次 checkout 會變成 CRLF。**另有一項文件規範衝突待裁示**：全域規範（2026-09-24 定）要求日誌**最新條目置頂**，但本檔 §13～§18 為編號遞增、最新在檔尾，且 §1～§12 為帶目錄的敘事章節 —— 反序會破壞整份編號與目錄錨點，而同一條規範明禁大規模重排。本節因此比照既有結構追加於檔尾，僅在 §18／§19 邊界改用空兩行分隔。/ One documentation-rule conflict is outstanding: the newest-first rule cannot be applied to this numbered, TOC-anchored document without the bulk reflow the same rule forbids, so this section was appended in the existing ascending order.
