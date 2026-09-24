@@ -66,3 +66,69 @@ prompt_init.md
 SPEC-v4.md
 ST8925-LAB-standalone.html
 st8925lab-deploy-guide.html
+
+# ==========================================================================
+# 2026-09-24 全站盤點：2026-09-23 那次只補了 Travel-Assistance／worker／tools／
+# cloudmd，其餘子專案遺漏。實測以下路徑當時皆可被任何人下載（HTTP 200）：
+# VPS_DEPLOYMENT_GUIDE.md（內含 production .env 範本）、README.md、PROMPT.md、
+# walkthrough.md、st-development-skill.md、log_20260818_01.txt、.agentMemory/*.md、
+# .claude/settings.local.json、ai-diagnostic-kb/source/backend/**、
+# iot-gen2-simulator-monitor/vps/**、各子專案 README.md 與 PROMPT.md。
+# 2026-09-24 site-wide audit: the 2026-09-23 pass covered only Travel-Assistance,
+# worker/, tools/ and cloudmd/. Every path above was confirmed publicly
+# downloadable (HTTP 200) before these rules were added.
+#
+# 限制（重要）：這份檔案只擋「是否被當成靜態資產發佈」，擋不住 GitHub。本 repo 在
+# GitHub 是 public，所以這些檔案在 github.com/Steven8925/st8925lab 仍然看得到。
+# 它降低曝光面，但不是移除機密的工具 —— 真的外洩必須更換金鑰本身。
+# Limitation: this only stops asset publishing, NOT GitHub. The repo is public, so
+# these files stay visible there. This reduces exposure surface but never removes a
+# secret; a real leak must be fixed by rotating the credential itself.
+#
+# 已逐一確認網站實際引用的檔案（index.html／app.js／config.js／geodata.js／shared/，
+# 以及 ai-diagnostic-kb、iot-gen2-simulator-monitor、alarm-notification-simulator、
+# project-04、project-05 的 index.html＋app.js＋style.css＋modules/＋assets/）
+# 都不引用任何 .md／.py／.txt／.sql／.yml，故下列全域型別規則不會破壞網站。
+# Verified: no served page references .md/.py/.txt/.sql/.yml, so the blanket type
+# rules below cannot break the site.
+# ==========================================================================
+
+# 文件類：開發歷程、重建規格、計畫、任務與筆記。用全域規則，讓「未來新增的子專案」
+# 預設就不會外洩，不必每次記得補。
+# Docs: dev history, rebuild specs, plans, tasks, notes. Blanket rules so future
+# subprojects are private by default instead of relying on memory.
+*.md
+*.txt
+
+# 例外：僅限「根目錄」的 SEO 檔案（目前不存在，先留規則避免日後新增時被 *.txt 擋掉）。
+# 前面的 / 是必要的：未加錨點的 !robots.txt 會連 cloudmd/option_C/public/robots.txt
+# 一起重新納入，破壞 cloudmd/ 的整層排除。2026-09-24 驗證時發現並修正。
+# Root-only SEO exceptions. The leading / is required: an unanchored !robots.txt
+# also re-includes cloudmd/option_C/public/robots.txt, defeating the cloudmd/
+# directory exclusion. Caught during verification on 2026-09-24.
+!/robots.txt
+!/llms.txt
+
+# 開發腳本與後端 Python 原始碼（根目錄 verify.py／make_standalone.py 等）。
+# Dev scripts and backend Python source (root verify.py / make_standalone.py etc).
+*.py
+
+# 子專案後端與基礎設施原始碼：Dockerfile、SQL、PHP、nginx 設定、docker-compose、
+# .env.example 等，全部由伺服器端執行，不應以靜態檔案公開。
+# Subproject backend and infra source: Dockerfiles, SQL, PHP, nginx config,
+# docker-compose, .env.example. All server-side; never served as static files.
+ai-diagnostic-kb/source/
+iot-gen2-simulator-monitor/vps/
+
+# 內部 agent 記憶與本機工具設定。.claude/settings.local.json 於 2026-09-24
+# 一併以 git rm --cached 停止追蹤。
+# Internal agent memory and local tooling config. settings.local.json was also
+# untracked via git rm --cached on 2026-09-24.
+.agentMemory/
+.claude/
+
+# 版控與發佈設定本身不需要公開。
+# VCS and publish configuration need not be public.
+.gitignore
+.assetsignore
+.gitmodules

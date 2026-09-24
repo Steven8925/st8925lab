@@ -46,3 +46,10 @@ temp_ref_imgs/
 .dev.vars*
 node_modules/
 
+# 本機 Claude Code 工具設定（launch.json 等）：只在本機使用，不進版控。
+# 注意：.assetsignore 並未排除 .claude/，而 .claude/settings.local.json 已被追蹤且
+# 線上可讀（HTTP 200）；本規則只擋「之後新增」的檔案，既有追蹤需另做 git rm --cached。
+# Local Claude Code tooling config (launch.json etc). Note .assetsignore does NOT
+# exclude .claude/, and .claude/settings.local.json is ALREADY tracked and publicly
+# readable; this rule only stops new files - untracking needs git rm --cached.
+.claude/
