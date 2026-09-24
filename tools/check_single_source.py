@@ -108,9 +108,21 @@ def main():
 
     print("\n[3] 專案資料夾是否存在 / project folders exist")
     print("-" * 78)
+    # Travel-Assistance 是 **私有** submodule（2026-09-24 查證：parent 為 PUBLIC，
+    # submodule 為 PRIVATE）。沒有授權的環境（例如 CI 的預設 GITHUB_TOKEN）
+    # clone 不到它，資料夾會是空的。那不是「檔案遺失」，是「取不到」——
+    # 兩者必須分開報告，否則 CI 會為了一個環境限制而永遠紅燈。
+    ta_dir = os.path.join(ROOT, "Travel-Assistance")
+    ta_absent = (not os.path.isdir(ta_dir)) or not os.listdir(ta_dir)
+    if ta_absent:
+        print("  注意：Travel-Assistance submodule 未取出（私有 repo，此環境無權限）。")
+        print("        該專案的檢查標為 SKIP，不計為失敗。")
     for pid, slug in zip(cfg_ids, cfg_slugs):
         page = os.path.join(ROOT, slug, "index.html")
         ok = os.path.exists(page)
+        if not ok and slug == "Travel-Assistance" and ta_absent:
+            print("  SKIP  %s/index.html（submodule 未取出）" % slug)
+            continue
         if not ok:
             problems.append("%s (%s) 沒有 index.html" % (pid, slug))
         print("  %-5s %s/index.html" % ("OK" if ok else "FAIL", slug))
