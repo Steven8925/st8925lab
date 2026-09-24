@@ -53,3 +53,12 @@ node_modules/
 # exclude .claude/, and .claude/settings.local.json is ALREADY tracked and publicly
 # readable; this rule only stops new files - untracking needs git rm --cached.
 .claude/
+
+# 缺陷登記簿（2026-09-24）：本 repo 在 GitHub 為 public。.assetsignore 只擋靜態資產
+# 發佈，擋不住 GitHub（見 .assetsignore 自身的說明）。一份列出未修補弱點、且附上
+# 檔案行號的登記簿放進公開 repo，等於主動把攻擊路徑交出去。故不進版控。
+# Defect register: this repo is public on GitHub. .assetsignore stops asset publishing,
+# not GitHub. A register of unpatched weaknesses with file:line anchors must not be
+# committed to a public repository.
+DEFECTS.md
+PLAN_*.md
