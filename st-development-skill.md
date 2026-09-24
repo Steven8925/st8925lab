@@ -62,13 +62,27 @@ description: 適用於全專案的自主工程推進、雙軌文件即時同步�
 > 一律視為「尚未同意」，維持不動作**，不得以「未獲即時反對」為由逕行執行。
 > 需要的是明確的同意（例如「可以刪」「照做」「核可」）。
 >
-> **本條的由來**：2026-09-24 清理專案時，`temp_ref_imgs/`（2.1 MB）、
-> `.agents/`（4.9 MB）、`V4/` 皆不在版控，刪除不可復原。提報後山姆哥回覆
-> 「知道了」。舊版條文的「未獲即時反對即執行」會導致這三個目錄被永久刪除；
-> 實際判讀為「知道了，先不要動」而未刪除，事後確認此判讀正確。
-> Origin: on 2026-09-24 three unversioned directories were queued for deletion and
-> Sam replied only "noted". The old "proceed unless objected" clause would have
-> destroyed them irrecoverably. Acknowledgement is not authorization.
+> **本條的由來**：2026-09-24 清理專案時，`temp_ref_imgs/`、`.agents/`、`V4/`
+> 三個目錄被列入待刪。提報後山姆哥僅回覆「知道了」。舊版條文的「未獲即時反對
+> 即執行」會導致三者被直接刪除；實際判讀為「知道了，先不要動」而維持不動，
+> 事後確認此判讀正確 —— 山姆哥當天稍晚才逐項給出明確指示，且**其中一項是「留」**。
+>
+> **附帶更正（2026-09-24 同日）**：本條原先寫「三者皆不在版控，刪除不可復原」，
+> 這是錯的。後續查證發現 `.agents/`（4.9 MB）是
+> `gemini-cli-extensions/data-agent-kit-starter-pack` 的乾淨 clone（`2df10e2`），
+> 工作區無修改、無僅存本機的 commit，重新 clone 即可取回。我在**未進入該目錄
+> 查證**的情況下就斷言「不可復原」，與 §2 的「未經查證的數字不得寫入文件」
+> 是同一個錯誤。
+> 這個更正讓本條更強而非更弱：**連我對風險的評估本身都可能是錯的**，
+> 因此更不該拿沉默當同意 —— 使用者的沉默，可能只是還沒看出我把事實講錯了。
+> Origin: three directories were queued for deletion and Sam replied only "noted".
+> The old "proceed unless objected" clause would have deleted all three; he later
+> gave explicit per-item instructions, and one of them was "keep".
+> Correction, same day: this note originally claimed all three were unrecoverable.
+> That was wrong — `.agents/` was a clean clone and could be re-cloned. Asserting
+> irreversibility without checking is the same failure as publishing an unverified
+> figure. That makes the rule stronger, not weaker: if my own risk assessment can
+> be wrong, silence is even less safe to read as consent.
 
 ---
 
