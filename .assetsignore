@@ -85,6 +85,14 @@ tools/
 prompt_init.md
 SPEC-v4.md
 ST8925-LAB-standalone.html
+
+# Tailwind 建置的**輸入**檔。產出 Travel-Assistance/tailwind.css 必須被發佈
+# （頁面靠它上樣式），但輸入檔沒有任何理由公開。
+# 前導斜線是刻意的：今天已經被未錨定的 `!.env.example` 咬過一次，
+# 它把兩個子目錄的 .env.example 一起重新納入了。
+# Build INPUTS only. The generated tailwind.css MUST stay published.
+/Travel-Assistance/tailwind.singlefile.config.js
+/Travel-Assistance/tailwind.input.css
 st8925lab-deploy-guide.html
 
 # ==========================================================================

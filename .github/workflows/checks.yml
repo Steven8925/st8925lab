@@ -15,10 +15,14 @@
 # 所以 `submodules: recursive` 會直接失敗：
 #     fatal: repository '.../Travel-Assistance.git/' not found
 #
-# 這個失敗本身是重要情報，不是雜訊：**Cloudflare Workers Builds 也是從 GitHub
-# clone**。若它同樣取不到這個私有 submodule，`Travel-Assistance/index.html`
-# 就不在資產庫裡，P06 在正式站是 404 —— 而本機開發一切正常。
-# 詳見 DEFECTS.md 的 S-6，該項待實測確認。
+# 當時的推論是：**Cloudflare Workers Builds 也是從 GitHub clone**，若它同樣取不到
+# 這個私有 submodule，P06 在正式站就是 404。
+#
+# 2026-09-24 實測推翻了那個推論：`GET /Travel-Assistance/index.html` 回 **200**。
+# Cloudflare 的 GitHub App 有該私有 repo 的權限，與 Actions 預設 GITHUB_TOKEN
+# 的權限範圍是兩件不同的事，不可混為一談。DEFECTS.md 的 S-6 已因此關閉。
+# 留下這段紀錄是因為它說明了一件事：CI 失敗是真的，但從它推導出的結論是錯的，
+# 而只有實測能分辨這兩者。
 #
 # 在山姆哥決定（公開該 repo／加 PAT secret／維持現狀）之前，本工作流不取出
 # submodule，檢查腳本會明確把相關項目標為 SKIP 而非 FAIL —— 為了一個環境限制
@@ -61,8 +65,8 @@ jobs:
             echo "相關檢查將標為 SKIP。見 DEFECTS.md S-6。"
           fi
 
-      # 三支檢查彼此獨立，任一失敗都要讓整個工作失敗，
-      # 但仍要看到其他兩支的輸出 —— 所以用 if: always() 串起來。
+      # 四支檢查彼此獨立，任一失敗都要讓整個工作失敗，
+      # 但仍要看到其他幾支的輸出 —— 所以用 if: always() 串起來。
       - name: 公開暴露面 / public surface
         run: python tools/check_public_surface.py
 
@@ -73,3 +77,10 @@ jobs:
       - name: 單一真理源 / single source of truth
         if: always()
         run: python tools/check_single_source.py
+
+      # Travel-Assistance 的 Tailwind 已從 Play CDN 改為建置期產生 tailwind.css。
+      # 新的失效模式：有人加了 class 卻沒重建 —— 不會報錯，樣式默默掉光。
+      # 這支比對 class 詞彙表指紋來攔它。submodule 未取出時回報 SKIP。
+      - name: Tailwind 建置同步 / tailwind build freshness
+        if: always()
+        run: python tools/check_tailwind_build.py

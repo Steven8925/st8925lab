@@ -38,6 +38,15 @@
 # Correction: this note previously claimed the Tailwind Play CDN requires
 # 'unsafe-eval'. It does not — proven with a real origin, real response
 # header, and a control that confirmed the CSP was actually enforced.
+#
+# cdn.tailwindcss.com 已於 2026-09-24 從 script-src 移除 —— 不是因為 CSP，
+# 而是因為 Travel-Assistance/index.html 不再載入它：Tailwind 已改為建置期
+# 產生 Travel-Assistance/tailwind.css。Play CDN 官方明載不適用正式環境
+# （每位訪客都要下載編譯器並在自己瀏覽器裡跑一次編譯）。
+# 等價性以逐元素 computed style 實測：680 個非動畫元素，差異 0。
+#
+# cdn.tailwindcss.com was dropped because nothing loads it any more, not
+# because of the CSP. Equivalence was measured element-by-element.
 
 /*
   # 瀏覽器不得用自己的猜測覆蓋我們宣告的 Content-Type。
@@ -70,4 +79,4 @@
   #     unpkg.com/@phosphor-icons/web，但該套件的 CSS 會再去 jsdelivr 取
   #     regular/thin/light/bold/fill/duotone 六份子樣式表。只看 HTML 看不出來。
   # 這兩項都是靜態審查看不到、只有真的用瀏覽器開才會發現的。
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdn.sheetjs.com https://cdn.tailwindcss.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net https://unpkg.com https://fonts.gstatic.com; connect-src 'self' https://st8925lab-travel-assistance.onrender.com https://st8925lab-alarm-api.onrender.com https://st8925lab-alarm-ops.onrender.com https://cloudflareinsights.com https://*.tile.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdn.sheetjs.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net https://unpkg.com https://fonts.gstatic.com; connect-src 'self' https://st8925lab-travel-assistance.onrender.com https://st8925lab-alarm-api.onrender.com https://st8925lab-alarm-ops.onrender.com https://cloudflareinsights.com https://*.tile.openstreetmap.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
