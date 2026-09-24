@@ -95,8 +95,22 @@ def extract_class_vocabulary(html):
 
 
 def fingerprint_of(vocab):
+    """指紋涵蓋「所有會改變產出 CSS 的輸入」。
+
+    第一版只雜湊 index.html 的 class 詞彙表。那有個洞，是 2026-09-25 補
+    brand-300/400 時**用這支檢查才發現的**：改設定檔會改變產出 CSS，卻不動
+    markup，所以指紋不變 —— 就算忘了重建，檢查照樣通過。
+
+    Tailwind 的產出由三個輸入決定：markup 的 class 詞彙、設定檔、input CSS。
+    三個都要進指紋，否則這支檢查在設定漂移時是瞎的。
+    """
     h = hashlib.sha256()
     h.update("\n".join(vocab).encode("utf-8"))
+    for path in (CONFIG, INPUT):
+        h.update(b"\x00")
+        if os.path.exists(path):
+            # 以 bytes 雜湊：行尾本身若變了，也該視為輸入變了
+            h.update(open(path, "rb").read())
     return h.hexdigest()
 
 
@@ -168,8 +182,9 @@ def main():
         problems.append("tailwind.css 的引用位置會改變層疊順序")
 
     # [3] class 詞彙表指紋
-    print("\n[3] class 詞彙表是否與上次建置相同")
+    print("\n[3] 建置輸入是否與上次建置相同")
     print("-" * 78)
+    print("  指紋涵蓋：index.html 的 class 詞彙 + 設定檔 + input CSS")
     vocab = extract_class_vocabulary(html)
     fp = fingerprint_of(vocab)
     print("  詞彙表 token 數 : %d" % len(vocab))
