@@ -1,7 +1,7 @@
-4e9af7fc153afbebd9e67eb3dedb0d5f7e375f848df5d60ca05119e51cd553fe
+ce4860af4af961fe4decb50a1c8c138a5b250d32a01f6a9ca98a4972ace2a73a
 
 # Travel-Assistance/index.html 的 class 詞彙表 SHA-256。
 # 由 tools/check_tailwind_build.py --write-fingerprint 產生。
 # 只有在重建過 tailwind.css **並且在瀏覽器確認過**之後才該更新這個值。
 # 先更新指紋再重建，等於把檢查關掉。
-# token 數：1210
+# token 數：1223
