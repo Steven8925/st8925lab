@@ -23,9 +23,19 @@ const JSON_HEADERS = {
   'content-security-policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
 };
 
-// NVIDIA 模型清單端點：只驗證授權，不消耗 token。
-// NVIDIA's model-list endpoint: validates auth only, consumes no tokens.
-const NVIDIA_MODELS_URL = 'https://integrate.api.nvidia.com/v1/models';
+// NVIDIA 對話端點：探測送一次 max_tokens=1 的最小請求。
+// 2026-09-26（S-31）：原本打 /v1/models，但那個端點連假金鑰都回 200，
+// 所以「valid: true」什麼都沒證明。對話端點會拒絕無效金鑰（實測假金鑰 403），
+// 每次成本約 1 個 token；探測本身仍由 PROBE_TOKEN 把關，外人無法觸發。
+// NVIDIA chat endpoint: the probe sends one minimal request (max_tokens=1).
+// 2026-09-26 (S-31): this used to call /v1/models, which answers 200 even for a fake
+// key, so "valid: true" proved nothing. The chat endpoint rejects bad keys (a fake
+// key measured 403). Cost is about one token per probe, and the probe is still gated
+// by PROBE_TOKEN, so outsiders cannot trigger it.
+const NVIDIA_CHAT_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+// 與 render.yaml 的 NVIDIA_CHAT_MODEL 相同；Worker 有設同名變數時以變數為準。
+// Same as NVIDIA_CHAT_MODEL in render.yaml; a Worker variable of that name wins.
+const NVIDIA_PROBE_MODEL = 'nvidia/nemotron-3-super-120b-a12b';
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
@@ -48,21 +58,38 @@ function isProbeAuthorized(request, url, env) {
 
 // 拿執行期金鑰實際送一次請求，只回報 HTTP 狀態碼。
 // 絕不回傳金鑰、回應內容或錯誤細節。
+// valid：200 = true；401／403 = false；其他狀態（例如模型已退役的 404）= null，
+// 因為那代表「無法判定」，不代表金鑰無效。
 // Sends one real request with the runtime key; reports only the HTTP status.
 // Never returns the key, the response body, or error details.
+// valid: 200 = true; 401/403 = false; any other status (e.g. 404 for a retired model)
+// = null, because that means "cannot tell", not "the key is bad".
 async function probeNvidia(env) {
   if (!env.NVIDIA_API_KEY) {
     return { configured: false, reason: 'not_configured' };
   }
+  const model = env.NVIDIA_CHAT_MODEL || NVIDIA_PROBE_MODEL;
   try {
-    const res = await fetch(NVIDIA_MODELS_URL, {
-      method: 'GET',
-      headers: { authorization: `Bearer ${env.NVIDIA_API_KEY}` },
-      signal: AbortSignal.timeout(10000),
+    const res = await fetch(NVIDIA_CHAT_URL, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${env.NVIDIA_API_KEY}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1,
+      }),
+      signal: AbortSignal.timeout(20000),
     });
-    return { configured: true, status: res.status, valid: res.status === 200 };
+    if (res.status === 200) return { configured: true, status: 200, valid: true, model };
+    if (res.status === 401 || res.status === 403) {
+      return { configured: true, status: res.status, valid: false, model };
+    }
+    return { configured: true, status: res.status, valid: null, reason: 'inconclusive', model };
   } catch {
-    return { configured: true, status: null, valid: false, reason: 'unreachable' };
+    return { configured: true, status: null, valid: null, reason: 'unreachable', model };
   }
 }
 
