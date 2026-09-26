@@ -6,9 +6,21 @@
 // served by static assets directly. The final fallback still hands off to env.ASSETS so
 // pages keep working even if the routing config changes.
 
+// 安全標頭：值與 _headers 逐字一致（_headers 只作用於靜態資產，碰不到 /api/*，
+// 所以必須在這裡另外設）。CSP 用最嚴格版本：JSON 回應不需要載入任何資源。
+// Security headers, values copied verbatim from _headers. _headers applies to static
+// assets only and never reaches /api/*, so they must be set here as well. The CSP is
+// the strictest form, because a JSON response has no reason to load anything.
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
   'cache-control': 'no-store',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
+  'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+  'x-permitted-cross-domain-policies': 'none',
+  'content-security-policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
 };
 
 // NVIDIA 模型清單端點：只驗證授權，不消耗 token。
