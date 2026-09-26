@@ -4,7 +4,6 @@
 https://cdn.jsdelivr.net/npm/chart.js
 https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js
 https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js
-https://cdn.tailwindcss.com
 https://unpkg.com/@phosphor-icons/web
 https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
 https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
