@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://wayne_user:Wayne_Secure_Timescale_2026!@localhost:5432/wayne_iot"
+        "postgresql://wayne_user@localhost:5432/wayne_iot"
     )
 
     # LLM Provider Configuration

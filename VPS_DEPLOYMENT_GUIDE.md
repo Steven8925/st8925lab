@@ -201,13 +201,13 @@ APP_DEBUG=false
 # --- PostgreSQL & TimescaleDB ---
 POSTGRES_DB=st8925_prod
 POSTGRES_USER=st8925_admin
-POSTGRES_PASSWORD=SuperStrongPostgresPass_2026_Secure!
-DATABASE_URL=postgresql://st8925_admin:SuperStrongPostgresPass_2026_Secure!@postgres:5432/st8925_prod
+POSTGRES_PASSWORD=<generate: openssl rand -base64 32>
+DATABASE_URL=postgresql://st8925_admin:<POSTGRES_PASSWORD>@postgres:5432/st8925_prod
 
 # --- Redis 7 ---
 REDIS_HOST=redis
 REDIS_PORT=6379
-REDIS_PASSWORD=SuperStrongRedisPass_2026_Secure!
+REDIS_PASSWORD=<generate: openssl rand -base64 32>
 
 # --- P03: AI Diagnostic & Knowledge Base ---
 LLM_PROVIDER=gemini
@@ -221,12 +221,12 @@ LOG_LEVEL=INFO
 ALARM_JWT_SECRET=super_secret_jwt_alarm_key_2026_xyz_production
 SEED_MANAGER_EMAIL=manager@st8925lab.com
 SEED_ADMIN_EMAIL=admin@st8925lab.com
-SEED_PASSWORD=Prod-Alarm-2026-Strict!
+SEED_PASSWORD=<set a strong password>
 LINE_CHANNEL_ACCESS_TOKEN=
 FCM_SERVER_KEY=
 
 # --- P02: Wayne IoT Server Gen 2 ---
-LARAVEL_APP_KEY=base64:3m8zX9Y7wP2qR4sT6uV8wX0yZ1aB3cE5gH7jK9mN1pQ=
+LARAVEL_APP_KEY=<generate: php artisan key:generate --show>
 CACHE_DRIVER=redis
 QUEUE_CONNECTION=redis
 EOF

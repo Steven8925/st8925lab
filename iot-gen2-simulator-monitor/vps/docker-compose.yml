@@ -68,7 +68,7 @@ services:
     environment:
       - POSTGRES_DB=wayne_iot
       - POSTGRES_USER=wayne_user
-      - POSTGRES_PASSWORD=Wayne_Secure_Timescale_2026!
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?required}
       - TIMESCALEDB_TELEMETRY=off
     ports:
       - "127.0.0.1:5432:5432"
@@ -84,7 +84,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: wayne_redis
-    command: redis-server --appendonly yes --requirepass Wayne_Redis_Secret_2026! --maxmemory 2gb --maxmemory-policy noeviction
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?required} --maxmemory 2gb --maxmemory-policy noeviction
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
@@ -100,9 +100,9 @@ services:
       dockerfile: Dockerfile
     container_name: wayne_ai
     environment:
-      - DB_URL=postgresql://wayne_user:Wayne_Secure_Timescale_2026!@timescaledb:5432/wayne_iot
+      - DB_URL=postgresql://wayne_user:${DB_PASSWORD:?required}@timescaledb:5432/wayne_iot
       - REDIS_HOST=redis
-      - REDIS_PASSWORD=Wayne_Redis_Secret_2026!
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?required}
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:

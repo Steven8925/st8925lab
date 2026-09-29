@@ -25,7 +25,7 @@ app = FastAPI(
     version="2.0.0"
 )
 
-DB_URL = os.getenv("DB_URL", "postgresql://wayne_user:Wayne_Secure_Timescale_2026!@timescaledb:5432/wayne_iot")
+DB_URL = os.getenv("DB_URL", "postgresql://wayne_user@timescaledb:5432/wayne_iot")
 
 class TelemetryPoint(BaseModel):
     time: str

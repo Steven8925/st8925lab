@@ -145,7 +145,7 @@ docker logs -f wayne_worker
 docker logs -f wayne_ai
 
 # 3. 檢查 Redis Stream 隊列長度
-docker exec -it wayne_redis redis-cli -a Wayne_Redis_Secret_2026! XLEN iot_stream:incoming
+docker exec -it wayne_redis redis-cli -a <REDIS_PASSWORD> XLEN iot_stream:incoming
 
 # 4. 檢查 TimescaleDB 壓縮節省空間
 docker exec -it wayne_timescaledb psql -U wayne_user -d wayne_iot -c "SELECT * FROM timescaledb_information.compression_settings;"

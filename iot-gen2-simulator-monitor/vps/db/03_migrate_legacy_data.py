@@ -26,7 +26,7 @@ PG_CONFIG = {
     'host': os.getenv('NEW_PG_HOST', '127.0.0.1'),
     'port': int(os.getenv('NEW_PG_PORT', '5432')),
     'user': os.getenv('NEW_PG_USER', 'wayne_user'),
-    'password': os.getenv('NEW_PG_PASS', 'Wayne_Secure_Timescale_2026!'),
+    'password': os.environ['NEW_PG_PASS'],
     'database': os.getenv('NEW_PG_DB', 'wayne_iot'),
 }
 
