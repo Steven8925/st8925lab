@@ -93,6 +93,8 @@ async function probeNvidia(env) {
   }
 }
 
+import { handleMessengerApi } from './messenger.js';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -109,7 +111,7 @@ export default {
         service: 'st8925lab-api',
         time: new Date().toISOString(),
         configured: {
-          nvidia: Boolean(env.NVIDIA_API_KEY),
+          nvidia: Boolean(env.NVIDIA_API_KEY || env.NVIDIA_NIM_API_KEY),
           tavily: Boolean(env.TAVILY_API_KEY),
         },
       };
@@ -123,6 +125,8 @@ export default {
     }
 
     if (pathname.startsWith('/api/')) {
+      const messengerResp = await handleMessengerApi(request, url, env, jsonResponse);
+      if (messengerResp) return messengerResp;
       return jsonResponse({ ok: false, error: 'not_found' }, 404);
     }
 

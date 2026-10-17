@@ -66,3 +66,7 @@ PLAN_*.md
 # Cloudflare Pages Function 草稿（secure-messenger-chatops 的後端）。本站部署是 Worker，
 # 這個檔不會被執行；後端改寫進 worker/index.js 之前不進公開 repo（2026-10-17 山姆哥選 A）。
 /functions/
+
+# LAB 暫存複製目錄與參考舊規檔（2026-10-17）：內含本機 .env 與筆記，嚴禁進入公開 GitHub 版控。
+secure-messenger-chatops/copy from LAB/
+PROMPT_v11.md

@@ -620,18 +620,23 @@ Every value below was read from the file, not recalled.
 | `main` | `worker/index.js` |
 | `compatibility_date` | `2026-09-21` |
 | `keep_vars` | `true` —— 儀表板上設定的變數不會因部署被清掉 |
+| `vars.NVIDIA_NIM_TEXT_MODEL` | `"nvidia/nemotron-3-super-120b-a12b"`（2026-10-17 同步自 Cloudflare Dashboard） |
+| `vars.NVIDIA_NIM_VISION_MODEL` | `"nvidia/nemotron-3.5-super-vl-120b-a12b"`（2026-10-17 同步自 Cloudflare Dashboard） |
 | `observability.enabled` | `true` |
 | `assets.directory` | `.` —— **repo 根目錄就是發佈根目錄**，這是 §7.2 兩道防線的成因 |
 | `assets.binding` | `ASSETS` |
 | `assets.run_worker_first` | `["/api/*"]` |
 
 路由行為：`/api/*` 先進 Worker；其餘所有路徑直接由靜態資產回應，完全不經過
-Worker。Worker 目前只實作 `/api/health`，回報 `configured.nvidia` 與
-`configured.tavily` 兩個布林值（只說金鑰字串存不存在，**不回傳金鑰本身**），
-並在通過授權時附上 `probe`。其他 `/api/*` 路徑回 404。`/api/chat` 尚未實作，
-屬 Phase 1 Stage C。
+Worker。Worker 實作 `/api/health`（回報 `configured.nvidia` 與
+`configured.tavily` 兩個布林值，並在通過授權時附上 `probe`），以及由
+`worker/messenger.js` 處理之 Project 04（`secure-messenger-chatops`）路由：
+`/api/status`、`/api/messages`、`/api/ai`、`/api/telegram`、`/api/telemetry`。
+其他 `/api/*` 路徑回 404。`/api/chat` 尚未實作，屬 Phase 1 Stage C。
 Routing: `/api/*` hits the Worker first; everything else is served straight from
-static assets. Only `/api/health` is implemented today.
+static assets. `/api/health` and the Project 04 routes (`worker/messenger.js`:
+`/api/status`, `/api/messages`, `/api/ai`, `/api/telegram`, `/api/telemetry`) are
+implemented; other `/api/*` paths return 404.
 
 ### 7.0.1 發佈範圍 / What actually gets published
 

@@ -15,14 +15,13 @@ scope and the two exclusion barriers live in the root [`../PROMPT.md`](../PROMPT
 
 ## 1. 用途 / Purpose
 
-單一檔案 `worker/index.js`，預設匯出一個帶 `fetch(request, env)` 的物件。
-負責兩件事：
+入口檔案 `worker/index.js`（預設匯出帶 `fetch(request, env)` 的物件）搭配子模組 `worker/messenger.js`，負責三件事：
 
-1. 提供 `/api/health` 健康檢查，回報兩把金鑰**是否已設定**（布林值）。
-2. 其餘所有路徑轉交靜態資產綁定 `env.ASSETS`。
+1. 提供 `/api/health` 健康檢查，回報金鑰**是否已設定**（布林值）與授權 probe。
+2. 透過 `worker/messenger.js`（`handleMessengerApi`）處理 Project 04（`secure-messenger-chatops`）之 `/api/status`、`/api/messages`、`/api/ai`、`/api/telegram`、`/api/telemetry` 路由（詳見 `../secure-messenger-chatops/PROMPT.md`）。
+3. 其餘所有路徑轉交靜態資產綁定 `env.ASSETS`。
 
-A single file exporting `{ async fetch(request, env) }`. It serves `/api/health`
-and hands every other path to the `env.ASSETS` static-assets binding.
+`worker/index.js` exports `{ async fetch(request, env) }`, serving `/api/health`, delegating Project 04 API routes to `worker/messenger.js`, and handing every other path to the `env.ASSETS` static-assets binding.
 
 ---
 
@@ -32,16 +31,15 @@ and hands every other path to the `env.ASSETS` static-assets binding.
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
   'cache-control': 'no-store',
+  // 連同與 _headers 一致的安全標頭（CSP default-src 'none' 等）
 };
 
-const NVIDIA_MODELS_URL = 'https://integrate.api.nvidia.com/v1/models';
+const NVIDIA_CHAT_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+const NVIDIA_PROBE_MODEL = 'nvidia/nemotron-3-super-120b-a12b';
 ```
 
 `cache-control: no-store` 是必要的：健康檢查與 probe 結果不得被任何快取層
-保留。`NVIDIA_MODELS_URL` 選用模型清單端點，因為它**只驗證授權、不消耗
-token**。
-`no-store` is required so health and probe results are never cached. The
-model-list endpoint is used because it validates auth without consuming tokens.
+保留。
 
 輔助函式 / Helper：
 
@@ -61,7 +59,8 @@ function jsonResponse(body, status = 200) {
 |---|---|
 | `pathname === '/api/health'` 且 method 不是 `GET` 也不是 `HEAD` | `405` + `{ ok: false, error: 'method_not_allowed' }` |
 | `pathname === '/api/health'`（`GET`／`HEAD`） | `200` + 健康檢查主體（見 §4） |
-| `pathname.startsWith('/api/')` | `404` + `{ ok: false, error: 'not_found' }` |
+| `pathname.startsWith('/api/')` 且命中 `handleMessengerApi`（`/api/status`, `/api/messages`, `/api/ai`, `/api/telegram`, `/api/telemetry`） | `200` + Project 04 JSON 回應（見 `../secure-messenger-chatops/PROMPT.md`） |
+| 其餘 `pathname.startsWith('/api/')` | `404` + `{ ok: false, error: 'not_found' }` |
 | 其他所有路徑 All other paths | `return env.ASSETS.fetch(request)` |
 
 > 最後的 `env.ASSETS` 分支是保底設計。`wrangler.jsonc` 的

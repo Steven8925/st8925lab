@@ -181,3 +181,6 @@ iot-gen2-simulator-monitor/vps/
 
 # Pages Function 草稿：本站是 Worker 部署，此目錄不執行，也不得被當成靜態檔公開（2026-10-17）。
 /functions/
+
+# LAB 暫存複製目錄（2026-10-17）：不得被當成靜態資產公開。
+/secure-messenger-chatops/copy from LAB/

@@ -19,6 +19,13 @@ This file records how `worker/` evolved. Current behaviour is specified in
 
 ---
 
+## [2026-10-17_22:39:28] 掛載 Project 04 (`worker/messenger.js`) 與同步 `wrangler.jsonc` `vars`
+
+- 新增模組化路由檔 `worker/messenger.js`（匯出 `handleMessengerApi`），由 `worker/index.js` 在 `/api/*` 分支轉發處理 `/api/status`、`/api/messages`、`/api/ai`、`/api/telegram`、`/api/telemetry`；原有 `/api/health` 與 `probeNvidia` 行為 100% 保留不變，且 `configured.nvidia` 同時相容 `NVIDIA_API_KEY` 與 `NVIDIA_NIM_API_KEY`。
+- `wrangler.jsonc` 同步加入 Cloudflare Dashboard 設定之非機密模型名稱 `vars`（`NVIDIA_NIM_TEXT_MODEL: "nvidia/nemotron-3-super-120b-a12b"`、`NVIDIA_NIM_VISION_MODEL: "nvidia/nemotron-3.5-super-vl-120b-a12b"`）；敏感憑證（`NVIDIA_NIM_API_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_CHAT_ID`、`SUPABASE_ANON_KEY`）維持存於 Cloudflare Runtime Secrets。
+
+---
+
 ## [2026-09-23_21:10:00] `a4dd71c` — Worker 入口建立 / Worker entry created
 
 Phase 1 Stage A。此前 repo **沒有任何設定檔**，Cloudflare Workers Builds 每次
