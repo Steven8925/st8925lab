@@ -34,5 +34,7 @@ secure-messenger-chatops/js/telemetry-bridge.js
 secure-messenger-chatops/js/transport-adapter.js
 secure-messenger-chatops/js/ui-controller.js
 secure-messenger-chatops/js/widget-embed.js
+shared/fontscale.css
+shared/fontscale.js
 shared/wordmark.css
 shared/wordmark.js

@@ -3,6 +3,24 @@
 本檔記錄根目錄 `PROMPT.md` 的變動與原因，最新在最上方。2026-10-17 之前的歷程記在 `README.md`（不搬移、不改寫）。
 
 
+[2026-10-17_23:48:29] 更新紀錄（根目錄 PROMPT.md §0 檔案清單、§4.1 第 6 點）
+
+**討論過程**：山姆哥要求以 Secure Messenger 的字級為基礎，統一各子專案預設字型大小，並在各子專案加上 A- / 100% / A+ 控制鈕。實測各頁主要文字：P04 約 15–16px、Alarm 11px、KB 11px、IoT 12px、Travel 12.4px。提出 (a) 全部對齊 P04、(b) 折衷約 14px 兩案。
+
+**最終決策**：山姆哥選 (b) 主要文字約 14px；Travel-Assistance 不做；並宣布取消功能凍結。
+- 新增共用元件 `shared/fontscale.css`、`shared/fontscale.js`；P04 原本自帶的控制鈕邏輯改用共用元件。
+- IoT、KB 的 `font-size` 由 px 改為 rem（89 處，含 `app.js` 動態產生的 HTML）。以 `--fs-boost: 1` 先跑瀏覽器回歸比對，與改前逐元素完全相同後，才調整倍率。
+- Alarm 改 `tools/build_alarm_frontend.py` 的注入內容後重新建置；資產雜湊不變，只有 `index.html` 改變。
+- P04 根字級 18px → 16px。
+
+**重大錯誤／問題**：
+- 放大後 KB 頂列的導覽分頁擠成三行、超出 64px 頂列。處理方式：頂列字級固定為原 px；≤1500px 收起裝飾用的「AI ENGINE ACTIVE」；≤1280px 跨專案連結只留圖示。KB 在 1024px 的頂列反而比改前好（改前已破版）。
+- 375px 時 Alarm、IoT、KB 頂列被擠出畫面（IoT、KB 改前就是如此）。手機版改為收起跨專案連結。
+- `tools/build_alarm_frontend.py` 在 Windows 上 `rmtree(assets)` 會因目錄被佔用而失敗，留下空的 `assets/`。已就地修正為「清空內容再複製」。
+
+**變更原因**：各子專案字級落差達 5px（11px 對 16px），在儀表板頁面閱讀吃力；統一基準並提供使用者自行調整。
+
+
 [2026-10-17_22:39:28] 更新紀錄（根目錄 `wrangler.jsonc`、`PROMPT.md` §7.0、`worker/` 與 `secure-messenger-chatops/` 雙向文件同步）
 
 **討論過程**：山姆哥於 Cloudflare Dashboard 設定 `NVIDIA_NIM_TEXT_MODEL` 與 `NVIDIA_NIM_VISION_MODEL` 後，指示更新 `wrangler.jsonc` 並串接 `worker/` API 路由；同時嚴正要求從 LAB（`d:\Google Antigravity Proejct_free modification\Messebger\`）同步至 PROD（`z:\11_st8925lab\`）時，必須先預讀 PROD 既有開發文件（`PROMPT.md`、`README.md`、`CHANGELOG.md`、`AGENTS.md`、`LOG/`），與 LAB 最終確認文件比對合併後，在 LAB 與 PROD 兩端各放一份，杜絕「只改程式碼／設定檔卻未更新開發文件」的不一致情況。

@@ -6,6 +6,8 @@
 <title>ST8925 LAB — AI Diagnostic Knowledge Base</title>
 <meta name="description" content="工業冷卻水與冰水機組 AI 智慧診斷與知識庫平台 (AI Diagnostic Knowledge Base) — 整合統計基線、漂移預警、RAG 語義知識庫與 Gemini LLM 根因診斷。">
 <link rel="stylesheet" href="../shared/wordmark.css">
+<link rel="stylesheet" href="../shared/fontscale.css">
+<script src="../shared/fontscale.js"></script>
 <link rel="stylesheet" href="./style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -30,8 +32,9 @@
         </nav>
     </div>
     <div class="topbar-actions">
-        <a class="nav-cross-btn" href="../iot-gen2-simulator-monitor/index.html" title="前往 Project 02 IoT 遙測監控">📡 IoT 遙測 (P02)</a>
-        <a class="nav-cross-btn" href="../alarm-notification-simulator/index.html" title="前往 Project 01 告警通知模擬台">🔔 告警推播 (P01)</a>
+        <div id="font-scale-slot"></div>
+        <a class="nav-cross-btn" href="../iot-gen2-simulator-monitor/index.html" title="前往 Project 02 IoT 遙測監控" aria-label="IoT 遙測 (P02)">📡<span class="xbtn-label"> IoT 遙測 (P02)</span></a>
+        <a class="nav-cross-btn" href="../alarm-notification-simulator/index.html" title="前往 Project 01 告警通知模擬台" aria-label="告警推播 (P01)">🔔<span class="xbtn-label"> 告警推播 (P01)</span></a>
         <div class="live-indicator">
             <div class="live-dot"></div>
             <span>AI ENGINE ACTIVE</span>
@@ -166,7 +169,7 @@
             <div class="chart-container" style="height: 380px;">
                 <canvas id="cusum-chart-canvas"></canvas>
             </div>
-            <div style="font-size:12px; color:var(--muted); margin-top:14px; line-height:1.6; background:rgba(0,0,0,0.25); padding:12px 16px; border-radius:var(--radius-sm)">
+            <div style="font-size:0.923077rem; color:var(--muted); margin-top:14px; line-height:1.6; background:rgba(0,0,0,0.25); padding:12px 16px; border-radius:var(--radius-sm)">
                 💡 <strong>CUSUM 原理說明：</strong> 標準閾值告警只有在水溫突破 36.5°C 時才會觸發；但 CUSUM 演算法透過持續累積微小正向偏差 (x<sub>i</sub> - μ - k)，在水溫僅上升至 35.2°C 時即突破決策區間 h (4.5σ)，提前 3~5 天為現場維運團隊爭取預防性處置時間。
             </div>
         </div>
@@ -212,6 +215,7 @@ const col = RAINBOW.find(c => c.name === hue) || RAINBOW[idx % RAINBOW.length];
 document.documentElement.style.setProperty('--c', col.hex);
 
 initWordmark('wordmark', SITE_NAME);
+initFontScale('font-scale-slot');
 </script>
 <script type="module" src="./app.js"></script>
 

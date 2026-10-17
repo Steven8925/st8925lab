@@ -1,0 +1,46 @@
+/* ===============================================================
+   FONT SCALE — shared component / 共用元件
+   頂列「A- / 100% / A+」控制鈕樣式；與 fontscale.js 成對載入。
+   外觀取自 secure-messenger-chatops（P04）原本的控制鈕。
+   尺寸用 px：控制鈕本身不隨字體倍率縮放，按鈕位置才不會跟著跑。
+   =============================================================== */
+
+.font-scale-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 7px;
+    padding: 3px 6px;
+}
+
+.font-scale-btn {
+    background: transparent;
+    color: #eef3fb;
+    border: none;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.font-scale-btn:hover,
+.font-scale-btn:focus-visible {
+    color: var(--c, #a78bfa);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.font-scale-btn:focus-visible {
+    outline: 2px solid var(--c, #a78bfa);
+    outline-offset: 1px;
+}
+
+@media (max-width: 760px) {
+    .font-scale-btn { padding: 3px 5px; font-size: 12px; }
+}

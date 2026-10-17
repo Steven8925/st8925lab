@@ -17,30 +17,12 @@ export class UiController {
     }
 
     init() {
-        this._bindFontScaleControls();
         this._bindChannelTabs();
         this._bindComposer();
         this._bindVaultControls();
         this._bindTelemetryControls();
         this._seedWelcomeMessages();
         this.switchChannel('A');
-    }
-
-    _bindFontScaleControls() {
-        const decBtn = document.getElementById('btn-font-dec');
-        const rstBtn = document.getElementById('btn-font-reset');
-        const incBtn = document.getElementById('btn-font-inc');
-        let scale = parseFloat(localStorage.getItem('st8925_font_scale') || '1') || 1;
-        const applyScale = (next) => {
-            scale = Math.min(1.45, Math.max(0.85, Math.round(next * 100) / 100));
-            document.documentElement.style.setProperty('--font-scale', String(scale));
-            localStorage.setItem('st8925_font_scale', String(scale));
-            if (rstBtn) rstBtn.textContent = `${Math.round(scale * 100)}%`;
-        };
-        applyScale(scale);
-        if (decBtn) decBtn.addEventListener('click', () => applyScale(scale - 0.1));
-        if (rstBtn) rstBtn.addEventListener('click', () => applyScale(1));
-        if (incBtn) incBtn.addEventListener('click', () => applyScale(scale + 0.1));
     }
 
     _seedWelcomeMessages() {

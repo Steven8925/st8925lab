@@ -63,14 +63,22 @@ TOPBAR_CSS = """
         font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
     }
     #root { padding-top: var(--bar-h); box-sizing: border-box; min-height: 100vh; }
+    /* 字體大小（2026-10-17，山姆哥 1(b)）：本頁全用 rem（Tailwind 與 tokens.css），主要文字是
+       --text-xs 0.6875rem。根字級放大 14/11 倍讓它預設約 14px，再乘頂列 A-／A+ 的 --font-scale。 */
+    html { font-size: calc(16px * 14 / 11 * var(--font-scale, 1)); }
+    /* 手機（≤760px）：頂列只留站名、字體控制鈕與 BACK TO ORBIT；跨專案連結收起。 */
+    @media (max-width: 760px) {
+        #st8925-topbar .st-xlink { display: none !important; }
+    }
 """
 
 TOPBAR_HTML = (
     '<header id="st8925-topbar">'
     '<a id="wordmark" href="../index.html" aria-label="ST8925 LAB"></a>'
     '<div style="display:flex; align-items:center; gap:8px; margin-left:auto;">'
-    '<a href="../iot-gen2-simulator-monitor/index.html" style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; color:#cbd5e1; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">📡 IoT 遙測 (P02)</a>'
-    '<a href="../ai-diagnostic-kb/index.html" style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; color:#cbd5e1; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">🤖 AI 診斷 (P03)</a>'
+    '<div id="font-scale-slot"></div>'
+    '<a class="st-xlink" href="../iot-gen2-simulator-monitor/index.html" style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; color:#cbd5e1; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">📡 IoT 遙測 (P02)</a>'
+    '<a class="st-xlink" href="../ai-diagnostic-kb/index.html" style="font-family:ui-monospace,monospace; font-size:11px; font-weight:600; color:#cbd5e1; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">🤖 AI 診斷 (P03)</a>'
     '<a href="../index.html" style="font-family:ui-monospace,monospace; font-size:11px; color:#8a9bb5; text-decoration:none; padding:4px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03);">&larr; BACK TO ORBIT</a>'
     '</div>'
     "</header>\n"
@@ -89,6 +97,7 @@ const hue = new URLSearchParams(location.search).get('hue');
 const col = RAINBOW.find(c => c.name === hue) || RAINBOW[idx % RAINBOW.length];
 document.documentElement.style.setProperty('--c', col.hex);
 initWordmark('wordmark', SITE_NAME);
+initFontScale('font-scale-slot');
 """
 
 
@@ -116,6 +125,8 @@ def inject_topbar(html: str) -> str:
     html = html.replace(
         "</head>",
         '<link rel="stylesheet" href="../shared/wordmark.css">\n'
+        '<link rel="stylesheet" href="../shared/fontscale.css">\n'
+        '<script src="../shared/fontscale.js"></script>\n'
         f"<style>{TOPBAR_CSS}</style>\n</head>",
     )
     html = re.sub(r"(<body[^>]*>)", r"\1\n" + TOPBAR_HTML, html, count=1)
@@ -138,9 +149,17 @@ def deploy_build() -> None:
     (LIVE_DIR / "index.html").write_text(html, encoding="utf-8")
 
     live_assets = LIVE_DIR / "assets"
-    if live_assets.exists():
-        shutil.rmtree(live_assets)
-    shutil.copytree(WEB_DIST / "assets", live_assets)
+    # 只清空資料夾內容、不刪資料夾本身：Windows 上若有程式（例如本機預覽伺服器）
+    # 開著這個目錄，rmtree 刪目錄會失敗，舊版因此留下「檔案已刪、新檔未複製」的空 assets/。
+    # Empty the folder instead of removing it: on Windows a process holding the
+    # directory open makes rmdir fail, which used to leave assets/ empty.
+    live_assets.mkdir(exist_ok=True)
+    for old in live_assets.iterdir():
+        if old.is_dir():
+            shutil.rmtree(old)
+        else:
+            old.unlink()
+    shutil.copytree(WEB_DIST / "assets", live_assets, dirs_exist_ok=True)
 
     print(f"Deployed: {LIVE_DIR / 'index.html'}")
     print(f"Deployed: {live_assets} ({len(list(live_assets.iterdir()))} files)")

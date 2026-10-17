@@ -241,10 +241,10 @@ class DiagnosticApp {
                 return `
                     <div class="machine-nav-item ${isActive}" onclick="window.diagnosticApp.selectMachine(${m.id})">
                         <div>
-                            <div style="font-weight:600; font-size:12px; color:#fff">${m.name}</div>
-                            <div style="font-size:10px; color:var(--muted)">${m.model} · ${m.sn}</div>
+                            <div style="font-weight:600; font-size:0.923077rem; color:#fff">${m.name}</div>
+                            <div style="font-size:0.769231rem; color:var(--muted)">${m.model} · ${m.sn}</div>
                         </div>
-                        <div style="font-size:12px; font-weight:700; color:${m.id === 6 ? 'var(--critical)' : (m.id === 15 || m.id === 23 ? 'var(--warning)' : 'var(--healthy)')}">
+                        <div style="font-size:0.923077rem; font-weight:700; color:${m.id === 6 ? 'var(--critical)' : (m.id === 15 || m.id === 23 ? 'var(--warning)' : 'var(--healthy)')}">
                             ${m.id === 6 ? '62' : (m.id === 15 ? '78' : (m.id === 23 ? '81' : '96'))}
                         </div>
                     </div>
@@ -326,7 +326,7 @@ class DiagnosticApp {
                             <div class="step-num">${a.priority}</div>
                             <div>
                                 <div style="font-weight:600; color:#fff">${a.action}</div>
-                                <div style="font-size:11px; color:var(--muted)">所需工具: ${a.tools || '一般檢修工具'} · 預估耗時: ${a.time}</div>
+                                <div style="font-size:0.846154rem; color:var(--muted)">所需工具: ${a.tools || '一般檢修工具'} · 預估耗時: ${a.time}</div>
                             </div>
                         </div>
                         <span class="status-badge" style="background:rgba(77,171,247,0.15); color:var(--c)">${a.urgency.toUpperCase()}</span>
@@ -334,7 +334,7 @@ class DiagnosticApp {
                 `).join('')}
 
                 <div class="report-section-title">⚠️ 風險評估與惡化預判 (Risk Escalation)</div>
-                <div style="background:rgba(0,0,0,0.3); padding:12px 16px; border-radius:var(--radius-sm); font-size:12px; color:#cbd5e1; border-left:3px solid var(--critical)">
+                <div style="background:rgba(0,0,0,0.3); padding:12px 16px; border-radius:var(--radius-sm); font-size:0.923077rem; color:#cbd5e1; border-left:3px solid var(--critical)">
                     ${report.risk.escalation} (預估時間窗口: <strong>${report.risk.timeframe}</strong>)
                 </div>
             </div>
@@ -479,16 +479,16 @@ class DiagnosticApp {
             container.innerHTML = KB_TROUBLESHOOTING.map(t => `
                 <div class="kb-card">
                     <div class="kb-card-header">
-                        <div style="font-size:15px; font-weight:600; color:#fff">${t.title}</div>
+                        <div style="font-size:1.153846rem; font-weight:600; color:#fff">${t.title}</div>
                         <span class="kb-code-tag">${t.code}</span>
                     </div>
-                    <div style="font-size:12px; color:var(--muted); margin-bottom:12px">${t.symptom}</div>
-                    <div style="font-weight:600; font-size:12px; color:#94a3b8; margin-bottom:6px">可能根本原因：</div>
+                    <div style="font-size:0.923077rem; color:var(--muted); margin-bottom:12px">${t.symptom}</div>
+                    <div style="font-weight:600; font-size:0.923077rem; color:#94a3b8; margin-bottom:6px">可能根本原因：</div>
                     ${t.causes.map(c => `
-                        <div style="background:rgba(0,0,0,0.25); padding:8px 12px; border-radius:4px; margin-bottom:6px; font-size:12px">
+                        <div style="background:rgba(0,0,0,0.25); padding:8px 12px; border-radius:4px; margin-bottom:6px; font-size:0.923077rem">
                             <span style="color:#fff; font-weight:600">#${c.rank} ${c.cause}</span>
                             <span style="color:var(--warning); float:right">機率 ${c.prob}</span>
-                            <div style="color:var(--muted); font-size:11px; margin-top:2px">${c.reason}</div>
+                            <div style="color:var(--muted); font-size:0.846154rem; margin-top:2px">${c.reason}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -497,11 +497,11 @@ class DiagnosticApp {
             container.innerHTML = KB_WORK_ORDERS.map(w => `
                 <div class="kb-card">
                     <div class="kb-card-header">
-                        <div style="font-size:15px; font-weight:600; color:#fff">${w.title}</div>
+                        <div style="font-size:1.153846rem; font-weight:600; color:#fff">${w.title}</div>
                         <span class="kb-code-tag">${w.no}</span>
                     </div>
-                    <div style="font-size:12px; color:var(--muted); margin-bottom:8px">📅 維修日期: ${w.date} · 技師: ${w.tech} · 工時: ${w.hours}</div>
-                    <div style="background:rgba(0,0,0,0.25); padding:10px 14px; border-radius:6px; font-size:12px; margin-bottom:8px">
+                    <div style="font-size:0.923077rem; color:var(--muted); margin-bottom:8px">📅 維修日期: ${w.date} · 技師: ${w.tech} · 工時: ${w.hours}</div>
+                    <div style="background:rgba(0,0,0,0.25); padding:10px 14px; border-radius:6px; font-size:0.923077rem; margin-bottom:8px">
                         <div><strong>故障現象：</strong>${w.phenomenon}</div>
                         <div style="margin-top:4px"><strong>根本原因：</strong>${w.cause}</div>
                         <div style="margin-top:4px"><strong>維修動作：</strong>${w.action}</div>
@@ -512,8 +512,8 @@ class DiagnosticApp {
         } else if (this.activeKbTab === 'faqs') {
             container.innerHTML = KB_FAQS.map(f => `
                 <div class="kb-card">
-                    <div style="font-size:14px; font-weight:600; color:#74c0fc; margin-bottom:8px">❓ Q: ${f.q}</div>
-                    <div style="font-size:13px; line-height:1.6; color:#e2e8f0; background:rgba(0,0,0,0.25); padding:12px 16px; border-radius:6px">
+                    <div style="font-size:1.076923rem; font-weight:600; color:#74c0fc; margin-bottom:8px">❓ Q: ${f.q}</div>
+                    <div style="font-size:1rem; line-height:1.6; color:#e2e8f0; background:rgba(0,0,0,0.25); padding:12px 16px; border-radius:6px">
                         ${f.a.replace(/\n/g, '<br>')}
                     </div>
                 </div>
@@ -522,12 +522,12 @@ class DiagnosticApp {
             container.innerHTML = KB_PARTS.map(p => `
                 <div class="kb-card" style="display:flex; justify-content:space-between; align-items:center">
                     <div>
-                        <div style="font-size:14px; font-weight:600; color:#fff">${p.name}</div>
-                        <div style="font-size:12px; color:var(--muted)">標準保養週期: ${p.interval} · 預估費用: ${p.cost}</div>
+                        <div style="font-size:1.076923rem; font-weight:600; color:#fff">${p.name}</div>
+                        <div style="font-size:0.923077rem; color:var(--muted)">標準保養週期: ${p.interval} · 預估費用: ${p.cost}</div>
                     </div>
                     <div style="text-align:right">
-                        <div style="font-size:13px; font-weight:700; color:var(--healthy)">壽命 ${p.life} Hrs</div>
-                        <div style="font-size:11px; color:var(--warning)">預警門檻: ${p.warn} Hrs</div>
+                        <div style="font-size:1rem; font-weight:700; color:var(--healthy)">壽命 ${p.life} Hrs</div>
+                        <div style="font-size:0.846154rem; color:var(--warning)">預警門檻: ${p.warn} Hrs</div>
                     </div>
                 </div>
             `).join('');
@@ -550,15 +550,15 @@ class DiagnosticApp {
         }
 
         container.innerHTML = `
-            <div style="font-size:12px; color:var(--c); margin-bottom:14px">找到 ${hits.length} 筆語義關聯知識結果：</div>
+            <div style="font-size:0.923077rem; color:var(--c); margin-bottom:14px">找到 ${hits.length} 筆語義關聯知識結果：</div>
             ${hits.map(h => `
                 <div class="kb-card">
                     <div class="kb-card-header">
-                        <div style="font-size:15px; font-weight:600; color:#fff">${h.title}</div>
+                        <div style="font-size:1.153846rem; font-weight:600; color:#fff">${h.title}</div>
                         <span class="status-badge badge-healthy">相關度 ${(h.score * 100).toFixed(0)}%</span>
                     </div>
-                    <div style="font-size:11px; color:var(--c); margin-bottom:6px">[來源: ${h.table}] ${h.code}</div>
-                    <div style="font-size:13px; color:#cbd5e1; line-height:1.5">${h.summary}</div>
+                    <div style="font-size:0.846154rem; color:var(--c); margin-bottom:6px">[來源: ${h.table}] ${h.code}</div>
+                    <div style="font-size:1rem; color:#cbd5e1; line-height:1.5">${h.summary}</div>
                 </div>
             `).join('')}
         `;

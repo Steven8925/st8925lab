@@ -7,6 +7,8 @@
     <meta name="description" content="Wayne IoT Server Gen 2 - 生產級冰水主機模擬監控系統，支援 21 台實體機組遙測、Modbus 矩陣與動態警報規則。">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="../shared/wordmark.css">
+<link rel="stylesheet" href="../shared/fontscale.css">
+<script src="../shared/fontscale.js"></script>
 </head>
 <body>
 
@@ -16,6 +18,7 @@
     <div class="topbar-right">
         <a class="nav-cross-btn" href="../ai-diagnostic-kb/index.html" title="前往 Project 03 AI 智慧診斷知識庫">🤖 AI 智慧診斷 (P03)</a>
         <a class="nav-cross-btn" href="../alarm-notification-simulator/index.html" title="前往 Project 01 告警通知模擬台">🔔 告警推播模擬 (P01)</a>
+        <div id="font-scale-slot"></div>
         <span class="page-title">IOT GEN2 SIMULATOR & MONITOR</span>
         <a class="back-link" href="../index.html">&larr; BACK TO ORBIT</a>
     </div>
@@ -58,12 +61,12 @@
         </div>
         <div class="status-card">
             <span class="label">⚡ 吞吐延遲 Ingest p99</span>
-            <span class="value"><span id="statP99">1.8</span> <small style="font-size:14px;">ms</small></span>
+            <span class="value"><span id="statP99">1.8</span> <small style="font-size:0.875rem;">ms</small></span>
             <span class="sub">SLA Target &lt; 30ms</span>
         </div>
         <div class="status-card">
             <span class="label">📊 壓縮率 Compression</span>
-            <span class="value">91.4<small style="font-size:14px;">%</small></span>
+            <span class="value">91.4<small style="font-size:0.875rem;">%</small></span>
             <span class="sub">TimescaleDB Hypertable</span>
         </div>
     </section>
@@ -232,6 +235,7 @@ document.documentElement.style.setProperty('--accent', col.hex);
 document.documentElement.style.setProperty('--c', col.hex);
 document.getElementById('st8925-topbar').style.borderBottomColor = col.hex;
 initWordmark('wordmark', SITE_NAME);
+initFontScale('font-scale-slot');
 </script>
 </body>
 </html>

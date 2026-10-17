@@ -58,7 +58,9 @@ site-root/
 ├── geodata.js                地理資料（海岸線／陸地打包點）
 ├── shared/
 │   ├── wordmark.css          ★ 共用元件：站名樣式
-│   └── wordmark.js           ★ 共用元件：站名亦滅 + 逐字透鏡邏輯
+│   ├── wordmark.js           ★ 共用元件：站名亦滅 + 逐字透鏡邏輯
+│   ├── fontscale.css         ★ 共用元件：頂列字體大小控制鈕樣式
+│   └── fontscale.js          ★ 共用元件：A- / 100% / A+ 字體倍率（全站共用設定）
 ├── app.js                    首頁渲染引擎（地球、軌道、爆炸、時鐘）
 ├── alarm-notification-simulator/  id '01'。★ 例外：不是手寫 HTML，是
 │                              Vite/React 建置產物，見該資料夾自己的
@@ -385,6 +387,22 @@ orbitR = ORBIT_RADIUS * breath
    `RAINBOW.find(c => c.name === hue)` 解析；直接開啟時退回
    `RAINBOW[idx % RAINBOW.length]` 的索引配色。寫入 CSS 自訂屬性
    `--c` 以統一頂列底線顏色。
+6. **字體大小控制（2026-10-17 起；Travel-Assistance 除外）**：`<head>` 載入 `../shared/fontscale.css` 與
+   `../shared/fontscale.js`，頂列放 `<div id="font-scale-slot"></div>`，並在 `initWordmark(...)` 之後呼叫
+   `initFontScale('font-scale-slot')`。倍率存在 `localStorage` 的 `st8925_font_scale`（全站共用、跨分頁同步），
+   範圍 `0.85`–`1.45`、每按一次 `0.1`，「100%」鈕重設為 `1`。各頁根字級 = 本頁基準 × `var(--font-scale, 1)`，
+   基準讓**主要文字預設約 14px**（山姆哥 1(b)）：
+
+   | 頁面 | 根字級規則 | 備註 |
+   |---|---|---|
+   | 01 alarm | `calc(16px * 14 / 11 * var(--font-scale, 1))` | 寫在 `tools/build_alarm_frontend.py` 的 `TOPBAR_CSS`，由建置注入；全頁 rem，主要文字 `--text-xs` 0.6875rem；≤760px 隱藏 `.st-xlink` |
+   | 02 iot | `calc(16px * var(--fs-boost, 1) * var(--font-scale, 1))`，`--fs-boost: 1.166667` | `font-size` 一律 rem（原 px ÷ 16）；頂列 `.page-title` 13px、`.nav-cross-btn` 11px、`.back-link` 12px 固定；≤760px 隱藏 `.nav-cross-btn`、`.page-title` |
+   | 03 kb | `calc(13px * var(--fs-boost, 1) * var(--font-scale, 1))`，`--fs-boost: 1.272727` | `font-size` 一律 rem（原 px ÷ 13）；頂列 `.nav-tab` 12px、`.nav-cross-btn`／`.back-link`／`.live-indicator` 11px 固定；≤1500px 隱藏 `.live-indicator`、≤1280px 隱藏 `.xbtn-label`、≤760px 隱藏 `.nav-cross-btn` |
+   | 04 messenger | `calc(16px * var(--font-scale, 1))` | 全頁 rem |
+   | 05 placeholder | `calc(16px * var(--font-scale, 1))` | |
+   | 06 Travel | 不套用 | 山姆哥 2026-10-17 裁示不做 |
+
+   頂列控制鈕本身用 px（`fontscale.css`），不隨倍率縮放。圖表（Chart.js）刻度字級寫在 JS，不隨倍率縮放。
 
 **實作參考**：
 - 樣板佔位頁：見 `project-05/index.html`

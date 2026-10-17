@@ -6,6 +6,8 @@
 <title>ST8925 LAB — SECURE MESSENGER &amp; CHATOPS</title>
 <meta name="description" content="ST8925 LAB Project 04: Embedded Secure Messenger, E2EE Secret Vault (AES-256-GCM), AI Concierge &amp; P01-P06 ChatOps.">
 <link rel="stylesheet" href="../shared/wordmark.css">
+<link rel="stylesheet" href="../shared/fontscale.css">
+<script src="../shared/fontscale.js"></script>
 <link rel="stylesheet" href="./css/messenger.css">
 </head>
 <body>
@@ -13,11 +15,7 @@
 <header id="topbar">
     <a id="wordmark" href="../index.html" aria-label="ST8925 LAB"></a>
     <div class="topbar-right">
-        <div class="font-scale-controls" title="調整介面字體大小">
-            <button type="button" class="font-scale-btn" id="btn-font-dec" aria-label="縮小字體">A-</button>
-            <button type="button" class="font-scale-btn" id="btn-font-reset" aria-label="重設字體">100%</button>
-            <button type="button" class="font-scale-btn" id="btn-font-inc" aria-label="放大字體">A+</button>
-        </div>
+        <div id="font-scale-slot"></div>
         <span id="project-title-badge">SECURE MESSENGER &amp; CHATOPS</span>
         <a class="back-orbit-btn" href="../index.html" aria-label="BACK TO ORBIT">&larr;<span class="bo-long"> BACK TO</span> ORBIT</a>
     </div>
@@ -174,6 +172,7 @@ const col   = RAINBOW.find(c => c.name === hue) || RAINBOW[idx % RAINBOW.length]
 document.documentElement.style.setProperty('--c', col.hex);
 document.title = `${SITE_NAME} — ${proj.label}`;
 initWordmark('wordmark', SITE_NAME);
+initFontScale('font-scale-slot');
 </script>
 <script type="module" src="./js/main.js"></script>
 </body>

@@ -325,7 +325,7 @@ function renderModalContent(channel) {
                 LINE Notify / Flex Message
             </div>
             <div style="padding:12px; background:#1e293b; color:#fff; border-radius:0 0 4px 4px; line-height:1.6;">
-                <div style="color:${alm.severity === 'critical' ? '#ff6b6b' : '#fcc419'}; font-weight:bold; font-size:14px;">
+                <div style="color:${alm.severity === 'critical' ? '#ff6b6b' : '#fcc419'}; font-weight:bold; font-size:0.875rem;">
                     【機房警報通知】${alm.ruleName}
                 </div>
                 <hr style="border:none; border-top:1px solid #334155; margin:8px 0;" />
@@ -335,7 +335,7 @@ function renderModalContent(channel) {
                 <div><b>警報層級：</b>${alm.severity.toUpperCase()}</div>
                 <div><b>詳細說明：</b>${alm.description}</div>
                 <hr style="border:none; border-top:1px solid #334155; margin:8px 0;" />
-                <div style="color:#94a3b8; font-size:11px;">Wayne IoT Server Gen 2 自動派發系統</div>
+                <div style="color:#94a3b8; font-size:0.6875rem;">Wayne IoT Server Gen 2 自動派發系統</div>
             </div>
         `;
     } else {
@@ -346,7 +346,7 @@ function renderModalContent(channel) {
             <div style="padding:12px; background:#1e293b; color:#fff; border-radius:0 0 4px 4px; line-height:1.6;">
                 <div style="color:#60a5fa; font-weight:bold;">notification.title: 【IoT 警報】${alm.machineName}</div>
                 <div>notification.body: ${alm.ruleName} (${alm.description})</div>
-                <pre style="margin-top:8px; background:#0f172a; padding:8px; border-radius:4px; font-size:11px; color:#38d9a9;">
+                <pre style="margin-top:8px; background:#0f172a; padding:8px; border-radius:4px; font-size:0.6875rem; color:#38d9a9;">
 data: {
   "alarm_id": "${alm.id}",
   "machine_id": "${alm.machineId}",

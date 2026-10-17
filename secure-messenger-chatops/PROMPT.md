@@ -4,6 +4,7 @@
 ## 版本修改紀錄表
 | 時間戳記 | 版本別 | 狀態 | 修改摘要 |
 | :--- | :--- | :--- | :--- |
+| `[2026-10-17_23:49:43]` | `V1.5` | 規格增修 | 字體控制改用全站共用元件 `shared/fontscale.js`；根字級 18px → 16px（主要文字約 14px，山姆哥 1(b)）。 |
 | `[2026-10-17_22:39:28]` | `V1.4` | 雙向合併定案 | 合併 PROD (`z:\11_st8925lab\secure-messenger-chatops\`) 與 LAB (`d:\Google Antigravity Proejct_free modification\Messebger\`) 雙向規格：納入 Cloudflare Worker (`worker/index.js` + `worker/messenger.js`) 與 `wrangler.jsonc` (`vars` 雙模型設定)、XSS 跳脫與 `data:\|blob:` 附件協定白名單、手機版（`≤ 760px`）頂部橫向頻道條與 `← ORBIT` 縮寫、誠實離線狀態 `OFFLINE_NOT_SENT`、字體縮放（`18px` 基準 + `A- / 100% / A+`）及防斷行規範，並確立 LAB ➔ PROD 雙向文件預讀合併與雙寫 SOP。 |
 | `[2026-10-17_20:20:07]` | `V1.3` | 實測驗證通過 | 完成 NVIDIA NIM 雙模型雲端推論、Telegram (`@Maru_TGBot`) 手機告警實機推播驗證與 Supabase REST API (`public.st8925_messages`) 雲端持久化同步串接，由山姆哥確認手機成功收到告警。 |
 | `[2026-10-17_19:17:18]` | `V1.2` | 規格增修 | 升級 AI 推論引擎為「NVIDIA NIM 雙模型智慧路由」：純文字走 `nvidia/nemotron-3-super-120b-a12b`（`temperature=1.0, top_p=0.95`），附圖自動切換至多模態視覺模型 `nvidia/nemotron-3.5-super-vl-120b-a12b`（`temperature=0.6, top_p=0.95`），兩者共用單一 `NVIDIA_NIM_API_KEY`。 |
@@ -50,7 +51,7 @@
      * **多模態視覺路由（`VISION_MULTIMODAL_ROUTE`）**：當訊息包含非 E2EE 圖片附件（`data:image/*`）時，自動切換至 **`nvidia/nemotron-3.5-super-vl-120b-a12b`**（採樣參數 `temperature=0.6, top_p=0.95`）。
   4. **Telegram 告警推播橋接**：當場景 A 訪客呼叫真人，或場景 C 觸發 `CRITICAL / HIGH` 級別告警時，透過 Telegram Bot API（`@Maru_TGBot`）推播至山姆哥手機。
 * **UI/UX 字級縮放、防斷行與手機版響應式規格**：
-  1. **字體大小與即時縮放控制**：根元素 `html` 基準字級為 `calc(18px * var(--font-scale))`（預設 `--font-scale: 1`），頂部導覽列提供 `A-`、`100%`、`A+` 三顆縮放鈕（支援 `85%`～`145%` 調整並持久化於 `localStorage` 之 `st8925_font_scale`）。
+  1. **字體大小與即時縮放控制**：根元素 `html` 基準字級為 `calc(16px * var(--font-scale, 1))`（2026-10-17 由 18px 調為 16px，讓主要文字預設約 14px，與全站一致）。頂列 `A-`、`100%`、`A+` 三顆縮放鈕改由全站共用元件 `../shared/fontscale.js`／`fontscale.css` 產生：`index.html` 放 `<div id="font-scale-slot"></div>`，頁尾 inline script 在 `initWordmark` 後呼叫 `initFontScale('font-scale-slot')`；倍率 `0.85`～`1.45`、每次 `0.1`，存於 `localStorage` 的 `st8925_font_scale`（與其他子專案共用）。規格見根目錄 `../PROMPT.md` §4.1 第 6 點。
   2. **按鈕與狀態列防斷行（No-Wrap Invariant）**：`.mini-btn`（如 `📎 圖檔`）、`.cyber-btn`、`.vault-badge`、`.kv-row > span:first-child`、`.ch-row-top`、`.e2ee-pill` 強制設定 `white-space: nowrap; flex-shrink: 0; display: inline-flex;`，輸入框 `#chat-message-input` 設定 `flex: 1; min-width: 0;`，確保任何字級下按鈕絕不折行。
   3. **手機版響應式佈局（`@media (max-width: 760px)`）**：左側頻道欄轉為頂部可橫向捲動的精簡頻道條（`.channel-list { flex-direction: row; overflow-x: auto; }`）並保留「📲 呼叫山姆哥」按鈕，確保手機端可自由切換 A／B／C 頻道；頂列隱藏 `#project-title-badge` 並隱藏 `.bo-long`，使返回鈕自動縮寫為 `← ORBIT`，於 `375px` 窄螢幕完整可見。
 * **明確排除邊界（Out of Scope）**：

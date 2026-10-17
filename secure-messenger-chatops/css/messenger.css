@@ -19,7 +19,8 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html {
-    font-size: calc(18px * var(--font-scale, 1));
+    /* 2026-10-17：18px → 16px，讓主要文字預設約 14px，與其他子專案一致（山姆哥 1(b)）。 */
+    font-size: calc(16px * var(--font-scale, 1));
 }
 html, body {
     width: 100%;
@@ -53,31 +54,7 @@ html, body {
     gap: 12px;
 }
 
-.font-scale-controls {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 7px;
-    padding: 3px 6px;
-}
-.font-scale-btn {
-    background: transparent;
-    color: var(--text);
-    border: none;
-    padding: 3px 8px;
-    border-radius: 5px;
-    font-family: inherit;
-    font-size: 0.82rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-.font-scale-btn:hover {
-    color: var(--c);
-    background: rgba(255, 255, 255, 0.08);
-}
+/* 字體大小控制鈕的樣式在 ../shared/fontscale.css（全站共用）。 */
 
 #project-title-badge {
     font-size: 0.88rem;
@@ -527,5 +504,4 @@ html, body {
     #project-title-badge, .bo-long { display: none; }
     .topbar-right { gap: 6px; }
     .back-orbit-btn { padding: 0.35rem 0.6rem; }
-    .font-scale-btn { padding: 3px 5px; }
 }

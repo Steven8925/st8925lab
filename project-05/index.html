@@ -6,6 +6,8 @@
 <title>ST8925 LAB — Project</title>
 <meta name="description" content="ST8925 LAB 專案子頁。Individual project page for ST8925 LAB.">
 <link rel="stylesheet" href="../shared/wordmark.css">
+<link rel="stylesheet" href="../shared/fontscale.css">
+<script src="../shared/fontscale.js"></script>
 <style>
     :root {
         --bg: #04070e;
@@ -69,11 +71,11 @@
 
     #lead {
         color: var(--muted);
-        font-size: clamp(13px, 2vw, 15px);
+        font-size: clamp(0.8125rem, 2vw, 0.9375rem);
         letter-spacing: .04em;
     }
     h1 {
-        font-size: clamp(22px, 5vw, 40px);
+        font-size: clamp(1.375rem, 5vw, 2.5rem);
         font-weight: 600;
         letter-spacing: .04em;
         color: var(--c);
@@ -83,13 +85,16 @@
         margin-top: 8px;
         color: var(--muted);
         text-decoration: none;
-        font-size: 13px;
+        font-size: 0.8125rem;
         letter-spacing: .1em;
         border-bottom: 1px solid transparent;
         padding-bottom: 2px;
         transition: color .2s, border-color .2s;
     }
     #back:hover, #back:focus-visible { color: var(--c); border-color: var(--c); }
+
+    /* 字體大小（2026-10-17）：根字級隨頂列 A-／A+（shared/fontscale.js）縮放。 */
+    html { font-size: calc(16px * var(--font-scale, 1)); }
 
     @media (prefers-reduced-motion: reduce) {
         #halo { animation: none; }
@@ -101,6 +106,7 @@
 
 <header id="topbar">
     <a id="wordmark" href="../index.html" aria-label="ST8925 LAB"></a>
+    <div id="font-scale-slot" style="margin-left:auto"></div>
 </header>
 
 <main>
@@ -138,6 +144,7 @@ document.getElementById('lead').textContent  = `this is "${proj.label}" home pag
 document.getElementById('title').textContent = `Welcome to "${proj.label}"`;
 
 initWordmark('wordmark', SITE_NAME);
+initFontScale('font-scale-slot');
 </script>
 
 </body>
