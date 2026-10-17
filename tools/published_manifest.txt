@@ -23,7 +23,16 @@ iot-gen2-simulator-monitor/modules/ai-predictor.js
 iot-gen2-simulator-monitor/modules/fleet-simulator.js
 iot-gen2-simulator-monitor/modules/rule-engine.js
 iot-gen2-simulator-monitor/style.css
-project-04/index.html
 project-05/index.html
+secure-messenger-chatops/css/messenger.css
+secure-messenger-chatops/index.html
+secure-messenger-chatops/js/ai-bot-client.js
+secure-messenger-chatops/js/crypto-engine.js
+secure-messenger-chatops/js/file-handler.js
+secure-messenger-chatops/js/main.js
+secure-messenger-chatops/js/telemetry-bridge.js
+secure-messenger-chatops/js/transport-adapter.js
+secure-messenger-chatops/js/ui-controller.js
+secure-messenger-chatops/js/widget-embed.js
 shared/wordmark.css
 shared/wordmark.js

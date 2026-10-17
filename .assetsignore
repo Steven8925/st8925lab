@@ -178,3 +178,6 @@ iot-gen2-simulator-monitor/vps/
 # CI workflows: .github/ is a dotfile directory and Wrangler does not ignore
 # dotfiles, so without this the workflow file would be served publicly.
 .github/
+
+# Pages Function 草稿：本站是 Worker 部署，此目錄不執行，也不得被當成靜態檔公開（2026-10-17）。
+/functions/

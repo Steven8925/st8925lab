@@ -1,10 +1,13 @@
 # Project 04 — 重建規格 / Rebuild Prompt
 
-讀完本檔即可重建 `project-04/index.html`。本頁**依賴**根目錄的共用檔案
+> ⚠️ **過時警告（2026-10-17）**：本檔以下內容是 `tools/rename_project.py` 從舊 `project-04/` 佔位頁複製改名而來，描述的是「置中 halo + Welcome」佔位頁，**不是**現在的 Secure Messenger & ChatOps 主控台。現行程式以 `index.html`、`js/*.js`、`css/messenger.css` 為準；本頁的正式重建規格尚未撰寫（待辦）。後端 `/api/*` 尚未實作：現行 Worker 對這些路徑回 404，頁面走瀏覽器本機模式。
+
+
+讀完本檔即可重建 `secure-messenger-chatops/index.html`。本頁**依賴**根目錄的共用檔案
 （`config.js`、`shared/wordmark.css`、`shared/wordmark.js`），其規格在
 根目錄 [`../PROMPT.md`](../PROMPT.md)，此處不重複——只講本頁**自己**的部分。
 
-Reading this file alone reproduces `project-04/index.html`. This page
+Reading this file alone reproduces `secure-messenger-chatops/index.html`. This page
 **depends on** the root's shared files (`config.js`,
 `shared/wordmark.css`, `shared/wordmark.js`), specified in the root
 [`../PROMPT.md`](../PROMPT.md) and not duplicated here — this file covers
@@ -23,7 +26,7 @@ site-root/
 ├── shared/
 │   ├── wordmark.css        ← 必須存在
 │   └── wordmark.js         ← 必須存在
-└── project-04/
+└── secure-messenger-chatops/
     └── index.html          ← 本檔
 ```
 
@@ -35,7 +38,7 @@ above.
 
 ## 規格 / Specification
 
-**檔案 File**: `project-04/index.html`
+**檔案 File**: `secure-messenger-chatops/index.html`
 
 **識別碼 Identity**: `const MY_ID = '04';` — 硬寫在本頁 `<script>` 內的唯一一行
 專案專屬程式碼。其餘 JS 邏輯與另外五個 project-XX 頁面逐位元組相同。
@@ -52,8 +55,8 @@ byte-identical across all six project-XX pages.
 2. `<main>` 置中內容 centred content:
    - `#halo` — 86px 圓形光暈，色彩為 `var(--c)`，2.6 秒呼吸動畫（沿用
      `pulse` keyframes，`scale(1)→scale(1.14)→scale(1)`，`opacity .92→1→.92`）。
-   - `#lead`（`<p>`）— 文字內容：`this is "PROJECT 04" home page.`
-   - `#title`（`<h1>`）— 文字內容：`Welcome to "PROJECT 04"`
+   - `#lead`（`<p>`）— 文字內容：`this is "SECURE MESSENGER & CHATOPS" home page.`
+   - `#title`（`<h1>`）— 文字內容：`Welcome to "SECURE MESSENGER & CHATOPS"`
      （兩行合起來即為需求原文「this is "Project XX" home page. Welcome to
      "Project XX"」，`XX` 一律取自 `config.js` 的 `PROJECTS[].label`，
      **不寫死**，未來改名會自動反映。）
@@ -100,7 +103,7 @@ directly with no `?hue=`.
 
 ## 未來修改 / Future Edits
 
-這是一個**可獨立編輯**的頁面——直接修改 `project-04/index.html` 的
+這是一個**可獨立編輯**的頁面——直接修改 `secure-messenger-chatops/index.html` 的
 `<main>` 內容即可放入真正的專案介紹，不會影響其他 5 個 project-XX 頁面
 或首頁。修改後請同步：
 1. 在 [`README.md`](./README.md) 新增一列變更紀錄（含日期）。
@@ -108,7 +111,7 @@ directly with no `?hue=`.
    README.md）重新命名本資料夾。
 
 This page can be edited independently — change the `<main>` content in
-`project-04/index.html` directly; it will not affect the other five
+`secure-messenger-chatops/index.html` directly; it will not affect the other five
 project-XX pages or the homepage. After editing:
 1. Add a dated row to [`README.md`](./README.md).
 2. If `config.js`'s `label` also changed, rename this folder per the

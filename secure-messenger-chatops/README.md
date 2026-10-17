@@ -1,10 +1,13 @@
 # Project 04 — 開發紀錄 / Development Log
 
-本檔記錄 `project-04/`（`config.js` 內 `id: '04'`）這個子頁面**自己的**變更歷史。
+> ⚠️ **過時警告（2026-10-17）**：本檔以下內容是 `tools/rename_project.py` 從舊 `project-04/` 佔位頁複製改名而來，描述的是「置中 halo + Welcome」佔位頁，**不是**現在的 Secure Messenger & ChatOps 主控台。現行程式以 `index.html`、`js/*.js`、`css/messenger.css` 為準；本頁的正式重建規格尚未撰寫（待辦）。後端 `/api/*` 尚未實作：現行 Worker 對這些路徑回 404，頁面走瀏覽器本機模式。
+
+
+本檔記錄 `secure-messenger-chatops/`（`config.js` 內 `id: '04'`）這個子頁面**自己的**變更歷史。
 整站共用的架構決策（軌道、星雲爆炸、色相傳遞機制、共用站名元件等）記錄在
 根目錄的 [`../README.md`](../README.md) 與 [`../PROMPT.md`](../PROMPT.md)，本檔不重複。
 
-This file records the change history **local to** `project-04/`
+This file records the change history **local to** `secure-messenger-chatops/`
 (`id: '04'` in `config.js`). Site-wide architecture decisions (the orbit,
 the nebula burst, the hue-handoff mechanism, the shared wordmark
 component, …) live in the root [`../README.md`](../README.md) and
@@ -17,8 +20,8 @@ component, …) live in the root [`../README.md`](../README.md) and
 | 項目 Item | 值 Value |
 |---|---|
 | 內部代碼 Internal id | `04`(永不變動 / never changes）|
-| 顯示名稱 Display label | 取自 `config.js` 的 `PROJECTS[].label`（目前為 `PROJECT 04`）|
-| 資料夾／URL Slug | `project-04`（**必須**與 label 同步改名，見下方「命名同步規則」）|
+| 顯示名稱 Display label | 取自 `config.js` 的 `PROJECTS[].label`（目前為 `SECURE MESSENGER & CHATOPS`）|
+| 資料夾／URL Slug | `secure-messenger-chatops`（**必須**與 label 同步改名，見下方「命名同步規則」）|
 | 軌道顏色 Ring colour | 由首頁彩虹配色第 4 環決定，隨機洗牌 |
 
 ---
@@ -50,7 +53,7 @@ component, …) live in the root [`../README.md`](../README.md) and
 
 | 日期 Date | 變更 Change | 說明 Notes |
 |---|---|---|
-| 2026-08-09 | 建立本資料夾 Folder created | 全站架構由「單一動態 `project.html?id=`」改為「六個獨立實體資料夾」，本頁取代舊有 `project.html?id=04` 的角色。內容：導覽列（共用站名元件，含 5 秒呼吸與 hover 逐字透鏡）＋ halo ＋ `this is "PROJECT 04" home page. Welcome to "PROJECT 04"` 文字＋返回首頁連結。頁面 accent color 沿用點擊軌道時傳遞的 `?hue=` 參數，與首頁色彩系統保持一致。詳見根目錄 README.md 與 PROMPT.md。<br>Site-wide architecture changed from a single dynamic `project.html?id=` page to six real folders. This page supersedes the old `project.html?id=04`. Content: top bar (shared wordmark component, 5 s pulse + hover per-glyph lens) + halo + the literal text `this is "PROJECT 04" home page. Welcome to "PROJECT 04"` + a back-to-orbit link. The page's accent colour follows the `?hue=` param carried from the clicked orbit ring, preserving the site's colour-continuity design. See the root README.md / PROMPT.md for full rationale. |
+| 2026-08-09 | 建立本資料夾 Folder created | 全站架構由「單一動態 `project.html?id=`」改為「六個獨立實體資料夾」，本頁取代舊有 `project.html?id=04` 的角色。內容：導覽列（共用站名元件，含 5 秒呼吸與 hover 逐字透鏡）＋ halo ＋ `this is "SECURE MESSENGER & CHATOPS" home page. Welcome to "SECURE MESSENGER & CHATOPS"` 文字＋返回首頁連結。頁面 accent color 沿用點擊軌道時傳遞的 `?hue=` 參數，與首頁色彩系統保持一致。詳見根目錄 README.md 與 PROMPT.md。<br>Site-wide architecture changed from a single dynamic `project.html?id=` page to six real folders. This page supersedes the old `project.html?id=04`. Content: top bar (shared wordmark component, 5 s pulse + hover per-glyph lens) + halo + the literal text `this is "SECURE MESSENGER & CHATOPS" home page. Welcome to "SECURE MESSENGER & CHATOPS"` + a back-to-orbit link. The page's accent colour follows the `?hue=` param carried from the clicked orbit ring, preserving the site's colour-continuity design. See the root README.md / PROMPT.md for full rationale. |
 
 *(未來每次修改本頁，請在此表新增一列，附日期與說明。)*
 *(Add a new dated row here every time this page changes.)*

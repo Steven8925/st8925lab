@@ -859,7 +859,7 @@ const RESPONSIVE_LABELS = {
     '01': { mid: 'ALARM SIMULATOR', short: 'ALARM', tiny: 'P01' },
     '02': { mid: 'IOT GEN2 MONITOR', short: 'IOT GEN2', tiny: 'P02' },
     '03': { mid: 'AI DIAGNOSTIC', short: 'AI KB', tiny: 'P03' },
-    '04': { mid: 'PROJECT 04', short: 'P04', tiny: 'P04' },
+    '04': { mid: 'SECURE MESSENGER', short: 'MESSENGER', tiny: 'P04' },
     '05': { mid: 'PROJECT 05', short: 'P05', tiny: 'P05' },
     '06': { mid: 'TRAVEL ASSIST', short: 'TRAVEL', tiny: 'P06' },
 };

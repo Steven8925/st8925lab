@@ -65,7 +65,8 @@ site-root/
 │                              PROMPT.md（§4 有完整說明）
 ├── iot-gen2-simulator-monitor/    id '02'。Wayne IoT Server Gen 2 模擬監控台與 VPS 生產藍圖
 ├── ai-diagnostic-kb/              id '03'。工業冷卻水與冰水機組 AI 智慧診斷與知識庫平台
-├── project-04/ .. project-05/     兩個獨立專案子頁（各含 index.html／README.md／PROMPT.md）
+├── secure-messenger-chatops/      id '04'。安全通訊與 ChatOps 中控台（純前端 ES modules；後端 /api/* 尚未實作；該資料夾 PROMPT.md 尚為舊佔位頁內容，待重寫）
+├── project-05/                    id '05'。佔位頁（含 index.html／README.md／PROMPT.md）
 ├── Travel-Assistance/             id '06'。旅遊協助平台（git submodule，指向 Steven8925/Travel-Assistance）
 ├── tools/
 │   ├── rename_project.py     ★ 專案改名同步工具
@@ -129,7 +130,7 @@ const PROJECTS = [
     { id: '01', label: 'ALARM NOTIFICATION SIMULATOR', slug: 'alarm-notification-simulator' },
     { id: '02', label: 'IOT GEN2 SIMULATOR & MONITOR', slug: 'iot-gen2-simulator-monitor' },
     { id: '03', label: 'AI DIAGNOSTIC KB', slug: 'ai-diagnostic-kb' },
-    { id: '04', label: 'PROJECT 04', slug: 'project-04' },
+    { id: '04', label: 'SECURE MESSENGER & CHATOPS', slug: 'secure-messenger-chatops' },
     { id: '05', label: 'PROJECT 05', slug: 'project-05' },
     { id: '06', label: 'TRAVEL ASSISTANCE', slug: 'Travel-Assistance' },
 ];
@@ -332,7 +333,7 @@ orbitR = ORBIT_RADIUS * breath
 1. **多階層自適應階梯 (Multi-tier Adaptive Labeling)**：
    - **寬螢幕（> 1420px）**：顯示完整全名（`.t-full`，例如 `ALARM NOTIFICATION SIMULATOR`、`TRAVEL ASSISTANCE`）。
    - **標準桌機 / 筆電縮放（1150px ~ 1420px）**：自動切換為精簡標籤（`.t-mid`，例如 `ALARM SIMULATOR`、`IOT GEN2 MONITOR`、`AI DIAGNOSTIC`、`TRAVEL ASSIST`）。
-   - **平板 / 窄視窗分割（840px ~ 1149px）**：自動切換為短標籤（`.t-short`，例如 `ALARM`、`IOT GEN2`、`AI KB`、`P04`、`P05`、`TRAVEL`）。
+   - **平板 / 窄視窗分割（840px ~ 1149px）**：自動切換為短標籤（`.t-short`，例如 `ALARM`、`IOT GEN2`、`AI KB`、`MESSENGER`、`P05`、`TRAVEL`）。
    - **手機 / 極窄螢幕（< 840px）**：自動切換為編號徽章（`.t-tiny`，例如 `P01`、`P02`、`P03`、`P04`、`P05`、`P06`）。
    - **完整名稱 Tooltip**：所有按鈕均綁定 `a.title = "${proj.id}: ${proj.label}"`，滑鼠懸停時隨時可查閱完整專案名稱。
 
@@ -386,13 +387,14 @@ orbitR = ORBIT_RADIUS * breath
    `--c` 以統一頂列底線顏色。
 
 **實作參考**：
-- 樣板佔位頁：見 `project-04/index.html`、`project-05/index.html`
+- 樣板佔位頁：見 `project-05/index.html`
+- 純前端 ES module 子專案：見 `secure-messenger-chatops/index.html`（`js/main.js` 為入口）
 - 工業監控主控台：見 `iot-gen2-simulator-monitor/index.html`
 - AI 智慧診斷知識庫：見 `ai-diagnostic-kb/index.html`
 - Vite 建置產物：見 `alarm-notification-simulator/index.html`（由 `tools/build_alarm_frontend.py` 注入）
 - 獨立 submodule：見 `Travel-Assistance/index.html`（在原有 header 之上疊加 `#st8925-topbar`）
 
-目前僅 `project-04` 與 `project-05` 仍為樣板佔位頁；其餘 `alarm-notification-simulator` (01)、`iot-gen2-simulator-monitor` (02)、`ai-diagnostic-kb` (03)、`Travel-Assistance` (06) 皆為真實獨立子專案，均具備全站共用頂列規範。
+目前僅 `project-05` 仍為樣板佔位頁；其餘 `alarm-notification-simulator` (01)、`iot-gen2-simulator-monitor` (02)、`ai-diagnostic-kb` (03)、`secure-messenger-chatops` (04)、`Travel-Assistance` (06) 皆為真實獨立子專案，均具備全站共用頂列規範。
 
 ### 4.2 全站子專案視覺風格統一原則 / Unified Industrial Cyber Dark Aesthetic Invariant
 
@@ -489,7 +491,7 @@ orbitR = ORBIT_RADIUS * breath
 
 ### 4.4 佔位頁樣板規格 / Placeholder Template Specification
 
-對於尚未填入真實內容的佔位頁樣板（目前為 project-04 與 project-05），版面／CSS／JS 摘要如下：
+對於尚未填入真實內容的佔位頁樣板（目前為 project-05），版面／CSS／JS 摘要如下：
 
 **版面**：毛玻璃導覽列（僅站名，無專案導覽）→ 置中的 halo（顏色
 `var(--c)`，2.6 秒呼吸動畫）→ 文字 `this is "<label>" home page.` →

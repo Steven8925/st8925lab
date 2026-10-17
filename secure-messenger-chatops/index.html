@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST8925 LAB — SECURE MESSENGER &amp; CHATOPS</title>
+<meta name="description" content="ST8925 LAB Project 04: Embedded Secure Messenger, E2EE Secret Vault (AES-256-GCM), AI Concierge &amp; P01-P06 ChatOps.">
+<link rel="stylesheet" href="../shared/wordmark.css">
+<link rel="stylesheet" href="./css/messenger.css">
+</head>
+<body>
+
+<header id="topbar">
+    <a id="wordmark" href="../index.html" aria-label="ST8925 LAB"></a>
+    <div class="topbar-right">
+        <div class="font-scale-controls" title="調整介面字體大小">
+            <button type="button" class="font-scale-btn" id="btn-font-dec" aria-label="縮小字體">A-</button>
+            <button type="button" class="font-scale-btn" id="btn-font-reset" aria-label="重設字體">100%</button>
+            <button type="button" class="font-scale-btn" id="btn-font-inc" aria-label="放大字體">A+</button>
+        </div>
+        <span id="project-title-badge">P04 · SECURE MESSENGER &amp; CHATOPS</span>
+        <a class="back-orbit-btn" href="../index.html">&larr; BACK TO ORBIT</a>
+    </div>
+</header>
+
+<main id="messenger-console" aria-label="Secure Messenger Console">
+    <!-- Left Sidebar: Channels (A / B / C) & Identity -->
+    <aside class="glass-panel" id="sidebar-panel">
+        <div class="panel-section-title">Communication Channels</div>
+        <div class="channel-list">
+            <button type="button" class="channel-tab active" data-channel-tab="A">
+                <div class="ch-row-top">
+                    <span>🌐 A · GUEST &amp; AI</span>
+                    <span class="ch-badge" id="count-ch-A">1</span>
+                </div>
+                <div class="ch-sub">訪客接待、NVIDIA NIM 駐站顧問、Telegram 轉接真人</div>
+            </button>
+
+            <button type="button" class="channel-tab" data-channel-tab="B">
+                <div class="ch-row-top">
+                    <span>🔒 B · E2EE VAULT</span>
+                    <span class="ch-badge" id="count-ch-B">1</span>
+                </div>
+                <div class="ch-sub">授權團隊私密包廂 · Web Crypto AES-256-GCM 零知識加密</div>
+            </button>
+
+            <button type="button" class="channel-tab" data-channel-tab="C">
+                <div class="ch-row-top">
+                    <span>⚡ C · CHATOPS P01-06</span>
+                    <span class="ch-badge" id="count-ch-C">1</span>
+                </div>
+                <div class="ch-sub">跨專案戰情告警匯流排 · 斜線指令 (/diag, /status)</div>
+            </button>
+        </div>
+
+        <div class="identity-box">
+            <label for="sender-alias-input">OPERATOR CALLSIGN (發訊代號)</label>
+            <input id="sender-alias-input" class="cyber-input" type="text" value="SAM_ARCHITECT" maxlength="28" />
+            <button type="button" id="btn-call-sam-tg" class="cyber-btn" style="width:100%;margin-top:4px;">
+                📲 呼叫山姆哥 (Telegram 推播)
+            </button>
+        </div>
+    </aside>
+
+    <!-- Center Panel: Active Stream, E2EE Vault Key Bar & Composer -->
+    <section class="glass-panel" id="stream-panel">
+        <header class="chat-header">
+            <div>
+                <h1 id="active-channel-title">🌐 CHANNEL A — GUEST &amp; AI CONCIERGE</h1>
+                <p id="active-channel-desc">TLS + NVIDIA NIM 駐站 AI 即時接待｜支援一鍵 Telegram 呼叫山姆哥</p>
+            </div>
+        </header>
+
+        <!-- Channel B Only: Client-Side E2EE Key Derivation Bar -->
+        <div id="e2ee-vault-bar">
+            <span class="vault-badge locked" id="vault-key-status">🔒 VAULT LOCKED</span>
+            <input
+                id="vault-passphrase-input"
+                class="cyber-input"
+                type="password"
+                placeholder="輸入通行密語 (Passphrase) 於本地衍生 AES-256-GCM 金鑰..."
+                style="flex:1;min-width:180px;"
+                autocomplete="off"
+            />
+            <button type="button" id="btn-unlock-vault" class="cyber-btn">🔑 衍生金鑰解鎖</button>
+            <button type="button" id="btn-lock-vault" class="mini-btn">清除金鑰</button>
+        </div>
+
+        <!-- Messages Stream & Drag-and-Drop Zone -->
+        <div id="chat-stream-container" aria-live="polite"></div>
+
+        <!-- Staged File Preview Bar -->
+        <div id="staged-file-bar"></div>
+
+        <!-- Message & Attachment Composer -->
+        <form id="chat-composer-form" autocomplete="off">
+            <label for="chat-file-input" class="mini-btn" title="上傳圖片或檔案 (支援拖曳與貼上，上限 10MB)" style="cursor:pointer;">
+                📎 圖檔
+            </label>
+            <input id="chat-file-input" type="file" style="display:none;" accept="image/*,.pdf,.txt,.json,.csv,.log,.md" />
+            <input
+                id="chat-message-input"
+                class="cyber-input"
+                type="text"
+                placeholder="輸入訊息、貼上截圖，或輸入 /help, /status, /diag, /notify..."
+            />
+            <button type="submit" class="cyber-btn">SEND &rarr;</button>
+        </form>
+    </section>
+
+    <!-- Right Sidebar: Security Posture, E2EE Audit & P01-P06 Simulator -->
+    <aside class="glass-panel" id="inspector-panel">
+        <div class="panel-section-title">Security &amp; Gateway Posture</div>
+        <div class="inspector-group">
+            <div class="kv-row">
+                <span>Transport Mode</span>
+                <span class="status-val ok" id="inspector-gw-status">CHECKING...</span>
+            </div>
+            <div class="kv-row">
+                <span>E2EE Cipher</span>
+                <span class="status-val">AES-256-GCM (96b IV)</span>
+            </div>
+            <div class="kv-row">
+                <span>KDF Standard</span>
+                <span class="status-val">PBKDF2-SHA256 (100k)</span>
+            </div>
+            <div class="kv-row">
+                <span>Active Key FP</span>
+                <span class="status-val warn" id="inspector-key-fp">LOCKED (No Key in RAM)</span>
+            </div>
+            <div class="kv-row">
+                <span>AI Engine</span>
+                <span class="status-val" id="inspector-nim-status">STANDBY</span>
+            </div>
+            <div class="kv-row">
+                <span>Telegram Bridge</span>
+                <span class="status-val" id="inspector-tg-status">STANDBY</span>
+            </div>
+        </div>
+
+        <div class="panel-section-title">P01~P06 Telemetry Injector</div>
+        <div class="inspector-group">
+            <p style="color:var(--muted);line-height:1.4;">
+                模擬 <code>st8925lab.com</code> 其他子專案發送即時告警卡片至 <strong>Channel C</strong>（嚴重等級將同步觸發 Telegram 橋接）：
+            </p>
+            <div class="sim-grid">
+                <button type="button" class="mini-btn" data-sim-trigger="p01">🚨 P01 BGP 告警</button>
+                <button type="button" class="mini-btn" data-sim-trigger="p02">🔥 P02 IoT 高溫</button>
+                <button type="button" class="mini-btn" data-sim-trigger="p03">🧠 P03 向量同步</button>
+                <button type="button" class="mini-btn" data-sim-trigger="p06">✈️ P06 差旅狀態</button>
+            </div>
+        </div>
+
+        <div class="panel-section-title">ChatOps Quick Commands</div>
+        <div class="inspector-group" style="line-height:1.6;">
+            <div><code>/status</code> — 系統與金鑰自檢報告</div>
+            <div><code>/diag ALM-9042</code> — AI 故障根因分析</div>
+            <div><code>/ask &lt;問題&gt;</code> — 詢問駐站 AI 顧問</div>
+            <div><code>/notify &lt;內容&gt;</code> — 推播山姆哥 Telegram</div>
+            <div><code>/help</code> — 完整指令說明</div>
+        </div>
+    </aside>
+</main>
+
+<script src="../config.js"></script>
+<script src="../shared/wordmark.js"></script>
+<script>
+const MY_ID = '04';
+const idx   = PROJECTS.findIndex(p => p.id === MY_ID);
+const proj  = PROJECTS[idx];
+const hue   = new URLSearchParams(location.search).get('hue');
+const col   = RAINBOW.find(c => c.name === hue) || RAINBOW[idx % RAINBOW.length];
+
+document.documentElement.style.setProperty('--c', col.hex);
+document.title = `${SITE_NAME} — ${proj.label}`;
+initWordmark('wordmark', SITE_NAME);
+</script>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
