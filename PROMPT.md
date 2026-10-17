@@ -332,9 +332,9 @@ orbitR = ORBIT_RADIUS * breath
 
 為達成此原則，導覽列採用「多階層自適應文字階梯」（Multi-tier Responsive Labeling）：
 
-1. **多階層自適應階梯 (Multi-tier Adaptive Labeling)**：
-   - **寬螢幕（> 1420px）**：顯示完整全名（`.t-full`，例如 `ALARM NOTIFICATION SIMULATOR`、`TRAVEL ASSISTANCE`）。
-   - **標準桌機 / 筆電縮放（1150px ~ 1420px）**：自動切換為精簡標籤（`.t-mid`，例如 `ALARM SIMULATOR`、`IOT GEN2 MONITOR`、`AI DIAGNOSTIC`、`TRAVEL ASSIST`）。
+1. **多階層自適應階梯 (Multi-tier Adaptive Labeling)**：導覽按鈕 `.project` 字級 `clamp(.68rem, 1vw, .9rem)`、`#cta` 字級 `clamp(.7rem, 1.1vw, .9rem)`（2026-10-18 放大；完整名稱因此實測需 ≥1690px，門檻定為 1759px）。
+   - **寬螢幕（> 1759px）**：顯示完整全名（`.t-full`，例如 `ALARM NOTIFICATION SIMULATOR`、`TRAVEL ASSISTANCE`）。
+   - **標準桌機 / 筆電縮放（1150px ~ 1759px）**：自動切換為精簡標籤（`.t-mid`，例如 `ALARM SIMULATOR`、`IOT GEN2 MONITOR`、`AI DIAGNOSTIC`、`TRAVEL ASSIST`）。
    - **平板 / 窄視窗分割（840px ~ 1149px）**：自動切換為短標籤（`.t-short`，例如 `ALARM`、`IOT GEN2`、`AI KB`、`MESSENGER`、`P05`、`TRAVEL`）。
    - **手機 / 極窄螢幕（< 840px）**：自動切換為編號徽章（`.t-tiny`，例如 `P01`、`P02`、`P03`、`P04`、`P05`、`P06`）。
    - **完整名稱 Tooltip**：所有按鈕均綁定 `a.title = "${proj.id}: ${proj.label}"`，滑鼠懸停時隨時可查閱完整專案名稱。
@@ -395,14 +395,14 @@ orbitR = ORBIT_RADIUS * breath
 
    | 頁面 | 根字級規則 | 備註 |
    |---|---|---|
-   | 01 alarm | `calc(16px * 14 / 11 * var(--font-scale, 1))` | 寫在 `tools/build_alarm_frontend.py` 的 `TOPBAR_CSS`，由建置注入；全頁 rem，主要文字 `--text-xs` 0.6875rem；≤760px 隱藏 `.st-xlink` |
-   | 02 iot | `calc(16px * var(--fs-boost, 1) * var(--font-scale, 1))`，`--fs-boost: 1.166667` | `font-size` 一律 rem（原 px ÷ 16）；頂列 `.page-title` 13px、`.nav-cross-btn` 11px、`.back-link` 12px 固定；≤760px 隱藏 `.nav-cross-btn`、`.page-title` |
-   | 03 kb | `calc(13px * var(--fs-boost, 1) * var(--font-scale, 1))`，`--fs-boost: 1.272727` | `font-size` 一律 rem（原 px ÷ 13）；頂列 `.nav-tab` 12px、`.nav-cross-btn`／`.back-link`／`.live-indicator` 11px 固定；≤1500px 隱藏 `.live-indicator`、≤1280px 隱藏 `.xbtn-label`、≤760px 隱藏 `.nav-cross-btn` |
+   | 01 alarm | `calc(16px * 14 / 11 * var(--font-scale, 1))` | 寫在 `tools/build_alarm_frontend.py` 的 `TOPBAR_CSS`，由建置注入；全頁 rem，主要文字 `--text-xs` 0.6875rem；頂列連結 14px（≤480px 時 `.st-back` 12px）；≤760px 隱藏 `.st-xlink` |
+   | 02 iot | `calc(16px * var(--fs-boost, 1) * var(--font-scale, 1))`，`--fs-boost: 1.166667` | `font-size` 一律 rem（原 px ÷ 16）；頂列 `.page-title`、`.nav-cross-btn`、`.back-link` 固定 14px；≤1280px 隱藏 `.page-title`；≤480px `.back-link` 12px；≤760px 隱藏 `.nav-cross-btn`、`.page-title` |
+   | 03 kb | `calc(13px * var(--fs-boost, 1) * var(--font-scale, 1))`，`--fs-boost: 1.272727` | `font-size` 一律 rem（原 px ÷ 13）；頂列 `.nav-tab`、`.nav-cross-btn`／`.back-link`／`.live-indicator` 固定 14px；`.nav-tab` 不換行、`.topbar-nav` 空間不足時左右捲動；≤1700px 隱藏 `.live-indicator` 與 `.xbtn-label`；≤480px `.back-link` 12px；≤760px 隱藏 `.nav-cross-btn` |
    | 04 messenger | `calc(16px * var(--font-scale, 1))` | 全頁 rem |
    | 05 placeholder | `calc(16px * var(--font-scale, 1))` | |
    | 06 Travel | 不套用 | 山姆哥 2026-10-17 裁示不做 |
 
-   頂列控制鈕本身用 px（`fontscale.css`），不隨倍率縮放。圖表（Chart.js）刻度字級寫在 JS，不隨倍率縮放。
+   頂列控制鈕本身用 px（`fontscale.css`：14px，≤760px 13px），不隨倍率縮放。圖表（Chart.js）刻度字級寫在 JS，不隨倍率縮放。
 
 **實作參考**：
 - 樣板佔位頁：見 `project-05/index.html`

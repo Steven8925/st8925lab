@@ -792,13 +792,21 @@ html { font-size: calc(16px * var(--fs-boost, 1) * var(--font-scale, 1)); }
 
 /* 頂列是導覽外框，字級固定為原本的 px，不隨 --fs-boost／--font-scale 放大：
    放大後導覽分頁會擠成多行、溢出 64px 的頂列（2026-10-17 1440px 實測）。內容區照常縮放。 */
-#st8925-topbar .page-title { font-size: 13px; }
-#st8925-topbar .nav-cross-btn { font-size: 11px; }
-#st8925-topbar .back-link { font-size: 12px; }
+/* 2026-10-18 山姆哥要求頂列字體放大：統一 14px（原 13／11／12px）。 */
+#st8925-topbar .page-title,
+#st8925-topbar .nav-cross-btn,
+#st8925-topbar .back-link { font-size: 14px; }
+/* ≤1280px 收起頁名徽章（與首頁導覽的名稱重複），避免跨專案連結換行。 */
+@media (max-width: 1280px) { #st8925-topbar .page-title { display: none; } }
 
 /* 手機（≤760px，2026-10-17）：頂列只留站名、字體控制鈕與 BACK TO ORBIT；跨專案連結收起（首頁導覽仍可到達）。 */
 @media (max-width: 760px) {
     #st8925-topbar .nav-cross-btn,
     #st8925-topbar .page-title { display: none; }
     #st8925-topbar .topbar-right { gap: 6px; }
+}
+
+/* 極窄螢幕（≤480px，2026-10-18）：BACK TO ORBIT 縮小一號，才放得進 375px 頂列。 */
+@media (max-width: 480px) {
+    #st8925-topbar .back-link { font-size: 12px; padding: 4px 6px; }
 }

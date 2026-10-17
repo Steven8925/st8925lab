@@ -64,7 +64,7 @@
         gap: clamp(.2rem, .35vw, .38rem);
         color: var(--c);
         text-decoration: none;
-        font-size: clamp(.55rem, .8vw, .76rem);
+        font-size: clamp(.68rem, 1vw, .9rem);   /* 2026-10-18 放大：原 clamp(.55rem, .8vw, .76rem) */
         font-weight: 600;
         letter-spacing: .04em;
         padding: clamp(.26rem, .35vw, .38rem) clamp(.36rem, .6vw, .7rem);
@@ -104,8 +104,9 @@
     .project .t-short { display: none; }
     .project .t-tiny  { display: none; }
 
-    /* 寬螢幕筆電 / 125%~150% 系統縮放螢幕（約 1150px ~ 1420px）切換精簡標籤 */
-    @media (max-width: 1420px) {
+    /* 寬螢幕筆電 / 125%~150% 系統縮放螢幕（約 1150px ~ 1759px）切換精簡標籤。
+       2026-10-18 導覽字體放大到 0.9rem 後，完整名稱實測需 ≥1690px 才不被截斷，門檻由 1420px 調為 1759px。 */
+    @media (max-width: 1759px) {
         .project .t-full  { display: none; }
         .project .t-mid   { display: inline; }
         .project .t-short { display: none; }
@@ -156,7 +157,7 @@
         display: inline-flex;
         align-items: center;
         gap: .4rem;
-        font-size: clamp(.62rem, 1.1vw, .78rem);
+        font-size: clamp(.7rem, 1.1vw, .9rem);   /* 2026-10-18 放大：原 clamp(.62rem, 1.1vw, .78rem) */
         font-weight: 600;
         letter-spacing: .1em;
         color: #cbd5e1;

@@ -797,17 +797,29 @@ html { font-size: calc(13px * var(--fs-boost, 1) * var(--font-scale, 1)); }
 
 /* 頂列是導覽外框，字級固定為原本的 px，不隨 --fs-boost／--font-scale 放大：
    放大後導覽分頁會擠成多行、溢出 64px 的頂列（2026-10-17 1440px 實測）。內容區照常縮放。 */
-#st8925-topbar .nav-tab { font-size: 12px; }
+/* 2026-10-18 山姆哥要求頂列字體放大：統一 14px（原 12／11px）。 */
+#st8925-topbar .nav-tab,
 #st8925-topbar .nav-cross-btn,
 #st8925-topbar .back-link,
-#st8925-topbar .live-indicator { font-size: 11px; }
+#st8925-topbar .live-indicator { font-size: 14px; }
 
 /* 頂列空間（2026-10-17）：加入字體控制鈕後，頂列在較窄視窗會把導覽分頁擠成多行。
    ≤1500px 收起純裝飾的「AI ENGINE ACTIVE」；≤1280px 跨專案連結只留圖示（全名保留在 title／aria-label）。 */
-@media (max-width: 1500px) { #st8925-topbar .live-indicator { display: none; } }
-@media (max-width: 1280px) { #st8925-topbar .nav-cross-btn .xbtn-label { display: none; } }
+@media (max-width: 1700px) { #st8925-topbar .live-indicator { display: none; } }
+@media (max-width: 1700px) { #st8925-topbar .nav-cross-btn .xbtn-label { display: none; } }
+/* 頂列 14px 後（2026-10-18）：導覽分頁不換行；空間不足時分頁列可左右捲動，右側按鈕群不被擠壓。 */
+#st8925-topbar > div:first-child { min-width: 0; flex: 1 1 auto; }
+#st8925-topbar .topbar-actions { flex-shrink: 0; }
+#st8925-topbar .topbar-nav { overflow-x: auto; min-width: 0; scrollbar-width: none; }
+#st8925-topbar .topbar-nav::-webkit-scrollbar { display: none; }
+#st8925-topbar .nav-tab { white-space: nowrap; flex-shrink: 0; }
 
 /* 手機（≤760px，2026-10-17）：頂列只留站名、字體控制鈕與 BACK TO ORBIT；跨專案連結收起（首頁導覽仍可到達）。 */
 @media (max-width: 760px) {
     #st8925-topbar .nav-cross-btn { display: none; }
+}
+
+/* 極窄螢幕（≤480px，2026-10-18）：BACK TO ORBIT 縮小一號，才放得進 375px 頂列。 */
+@media (max-width: 480px) {
+    #st8925-topbar .back-link { font-size: 12px; padding: 4px 6px; }
 }

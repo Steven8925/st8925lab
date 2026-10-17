@@ -23,7 +23,7 @@
     padding: 3px 8px;
     border-radius: 5px;
     font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     line-height: 1.2;
     cursor: pointer;
@@ -42,5 +42,5 @@
 }
 
 @media (max-width: 760px) {
-    .font-scale-btn { padding: 3px 5px; font-size: 12px; }
+    .font-scale-btn { padding: 3px 5px; font-size: 13px; }
 }
