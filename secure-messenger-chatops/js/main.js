@@ -23,7 +23,7 @@ function applyOrbitThemeAndWordmark() {
         document.title = `${ typeof SITE_NAME !== 'undefined' ? SITE_NAME : 'ST8925 LAB' } — ${proj.label}`;
 
         const badgeEl = document.getElementById('project-title-badge');
-        if (badgeEl) badgeEl.textContent = `P${MY_ID} · ${proj.label}`;
+        if (badgeEl) badgeEl.textContent = proj.label;
     }
 
     const wmEl = document.getElementById('wordmark');

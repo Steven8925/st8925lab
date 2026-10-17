@@ -85,7 +85,7 @@ export class TelemetryBridge {
             return {
                 ok: true,
                 delivered: false,
-                mode: 'OFFLINE_LOCAL_QUEUE',
+                mode: 'OFFLINE_NOT_SENT',
                 timestamp: Date.now()
             };
         }

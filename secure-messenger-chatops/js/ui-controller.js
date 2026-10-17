@@ -202,7 +202,7 @@ export class UiController {
                     role: 'system',
                     text: res.delivered
                         ? '📲 **已透過 Telegram Bot 推播通知山姆哥手機**，請稍候回應。'
-                        : `📲 **已觸發山姆哥隨身通知請求**（閘道模式：\`${res.mode}\`）。`
+                        : `⚠️ **目前離線，通知未送出**（閘道模式：\`${res.mode}\`）。如需聯繫山姆哥，請改用首頁的 CONTACT。`
                 });
             });
         }

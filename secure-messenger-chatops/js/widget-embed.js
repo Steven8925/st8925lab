@@ -208,8 +208,9 @@
 
     callSam.onclick = async () => {
         appendBubble('SYSTEM', '📲 正在透過 Telegram Bot 推播通知山姆哥...', 'bot');
+        let delivered = false;
         try {
-            await fetch('/api/telegram', {
+            const res = await fetch('/api/telegram', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -218,9 +219,11 @@
                     message: '網站訪客透過右下角浮動通訊艙請求真人連線！'
                 })
             });
+            delivered = res.ok && Boolean((await res.json()).delivered);
         } catch (_) {
-            // fallback
+            delivered = false;
         }
+        appendBubble('SYSTEM', delivered ? '✅ 已通知山姆哥。' : '⚠️ 目前離線，通知未送出。', 'bot');
     };
 
     form.onsubmit = async (e) => {

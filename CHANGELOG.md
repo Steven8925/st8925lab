@@ -3,6 +3,18 @@
 本檔記錄根目錄 `PROMPT.md` 的變動與原因，最新在最上方。2026-10-17 之前的歷程記在 `README.md`（不搬移、不改寫）。
 
 
+[2026-10-17_21:55:07] 更新紀錄（secure-messenger-chatops，根目錄 PROMPT.md 不變）
+
+**討論過程**：山姆哥指示先修上次列出的兩個問題，並把頂列徽章去掉 `P04 · ` 前綴。他提供的 `PROMPT_v11.md` 經查是 2026-09 的根目錄網站規格舊版，不含本頁內容，不能當本頁規格。
+
+**最終決策**：
+- 手機版（≤ 760px）：頻道列由「整欄隱藏」改為頂部可橫向捲動的頻道條，呼叫鈕保留；標題徽章隱藏，返回鈕縮為「← ORBIT」。
+- 離線時「呼叫山姆哥」、`/notify` 與浮動視窗改為明講「目前離線，通知未送出」；離線模式名稱由 `OFFLINE_LOCAL_QUEUE` 改為 `OFFLINE_NOT_SENT`（原名暗示有佇列重送，實際沒有）。
+- 頂列徽章文字改為 `SECURE MESSENGER & CHATOPS`（`index.html` 靜態文字與 `js/main.js` 動態寫入同步）。
+
+**變更原因**：原手機版 B／C 頻道無法切換、返回鈕被推出畫面；原離線訊息讓訪客以為已通知到本人。
+
+
 [2026-10-17_21:19:42] 更新紀錄（根目錄 PROMPT.md 尚無版本表，故未標版本號）
 
 **討論過程**：山姆哥要求檢查 `config.js` 並重新 commit。檢查發現 `config.js` 只改一行，把 id `04` 指向新資料夾 `secure-messenger-chatops/`，但該資料夾未進 git，`project-04/` 的刪除也未進 git；單推 `config.js` 會讓線上 04 號環 404。新資料夾另附一個 Cloudflare Pages Function（`functions/api/[[route]].js`），本站是 Worker 部署，它不會執行；頁面呼叫的 `/api/status`、`/api/messages`、`/api/ai`、`/api/telegram` 在現行 `worker/index.js` 一律回 404。

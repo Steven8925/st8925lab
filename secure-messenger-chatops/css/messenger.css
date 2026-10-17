@@ -504,8 +504,28 @@ html, body {
     #inspector-panel { display: none; }
 }
 @media (max-width: 760px) {
+    /* 手機：頻道列改為頂部橫列（原本整欄隱藏，B／C 頻道無法切換）。 */
     #messenger-console {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px;
     }
-    #sidebar-panel { display: none; }
+    #sidebar-panel, #stream-panel { min-width: 0; overflow: hidden; }
+    #sidebar-panel .panel-section-title,
+    .ch-sub,
+    .identity-box label,
+    #sender-alias-input { display: none; }
+    .channel-list { flex-direction: row; gap: 6px; padding: 8px; overflow-x: auto; }
+    .channel-tab { flex: 0 0 auto; padding: 8px 10px; }
+    .channel-tab:hover { transform: none; }
+    .ch-row-top { font-size: 0.8rem; }
+    .identity-box { margin-top: 0; padding: 0 8px 8px; border-top: none; background: none; }
+    #btn-call-sam-tg { margin-top: 0 !important; }
+    #e2ee-vault-bar { flex-wrap: wrap; }
+    /* 頂列：收起標題徽章、返回鈕縮成「← ORBIT」，確保在 375px 內完整可見。 */
+    #project-title-badge, .bo-long { display: none; }
+    .topbar-right { gap: 6px; }
+    .back-orbit-btn { padding: 0.35rem 0.6rem; }
+    .font-scale-btn { padding: 3px 5px; }
 }

@@ -71,7 +71,7 @@ export class AiBotClient {
                 role: 'bot',
                 text: tgRes.delivered
                     ? `✅ 已透過 Telegram Bot API 即時推播至山姆哥手機！\n• 狀態：\`${tgRes.mode}\`\n• 內容：${argText}`
-                    : `📋 已記錄至本地安全推播佇列（模式：\`${tgRes.mode}\`）：\n• 內容：${argText}`
+                    : `⚠️ 目前離線，Telegram 推播**未送出**（模式：\`${tgRes.mode}\`），訊息只留在本機瀏覽器：\n• 內容：${argText}`
             };
         }
 
