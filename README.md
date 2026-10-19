@@ -1,3 +1,7 @@
+> **導讀（2026-10-19 加註）**：本檔是 2026-10-17 之前的**開發歷史**，內容保留原樣，不再更新。
+> 現行規格看 [`PROMPT.md`](PROMPT.md)（全站架構圖在「9. 全系統架構」），規格變動與決策看 [`CHANGELOG.md`](CHANGELOG.md)，每日工作紀錄看 [`LOG/`](LOG/)。
+> **Reading guide**: this file is the development history up to 2026-10-17, kept as-is. Current spec: `PROMPT.md`; decisions: `CHANGELOG.md`; daily log: `LOG/`.
+
 # ST8925 LAB — 製作過程演變史
 ### Development History
 

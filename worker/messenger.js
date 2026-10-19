@@ -157,13 +157,18 @@ async function handleAiRoute(body, env) {
       }),
       signal: AbortSignal.timeout(25000),
     });
+    // NIM 回 4xx／5xx 或空內容時，改走下方備援，不回空字串的 NVIDIA_NIM 回覆。
+    // On a 4xx/5xx or empty content, fall through to the fallback below.
+    if (!r.ok) throw new Error(`nim_http_${r.status}`);
     const data = await r.json();
     const msgObj = data?.choices?.[0]?.message || {};
+    const reply = (msgObj.content || msgObj.reasoning_content || '').trim();
+    if (!reply) throw new Error('nim_empty_reply');
     return {
       provider: 'NVIDIA_NIM',
       model: selectedModel,
       route: routeType,
-      reply: (msgObj.content || msgObj.reasoning_content || '').trim(),
+      reply,
     };
   } catch {
     return {

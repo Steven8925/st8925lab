@@ -1,5 +1,15 @@
 # ST8925 LAB — 重建規格 / Rebuild Prompt
 
+## 版本修改紀錄 / Version History
+
+| 時間戳 | 版本 | 摘要 |
+|---|---|---|
+| [2026-10-20_00:04:03] | V1.2 | 刪除已封存項目的引用：§0 檔案清單移除 `SPEC-v4.md`；架構圖移除 `functions/` 節點；「9. 全系統架構」證據表列出封存清單 |
+| [2026-10-19_23:36:10] | V1.1 | 新增「9. 全系統架構」（Mermaid）與「10. 效能與資產預算」（實測基準，預算待訂） |
+
+> 本表自 2026-10-19 起建立，V1.0 指當天之前的規格狀態。之前的變動原因見 `CHANGELOG.md`（2026-10-17 起）與 `README.md`（更早的開發史）。
+
+
 **讀完本檔即可重建整個 st8925lab.com 網站**：首頁的呼吸夜間地球、六個
 專案軌道、星雲爆炸與雙向連動、六個獨立的專案子頁，以及全站命名同步規則。
 本檔取代舊有的 `V4_prompt.md`（曾確認與當時的 `README.md` 逐位元組相同，
@@ -37,13 +47,13 @@ replaces the old `V4_prompt.md` (once confirmed byte-identical to the
 above for its actual on-disk status).
 
 深入的「為什麼」（每個決策背後被推翻的假設、實測數字、抓到的 bug）記錄在
-[`README.md`](README.md)（開發史）與 [`SPEC-v4.md`](SPEC-v4.md)（v1–v4 詳細
-規格書）。本檔只保留**重建所需**的內容，不重複那兩份文件的敘事，
+[`README.md`](README.md)（開發史）與 `SPEC-v4.md`（v1–v4 詳細規格書；2026-10-19 已移到
+`C:\Claude Projects\_archive\11_st8925lab\20261019_cleanup\`，git 歷史中也查得到）。本檔只保留**重建所需**的內容，不重複那兩份文件的敘事，
 避免規格與說明文件三份互相飄移。
 
 The "why" behind each decision (overturned assumptions, measurements, bugs
 caught) lives in [`README.md`](README.md) (dev history) and
-[`SPEC-v4.md`](SPEC-v4.md) (the v1–v4 detailed spec). This file keeps only
+`SPEC-v4.md` (the v1–v4 detailed spec, moved to `_archive\11_st8925lab\20261019_cleanup\` on 2026-10-19; also in git history). This file keeps only
 what is **needed to rebuild**, so the three documents cannot silently
 drift apart.
 
@@ -79,8 +89,7 @@ site-root/
 ├── make_standalone.py         打包單一檔案驗收版的工具
 ├── .gitignore                ★ 擋「進不進 git」（repo 為 public，見 §7.2）
 ├── .assetsignore             ★ 擋「會不會被發佈成網站資產」（見 §7）
-├── README.md / PROMPT.md      根目錄文件（本檔）
-└── SPEC-v4.md                 v1–v4 詳細規格（歷史，供深入查閱）
+└── README.md / PROMPT.md      根目錄文件（本檔）
 ```
 
 **首頁載入順序不可調換** / homepage load order is mandatory:
@@ -221,7 +230,7 @@ initWordmark('wordmark', SITE_NAME);   // SITE_NAME 來自 config.js
 
 ## 3. 首頁 `index.html` + `app.js` — 夜間地球與軌道
 
-（完整規格、每個決策的實測數字與被推翻的假設見 SPEC-v4.md 與 README.md；
+（完整規格、每個決策的實測數字與被推翻的假設見 README.md 與已封存的 SPEC-v4.md；
 本節只列出**重建所需**的常數與演算法摘要，數字直接取自目前的 `app.js`
 原始碼，2026-08-09。）
 
@@ -812,5 +821,118 @@ credentials, or `.env` content in this directory at all.
 - **格式要求**：每一筆紀錄開頭必須包含標準時間戳記與執行模型標籤 `[YYYY-MM-DD_HH:MM:SS] [Model: <Model_Name> (Thinking: <Level>)]`，且每筆獨立紀錄之間必須強制空兩行。
 
 
+## 9. 全系統架構 / System Architecture
+
+> 依據：2026-10-19 從原始碼與線上實測讀取。實線＝已實作且有證據；虛線＝藍圖、草稿或未接通。
+> **尚未納入未來功能**：依工作區規則，架構圖要涵蓋山姆哥說明的未來功能。目前還在等山姆哥說明，說明後補進本圖。
+
+```mermaid
+flowchart TB
+    U["瀏覽器 / Visitor"]
+    GH["GitHub Steven8925/st8925lab（public）<br/>push main → Workers Builds 自動部署"]
+    CI[".github/workflows/checks.yml<br/>check_public_surface · check_links ·<br/>check_single_source · check_tailwind_build"]
+
+    subgraph CF["Cloudflare Worker「st8925lab」（wrangler.jsonc）"]
+        W["worker/index.js<br/>run_worker_first: /api/*"]
+        M["worker/messenger.js<br/>/api/status · /api/messages · /api/ai<br/>/api/telegram · /api/telemetry"]
+        A["ASSETS（assets.directory = 根目錄）<br/>發佈範圍由 .assetsignore 決定"]
+    end
+
+    subgraph SITE["靜態頁面（repo 根目錄＝網站根目錄）"]
+        H["首頁 index.html + app.js<br/>config.js（唯一資料源）· geodata.js"]
+        SH["shared/<br/>wordmark · fontscale"]
+        P01["01 alarm-notification-simulator<br/>（Vite 建置產物，tools/build_alarm_frontend.py）"]
+        P02["02 iot-gen2-simulator-monitor<br/>（純瀏覽器模擬）"]
+        P03["03 ai-diagnostic-kb<br/>（純瀏覽器模擬）"]
+        P04["04 secure-messenger-chatops"]
+        P05["05 project-05（佔位頁）"]
+        P06["06 Travel-Assistance<br/>（私有 submodule，只發佈 index.html）"]
+    end
+
+    subgraph RENDER["Render.com 免費方案（render.yaml）"]
+        R1["st8925lab-alarm-api"]
+        R2["st8925lab-alarm-ops"]
+        R3["st8925lab-ai-diagnostic-kb"]
+        R4["st8925lab-travel-assistance"]
+    end
+
+    subgraph EXT["外部服務"]
+        NIM["NVIDIA NIM<br/>integrate.api.nvidia.com"]
+        TG["Telegram Bot API"]
+        SB["Supabase（有設定才啟用）"]
+        CDN["第三方 CDN<br/>cdn.jsdelivr.net · unpkg.com · cdn.sheetjs.com"]
+        CFA["Cloudflare Web Analytics"]
+    end
+
+    VPS["VPS 藍圖<br/>iot-gen2-simulator-monitor/vps/ · VPS_DEPLOYMENT_GUIDE.md"]
+
+    GH --> CF
+    GH --> CI
+    U --> W
+    W -->|"其餘 /api/*"| M
+    W -->|"非 /api"| A
+    A --> SITE
+    H --> SH
+    P01 & P02 & P03 & P04 & P05 --> SH
+    M --> NIM
+    M --> TG
+    M -.-> SB
+    W -->|"/api/health 授權探測"| NIM
+    P04 -->|"fetch /api/*"| M
+    P01 -->|"建置時內聯後端網址"| R1
+    P01 --> R2
+    P06 -->|"健康檢查失敗時改用內建資料"| R4
+    SITE --> CDN
+    SITE --> CFA
+    R3 -.->|"render.yaml 設 LLM_PROVIDER=gemini"| NIM
+    R4 -.->|"TRAVEL_OFFLINE 預設離線"| NIM
+    P02 -.->|"README 描述的資料流，未實作"| P03
+    P02 -.-> P01
+    P03 -.-> P01
+    P03 -.->|"前端未呼叫"| R3
+    P02 -.-> VPS
+```
+
+**節點與證據**
+
+| 節點 | 證據（2026-10-19） |
+|---|---|
+| Worker 路由 | `worker/index.js`：`/api/health` 自行處理；其餘 `/api/*` 交給 `handleMessengerApi`，未命中回 404；非 `/api` 交給 `env.ASSETS`。`wrangler.jsonc` 設 `run_worker_first: ["/api/*"]` |
+| messenger 端點 | `worker/messenger.js` 檔頭列出 5 個端點。Telegram 走 `api.telegram.org`。Supabase 只在 `SUPABASE_URL` 與 `SUPABASE_ANON_KEY` 都有設定時使用 |
+| `/api/health` | 線上回 200，`configured.nvidia`、`configured.tavily` 皆為 true。Tavily 只有「是否已設定」的旗標，程式裡沒有任何 Tavily 呼叫 |
+| P02、P03 是純瀏覽器模擬 | 兩者的 `app.js`、`index.html`、`modules/` 搜尋 `fetch(` 與 `onrender`，結果 0 筆 |
+| P02→P03→P01 資料流 | 只出現在 `README.md` 的 Mermaid 圖，程式裡沒有對應的呼叫，所以畫成虛線 |
+| P01 後端 | 打包後的 JS 內含 `st8925lab-alarm-api.onrender.com`、`st8925lab-alarm-ops.onrender.com`；兩者 `/health` 都回 200 |
+| P03 後端 | `st8925lab-ai-diagnostic-kb.onrender.com/health` 回 200（冷啟動 42.7 秒），但前端沒有呼叫它。`render.yaml` 設 `LLM_PROVIDER=gemini`，沒有列 `NVIDIA_API_KEY` |
+| P06 後端 | `Travel-Assistance/index.html` 預設呼叫 `st8925lab-travel-assistance.onrender.com`；它的 `/health` 60 秒內沒有回應 |
+| 已封存 | `functions/`（未部署的 Pages Functions 草稿）、`SPEC-v4.md`、`PROMPT_v11.md`、`V4/`、`cloudmd/old`、`cloudmd/option_A`／`B`／`C`、`$RECYCLE.BIN/` 於 2026-10-19 移到 `C:\Claude Projects\_archive\11_st8925lab\20261019_cleanup\`，不在本圖中 |
+| VPS | 只有藍圖與部署手冊，沒有部署證據 |
 
 
+## 10. 效能與資產預算 / Performance & Asset Budget
+
+> **狀態：只有實測基準，尚未訂定預算。** 預算數字要和山姆哥一起訂，不憑空寫。
+
+**量測方法**：2026-10-19 用 Claude 內建瀏覽器依序開 `https://st8925lab.com/` 各頁，等 3–5 秒後讀 `performance` API（navigation 與 resource entries）。每頁量 1 次，桌面版，當時的實際網路。
+
+**限制**：
+- 不是 Lighthouse：本機沒有安裝 Lighthouse，所以沒有 LCP、TBT、CLS 分數。
+- 跨網域資源（CDN）若沒有 `Timing-Allow-Origin`，瀏覽器回報的傳輸量是 0，所以表中的傳輸量低估了第三方資源。
+- 同一個瀏覽器依序量測，`shared/` 等共用檔從第二頁起可能已經有快取。
+
+| 頁面 | 請求數 | 傳輸量 (KB) | 解壓後大小 (KB) | DOMContentLoaded (ms) | 主要組成（解壓後 KB） | 第三方主機 |
+|---|---|---|---|---|---|---|
+| `/` 首頁 | 9 | 46 | 101 | 1,037 | js 89、css 1 | static.cloudflareinsights.com |
+| `/alarm-notification-simulator/` | 10 | 100 | 330 | 545 | js 287、css 39 | static.cloudflareinsights.com |
+| `/iot-gen2-simulator-monitor/` | 14 | 26 | 276 | 425 | js 246、css 18 | cdn.jsdelivr.net、static.cloudflareinsights.com |
+| `/ai-diagnostic-kb/` | 14 | 13 | 294 | 361 | js 264、css 19 | cdn.jsdelivr.net、static.cloudflareinsights.com |
+| `/secure-messenger-chatops/` | 19 | 25 | 69 | 227 | js 47、css 13 | static.cloudflareinsights.com |
+| `/project-05/` | 8 | 5 | 6 | 632 | — | static.cloudflareinsights.com |
+| `/Travel-Assistance/` | 19 | 143 | 1,287 | 637 | css 686 | unpkg.com、cdn.sheetjs.com、cdn.jsdelivr.net、static.cloudflareinsights.com、st8925lab-travel-assistance.onrender.com |
+
+**觀察**：
+- 最大的是 Travel-Assistance：解壓後 1,287 KB，其中 css 686 KB。
+- 首頁的 DOMContentLoaded 最慢（1,037 ms）。它是第一個量測的頁面，包含冷快取與 DNS 查詢的時間。
+- P02、P03 各依賴一個 jsDelivr 資源。CDN 失效時這兩頁會怎樣，尚未驗證。
+
+**待山姆哥決定**：各頁的預算上限（例如解壓後大小、請求數、DOMContentLoaded），以及要不要安裝 Lighthouse 取得完整分數。

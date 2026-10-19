@@ -144,33 +144,52 @@ revisit if the token ever becomes short or predictable.
 
 ## 6. `probeNvidia` 行為 / Behaviour
 
+> 2026-10-19 依 `worker/index.js` 重寫本節。2026-09-26 起 probe 已改打 chat 端點，原本寫的 `/v1/models` 與 10 秒逾時是舊內容。
+
 ```js
 async function probeNvidia(env) {
   if (!env.NVIDIA_API_KEY) {
     return { configured: false, reason: 'not_configured' };
   }
+  const model = env.NVIDIA_CHAT_MODEL || NVIDIA_PROBE_MODEL;
   try {
-    const res = await fetch(NVIDIA_MODELS_URL, {
-      method: 'GET',
-      headers: { authorization: `Bearer ${env.NVIDIA_API_KEY}` },
-      signal: AbortSignal.timeout(10000),
+    const res = await fetch(NVIDIA_CHAT_URL, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${env.NVIDIA_API_KEY}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1,
+      }),
+      signal: AbortSignal.timeout(20000),
     });
-    return { configured: true, status: res.status, valid: res.status === 200 };
+    if (res.status === 200) return { configured: true, status: 200, valid: true, model };
+    if (res.status === 401 || res.status === 403) {
+      return { configured: true, status: res.status, valid: false, model };
+    }
+    return { configured: true, status: res.status, valid: null, reason: 'inconclusive', model };
   } catch {
-    return { configured: true, status: null, valid: false, reason: 'unreachable' };
+    return { configured: true, status: null, valid: null, reason: 'unreachable', model };
   }
 }
 ```
 
-三種回傳形狀 / Three possible shapes：
+改打 chat 端點的原因：`/v1/models` 對假金鑰也回 200，`valid: true` 證明不了任何事；chat 端點會拒絕無效金鑰（實測假金鑰回 403）。每次 probe 約花 1 個 token，且仍受 `PROBE_TOKEN` 管制。
+
+回傳形狀 / Possible shapes：
 
 | 情況 Case | 回傳 Returns |
 |---|---|
 | 金鑰未設定 No key | `{ configured: false, reason: 'not_configured' }` |
-| 請求完成 Request completed | `{ configured: true, status: <HTTP 狀態碼>, valid: <status === 200> }` |
-| 請求拋出（逾時／網路） Threw | `{ configured: true, status: null, valid: false, reason: 'unreachable' }` |
+| 200 | `{ configured: true, status: 200, valid: true, model }` |
+| 401／403 | `{ configured: true, status, valid: false, model }` |
+| 其他狀態（例如模型退役的 404） Other status | `{ configured: true, status, valid: null, reason: 'inconclusive', model }` |
+| 請求拋出（逾時／網路） Threw | `{ configured: true, status: null, valid: null, reason: 'unreachable', model }` |
 
-逾時為 `AbortSignal.timeout(10000)`，即 **10 秒**。
+逾時為 `AbortSignal.timeout(20000)`，即 **20 秒**。`valid: null` 代表「無法判定」，不代表金鑰無效。
 
 > 🔒 **安全不變式：只回報 HTTP 狀態碼。** 絕不回傳金鑰、上游回應主體，或
 > `catch` 到的錯誤細節（`catch` 刻意不綁定變數，從語法上就拿不到錯誤物件）。
@@ -183,14 +202,20 @@ async function probeNvidia(env) {
 
 ## 7. 環境繫結 / Bindings and secrets
 
+> 2026-10-19 依山姆哥提供的 Cloudflare 後台截圖（Production）核對：NVIDIA 金鑰只設了 `NVIDIA_API_KEY`，沒有 `NVIDIA_NIM_API_KEY`。
+
 | 名稱 Name | 類型 Type | 用途 Purpose |
 |---|---|---|
 | `ASSETS` | 靜態資產繫結 Assets binding | 由 `wrangler.jsonc` 的 `assets.binding` 定義 |
-| `NVIDIA_API_KEY` | Runtime secret | `configured.nvidia` 與 probe |
+| `NVIDIA_API_KEY` | Runtime secret | `configured.nvidia`、probe、`messenger.js` 的 `/api/ai` |
+| `NVIDIA_NIM_API_KEY` | （未設定） | `messenger.js` 與 `configured.nvidia` 會優先讀它；probe 不讀。後台沒有設，所以三者實際都用 `NVIDIA_API_KEY` |
+| `NVIDIA_NIM_TEXT_MODEL`、`NVIDIA_NIM_VISION_MODEL` | Variable（也寫在 `wrangler.jsonc` 的 `vars`） | `/api/ai` 的文字與看圖模型 |
 | `TAVILY_API_KEY` | Runtime secret | 僅 `configured.tavily`（目前無其他使用） |
 | `PROBE_TOKEN` | Runtime secret | probe 授權；未設定即關閉 probe |
+| `TELEGRAM_BOT_TOKEN`、`TELEGRAM_CHAT_ID` | Runtime secret | `messenger.js` 的 `/api/telegram` |
+| `SUPABASE_URL`、`SUPABASE_ANON_KEY` | Runtime secret | `messenger.js` 的訊息儲存；兩者都有設才啟用 |
 
-**三把金鑰都必須設在 Cloudflare 的「Runtime variables and secrets」，並存為
+**所有金鑰都必須設在 Cloudflare 的「Runtime variables and secrets」，並存為
 Secret。** 設成 Build-time 變數時 Worker 在執行期讀不到（`configured` 會是
 `false`）；這正是 2026-09-24 修正的問題，經過見 [`README.md`](README.md)。
 All three must live in Runtime variables and secrets, stored as Secret. Build-time
@@ -199,6 +224,16 @@ variables are unreadable at runtime — the bug fixed on 2026-09-24.
 `wrangler.jsonc` 已設 `keep_vars: true`，因此 `npx wrangler deploy` 不會清掉
 儀表板上設定的變數。
 `keep_vars: true` means a deploy will not wipe dashboard-set variables.
+
+---
+
+## 7.1 `/api/ai` 的備援規則 / Fallback rule
+
+`messenger.js` 的 `handleAiRoute` 只在拿到 NIM 的有效回覆時回 `provider: 'NVIDIA_NIM'`。以下情況一律回 `provider: 'LOCAL_KB_FALLBACK'` 與一段非空的備援文字：
+- NIM 回 4xx／5xx（例如 401、429、500）。2026-10-19 修正：之前沒有檢查狀態碼，會回空字串並標成 `NVIDIA_NIM`。
+- NIM 回 200 但內容是空的。
+- 逾時（25 秒）、網路錯誤或回應不是 JSON。
+沒有金鑰時回 `provider: 'LOCAL_KB_ENGINE'`，不對外呼叫。驗證：`.wrangler/check_worker_messenger.mjs`。
 
 ---
 

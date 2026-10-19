@@ -102,7 +102,7 @@ LAB (d:\Google Antigravity Proejct_free modification\Messebger\)      PROD (z:\1
      * `NVIDIA_NIM_VISION_MODEL`: `"nvidia/nemotron-3.5-super-vl-120b-a12b"`
 3. **執行期環境變數與 Secret 清單**：
    * `PORT` / `HOST`：LAB 本地閘道器監聽設定（預設 `127.0.0.1:8765`）。
-   * `NVIDIA_NIM_API_KEY`（或共用既有 `NVIDIA_API_KEY`）：NVIDIA NIM API 金鑰（`Secret`；Worker 端 `messenger.js` 與 `/api/health` 兩者皆相容讀取）。
+   * `NVIDIA_NIM_API_KEY`（或共用既有 `NVIDIA_API_KEY`）：NVIDIA NIM API 金鑰（`Secret`）。Worker 的 `messenger.js` 與 `/api/health` 的 `configured.nvidia` 兩個名稱都讀；`/api/health` 的 probe 只讀 `NVIDIA_API_KEY`。PROD（Cloudflare）實際只設了 `NVIDIA_API_KEY`（2026-10-19 依後台截圖核對）。
    * `NVIDIA_NIM_TEXT_MODEL`：純文字推論模型名稱（預設值：`nvidia/nemotron-3-super-120b-a12b`）。
    * `NVIDIA_NIM_VISION_MODEL`：附圖／多模態推論模型名稱（預設值：`nvidia/nemotron-3.5-super-vl-120b-a12b`）。
    * `NVIDIA_NIM_BASE_URL`：API 端點（預設值：`https://integrate.api.nvidia.com/v1`）。
